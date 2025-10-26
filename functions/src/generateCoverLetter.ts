@@ -1,0 +1,391 @@
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineString } from "firebase-functions/params";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { genkit } from "genkit";
+import { googleAI } from "@genkit-ai/googleai";
+
+const ai = genkit({
+  plugins: [googleAI()],
+  model: googleAI.model("gemini-2.5-flash", { temperature: 0.7, topK: 40 }),
+});
+
+const db = getFirestore();
+
+const REQUIRED_CREDITS = 10;
+
+const billingProfileRefForUser = (userId: string) =>
+  db
+    .collection("users")
+    .doc(userId)
+    .collection("billingProfile")
+    .doc("profile");
+
+const createInsufficientCreditsError = (action: "generate" | "regenerate") =>
+  new HttpsError(
+    "failed-precondition",
+    `You need at least ${REQUIRED_CREDITS} coins to ${action} a cover letter.`,
+    { code: "insufficient-credits" },
+  );
+
+defineString("GEMINI_API_KEY");
+
+interface GenerateCoverLetterRequest {
+  jobApplicationId: string;
+  resumeId: string;
+  manualJobDescription?: string;
+}
+
+interface GenerateCoverLetterResponse {
+  coverLetterId: string;
+  body: string;
+}
+
+function validateAuth(request: { auth?: { uid: string } }): string {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+  return request.auth.uid;
+}
+
+async function validateBillingBalance(
+  userId: string,
+  action: "generate" | "regenerate",
+): Promise<void> {
+  const billingProfileRef = billingProfileRefForUser(userId);
+  const billingSnapshot = await billingProfileRef.get();
+
+  if (!billingSnapshot.exists) {
+    throw new HttpsError("failed-precondition", "Billing profile not found");
+  }
+
+  const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
+
+  if (currentBalance < REQUIRED_CREDITS) {
+    throw createInsufficientCreditsError(action);
+  }
+}
+
+async function fetchAndValidateJobApplication(
+  jobApplicationId: string,
+  userId: string,
+) {
+  const jobApplicationDoc = await db
+    .collection("jobApplications")
+    .doc(jobApplicationId)
+    .get();
+
+  if (!jobApplicationDoc.exists) {
+    throw new HttpsError("not-found", "Job application not found");
+  }
+
+  const jobApplication = jobApplicationDoc.data();
+  if (jobApplication?.userId !== userId) {
+    throw new HttpsError(
+      "permission-denied",
+      "User does not have access to this job application",
+    );
+  }
+
+  return jobApplication;
+}
+
+async function fetchAndValidateResume(resumeId: string, userId: string) {
+  const resumeDoc = await db.collection("userResumes").doc(resumeId).get();
+
+  if (!resumeDoc.exists) {
+    throw new HttpsError("not-found", "Resume not found");
+  }
+
+  const resume = resumeDoc.data();
+  if (resume?.userId !== userId) {
+    throw new HttpsError(
+      "permission-denied",
+      "User does not have access to this resume",
+    );
+  }
+
+  if (!resume.text) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Resume has not been parsed yet",
+    );
+  }
+
+  return resume;
+}
+
+async function getJobDescription(
+  manualJobDescription: string | undefined,
+  jobApplication: any,
+): Promise<string> {
+  let jobDescription = manualJobDescription;
+
+  if (!jobDescription && jobApplication?.jobId) {
+    const jobDoc = await db.collection("jobs").doc(jobApplication.jobId).get();
+
+    if (jobDoc.exists) {
+      const jobData = jobDoc.data();
+      if (jobData?.parsedData?.description) {
+        jobDescription = jobData.parsedData.description;
+      }
+    }
+  }
+
+  if (!jobDescription) {
+    throw new HttpsError("failed-precondition", "No job description available");
+  }
+
+  return jobDescription;
+}
+
+function buildCoverLetterPrompt(
+  jobApplication: any,
+  resume: any,
+  jobDescription: string,
+): string {
+  return `You are an expert career coach and professional writer specializing in crafting compelling cover letters.
+
+Your task is to create a personalized, professional cover letter that effectively matches the candidate's experience with the job requirements.
+
+CANDIDATE INFORMATION:
+Company: ${jobApplication?.companyName}
+Position: ${jobApplication?.position}
+
+RESUME CONTENT:
+${resume.text}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+INSTRUCTIONS:
+1. Write a professional cover letter that:
+   - Opens with a strong, engaging introduction that shows enthusiasm for the specific role and company
+   - Highlights 2-3 of the most relevant experiences and achievements from the resume that directly align with the job requirements
+   - Demonstrates understanding of the company's needs and how the candidate can add value
+   - Uses specific examples and quantifiable achievements when available
+   - Maintains a professional yet personable tone
+   - Closes with a clear call to action
+
+2. Structure:
+   - Professional salutation (use "Dear Hiring Manager" if no specific name is available)
+   - 3-4 concise paragraphs (opening, 1-2 body paragraphs highlighting relevant experience, closing)
+   - Professional sign-off, make sure to include user's name and last name at the end
+
+3. Style Guidelines:
+   - Keep it concise (150-200 words)
+   - Use active voice
+   - Avoid clichés and generic statements
+   - Tailor language to match the company's tone (formal for traditional companies, slightly more casual for startups)
+   - Do not repeat the resume verbatim; instead, expand on key points with context
+
+4. DO NOT:
+   - Include placeholder text like [Your Name] or [Date]
+   - Add contact information headers (these will be added separately)
+   - Make up information not present in the resume
+   - Use overly aggressive or desperate language
+
+Generate the cover letter body text only, starting with the salutation and ending with the sign-off.`;
+}
+
+async function generateCoverLetterWithAI(
+  jobApplication: any,
+  resume: any,
+  jobDescription: string,
+): Promise<string> {
+  const prompt = buildCoverLetterPrompt(jobApplication, resume, jobDescription);
+  const result = await ai.generate({ prompt });
+  return result.text.trim();
+}
+
+async function deductCreditsInTransaction(
+  userId: string,
+  action: "generate" | "regenerate",
+  transactionCallback: (transaction: FirebaseFirestore.Transaction) => void,
+): Promise<void> {
+  const billingProfileRef = billingProfileRefForUser(userId);
+
+  await db.runTransaction(async (transaction) => {
+    const billingSnap = await transaction.get(billingProfileRef);
+
+    if (!billingSnap.exists) {
+      throw new HttpsError("failed-precondition", "Billing profile not found");
+    }
+
+    const currentBalance = billingSnap.data()?.currentBalance ?? 0;
+
+    if (currentBalance < REQUIRED_CREDITS) {
+      throw createInsufficientCreditsError(action);
+    }
+
+    transactionCallback(transaction);
+
+    transaction.update(billingProfileRef, {
+      currentBalance: FieldValue.increment(-REQUIRED_CREDITS),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+}
+
+function handleError(
+  error: unknown,
+  action: "generating" | "regenerating",
+): never {
+  console.error(`Error ${action} cover letter:`, error);
+
+  if (error instanceof HttpsError) {
+    throw error;
+  }
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : `Failed to ${action === "generating" ? "generate" : "regenerate"} cover letter`;
+  throw new HttpsError("internal", errorMessage);
+}
+
+// Main functions
+
+export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
+  async (request) => {
+    const userId = validateAuth(request);
+    const { jobApplicationId, resumeId, manualJobDescription } = request.data;
+
+    if (!jobApplicationId || !resumeId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "jobApplicationId and resumeId are required",
+      );
+    }
+
+    try {
+      await validateBillingBalance(userId, "generate");
+
+      const jobApplication = await fetchAndValidateJobApplication(
+        jobApplicationId,
+        userId,
+      );
+      const resume = await fetchAndValidateResume(resumeId, userId);
+      const jobDescription = await getJobDescription(
+        manualJobDescription,
+        jobApplication,
+      );
+
+      const coverLetterBody = await generateCoverLetterWithAI(
+        jobApplication,
+        resume,
+        jobDescription,
+      );
+
+      const coverLetterRef = db.collection("coverLetters").doc();
+      const jobApplicationRef = db
+        .collection("jobApplications")
+        .doc(jobApplicationId);
+
+      await deductCreditsInTransaction(userId, "generate", (transaction) => {
+        transaction.create(coverLetterRef, {
+          userId,
+          jobApplication: {
+            id: jobApplicationId,
+            companyName: jobApplication?.companyName,
+            position: jobApplication?.position,
+            companyLogoUrl: jobApplication?.companyLogoUrl || null,
+          },
+          resumeId,
+          body: coverLetterBody,
+          createdAt: FieldValue.serverTimestamp(),
+          modelMetadata: {
+            model: "gemini-2.5-flash",
+            temperature: 0.7,
+            prompt: "cover-letter-v1",
+          },
+        });
+
+        transaction.update(jobApplicationRef, {
+          coverLetterId: coverLetterRef.id,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+
+      return {
+        coverLetterId: coverLetterRef.id,
+        body: coverLetterBody,
+      } as GenerateCoverLetterResponse;
+    } catch (error) {
+      handleError(error, "generating");
+    }
+  },
+);
+
+export const regenerateCoverLetter = onCall<{
+  coverLetterId: string;
+  jobApplicationId: string;
+  resumeId: string;
+  manualJobDescription?: string;
+}>(async (request) => {
+  const userId = validateAuth(request);
+  const { coverLetterId, jobApplicationId, resumeId, manualJobDescription } =
+    request.data;
+
+  if (!coverLetterId || !jobApplicationId || !resumeId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "coverLetterId, jobApplicationId and resumeId are required",
+    );
+  }
+
+  try {
+    await validateBillingBalance(userId, "regenerate");
+
+    // Verify cover letter ownership
+    const coverLetterDoc = await db
+      .collection("coverLetters")
+      .doc(coverLetterId)
+      .get();
+
+    if (!coverLetterDoc.exists) {
+      throw new HttpsError("not-found", "Cover letter not found");
+    }
+
+    const coverLetter = coverLetterDoc.data();
+    if (coverLetter?.userId !== userId) {
+      throw new HttpsError(
+        "permission-denied",
+        "User does not have access to this cover letter",
+      );
+    }
+
+    const jobApplication = await fetchAndValidateJobApplication(
+      jobApplicationId,
+      userId,
+    );
+    const resume = await fetchAndValidateResume(resumeId, userId);
+    const jobDescription = await getJobDescription(
+      manualJobDescription,
+      jobApplication,
+    );
+
+    const newBody = await generateCoverLetterWithAI(
+      jobApplication,
+      resume,
+      jobDescription,
+    );
+
+    const coverLetterRef = db.collection("coverLetters").doc(coverLetterId);
+
+    await deductCreditsInTransaction(userId, "regenerate", (transaction) => {
+      transaction.update(coverLetterRef, {
+        body: newBody,
+        updatedAt: FieldValue.serverTimestamp(),
+        modelMetadata: {
+          model: "gemini-2.5-flash",
+          temperature: 0.7,
+          prompt: "cover-letter-v1",
+        },
+      });
+    });
+
+    return { body: newBody };
+  } catch (error) {
+    handleError(error, "regenerating");
+  }
+});

@@ -1,0 +1,65 @@
+---
+// Header component with navigation and external links
+---
+
+<header class="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+  <div class="container mx-auto px-4">
+    <div class="flex items-center justify-between h-16 relative">
+      <!-- Logo/Brand -->
+      <a href="/" class="text-2xl font-bold text-foreground z-[60]">
+        OpenApply
+      </a>
+      
+      <!-- Mobile menu toggle (checkbox hack for CSS-only menu) -->
+      <input type="checkbox" id="mobile-menu-toggle" class="hidden peer" aria-label="Toggle mobile menu" />
+      <label for="mobile-menu-toggle" class="lg:hidden flex flex-col justify-center items-center w-10 h-10 cursor-pointer z-[60] peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-2 peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-2" aria-label="Menu">
+        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
+        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
+        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
+      </label>
+      
+      <!-- Navigation -->
+      <nav class="peer-checked:translate-y-0 -mx-4 peer-checked:opacity-100 peer-checked:visible peer-checked:pointer-events-auto absolute lg:relative top-full left-0 right-0 lg:top-auto bg-background lg:bg-transparent border-b lg:border-0 border-border flex flex-col lg:flex-row items-stretch lg:items-center gap-6 lg:gap-8 p-6 lg:p-0 -translate-y-full lg:translate-y-0 opacity-0 lg:opacity-100 invisible lg:visible pointer-events-none lg:pointer-events-auto transition-all duration-300 ease-in-out">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6">
+          <a href="#how-it-works" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">How it Works</a>
+          <a href="#features" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Features</a>
+          <a href="#pricing" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Pricing</a>
+          <a href="#faq" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">FAQ</a>
+        </div>
+        
+        <div class="flex items-center gap-3 justify-center">
+          <a 
+            href="https://github.com/SergeyKhval/OpenApply" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground border border-border hover:bg-muted hover:border-muted-foreground rounded-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="View on GitHub"
+          >
+            <i class="ph ph-github-logo text-lg" aria-hidden="true"></i>
+            <span class="text-sm">GitHub</span>
+          </a>
+          <a 
+            href="https://discord.gg/VSPCrpbbZb" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground border border-border hover:bg-muted hover:border-muted-foreground rounded-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Join our Discord"
+          >
+            <i class="ph ph-discord-logo text-lg" aria-hidden="true"></i>
+            <span class="text-sm">Discord</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style>
+  /* Add Phosphor Icons CSS */
+  @import url("https://unpkg.com/@phosphor-icons/web@2.1.2/src/bold/style.css");
+  
+  /* Smooth scroll for anchor links */
+  .nav-link {
+    scroll-behavior: smooth;
+  }
+</style>

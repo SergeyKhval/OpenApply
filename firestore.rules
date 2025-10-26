@@ -1,0 +1,87 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function canRead() {
+      return request.auth != null;
+    }
+
+    function canCreateOwn() {
+      return request.auth != null &&
+             request.auth.uid == request.resource.data.userId;
+    }
+
+    function canUpdateOwn() {
+      return request.auth != null &&
+             request.auth.uid == resource.data.userId;
+    }
+
+    function canDeleteOwn() {
+      return request.auth != null &&
+             request.auth.uid == resource.data.userId;
+    }
+
+    match /jobApplications/{applicationId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+
+    match /jobApplicationNotes/{noteId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+    
+    match /userResumes/{resumeId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+    
+    match /contacts/{contactId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+    
+    match /interviews/{interviewId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+    
+    match /jobs/{interviewId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+    
+    match /coverLetters/{coverLetterId} {
+      allow read: if canRead();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /billingProfile/{docId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
