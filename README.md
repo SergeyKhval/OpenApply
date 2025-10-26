@@ -6,12 +6,11 @@ Website: https://openapply.app
 
 ## Features
 
-- Job application tracking with status management
-- Interview scheduling
+- Job application tracking
+- Interview / contact management
+- One click link-based or CSV job import
 - Resume storage
 - AI-powered cover letter generation
-- Job page parsing
-- Dashboard analytics
 
 ## Prerequisites
 

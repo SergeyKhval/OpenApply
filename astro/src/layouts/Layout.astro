@@ -114,7 +114,7 @@ import PostHog from "../components/posthog.astro";
                   </svg>
                   </a>
                 </div>
-                <p class="text-sm text-muted-foreground">No subscriptions. Pay as you go.</p>
+                <p class="text-sm text-muted-foreground">No subscription needed.</p>
               </div>
             </div>
           </div>
@@ -391,11 +391,12 @@ import PostHog from "../components/posthog.astro";
               </p>
             </div>
             <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <!-- Free Forever Card -->
               <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8"
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
               >
                 <h3 class="text-2xl font-bold mb-6">Free Forever</h3>
-                <ul class="space-y-4">
+                <ul class="space-y-4 flex-grow">
                   <li class="flex items-start gap-3">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -465,78 +466,21 @@ import PostHog from "../components/posthog.astro";
                     <span>Spreadsheet/file import</span>
                   </li>
                 </ul>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-primary/40 bg-card/80 shadow-sm backdrop-blur p-8"
-              >
-                <h3 class="text-2xl font-bold mb-6">Pay-as-you-go Credits</h3>
-                <ul class="space-y-4">
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Only used for AI features</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>USD billing</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>No subscriptions, no lock-in</span>
-                  </li>
-                </ul>
                 <div class="mt-8">
                   <a
                     href="/app"
                     class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
                   >
-                    Start Free
+                    Get Started
                   </a>
                 </div>
               </div>
+              <!-- Self-Host Card -->
               <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8"
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
               >
                 <h3 class="text-2xl font-bold mb-6">Self‑Host</h3>
-                <ul class="space-y-4">
+                <ul class="space-y-4 flex-grow">
                   <li class="flex items-start gap-3">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -614,6 +558,73 @@ import PostHog from "../components/posthog.astro";
                     class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
                   >
                     View on GitHub
+                  </a>
+                </div>
+              </div>
+              <!-- Pay-as-you-go Card -->
+              <div
+                class="rounded-lg text-card-foreground border border-primary/40 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
+              >
+                <h3 class="text-2xl font-bold mb-6">Pay-as-you-go Credits</h3>
+                <ul class="space-y-4 flex-grow">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Only used for AI features</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>USD billing</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>No subscriptions, no lock-in</span>
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <a
+                    href="/app"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
+                  >
+                    Start Free
                   </a>
                 </div>
               </div>
