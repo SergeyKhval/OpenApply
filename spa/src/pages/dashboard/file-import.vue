@@ -115,57 +115,72 @@
           </div>
         </CardHeader>
         <CardContent class="mb-4">
-          <div class="max-w-prose space-y-3">
-            <p>
-              Add your job applications in seconds by uploading a CSV file. You
-              will be able to review before uploading, map columns, and choose
-              which rows you want to import
-            </p>
-            <p class="text-sm leading-relaxed text-muted-foreground"></p>
+          <div class="grid lg:grid-cols-2 gap-4">
+            <div class="max-w-prose space-y-3">
+              <p>
+                Add your job applications in seconds by uploading a CSV file.
+                You will be able to review before uploading, map columns, and
+                choose which rows you want to import
+              </p>
+              <p class="text-sm leading-relaxed text-muted-foreground"></p>
 
-            <h3 class="mt-6 text-sm font-medium text-foreground">
-              Before you upload
-            </h3>
-            <ul
-              class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
-            >
-              <li>CSV with up to 100 rows.</li>
-              <li>One row per job application.</li>
-              <li>
-                Make sure you have at least these two columns:
-                <span class="font-medium text-foreground">Company name</span>
-                and <span class="font-medium text-foreground">Position</span>.
-              </li>
-              <li>
-                Rows without company name and position will be ignored during
-                import.
-              </li>
-              <li>Job description link column is optional.</li>
-              <li>
-                Prefer no header row. If your file has a header, you can delete
-                that row after upload.
-              </li>
-              <li>
-                Extra columns are fine; only the mapped ones will be imported.
-              </li>
-            </ul>
+              <h3 class="mt-6 text-sm font-medium text-foreground">
+                Before you upload
+              </h3>
+              <ul
+                class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
+              >
+                <li>CSV with up to 100 rows.</li>
+                <li>One row per job application.</li>
+                <li>
+                  Make sure you have at least these two columns:
+                  <span class="font-medium text-foreground">Company name</span>
+                  and <span class="font-medium text-foreground">Position</span>.
+                </li>
+                <li>
+                  Rows without company name and position will be ignored during
+                  import.
+                </li>
+                <li>Job description link column is optional.</li>
+                <li>
+                  Prefer no header row. If your file has a header, you can
+                  delete that row after upload.
+                </li>
+                <li>
+                  Extra columns are fine; only the mapped ones will be imported.
+                </li>
+              </ul>
 
-            <h3 class="mt-6 text-sm font-medium text-foreground">
-              How it works
-            </h3>
-            <ul
-              class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
+              <h3 class="mt-6 text-sm font-medium text-foreground">
+                How it works
+              </h3>
+              <ul
+                class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
+              >
+                <li>Click Upload CSV.</li>
+                <li>
+                  Map columns: choose which column is
+                  <span class="font-medium text-foreground">Company name</span>
+                  and which is
+                  <span class="font-medium text-foreground">Position</span>.
+                </li>
+                <li>
+                  Review & tidy: remove any rows you don’t want to import.
+                </li>
+                <li>Import: click Import to add your jobs.</li>
+              </ul>
+            </div>
+
+            <div
+              ref="drop-zone"
+              class="hidden lg:flex w-full h-full border-border border border-dashed rounded-lg flex-col items-center justify-around"
+              :class="isOverDropZone && 'border-solid border-primary'"
             >
-              <li>Click Upload CSV.</li>
-              <li>
-                Map columns: choose which column is
-                <span class="font-medium text-foreground">Company name</span>
-                and which is
-                <span class="font-medium text-foreground">Position</span>.
-              </li>
-              <li>Review & tidy: remove any rows you don’t want to import.</li>
-              <li>Import: click Import to add your jobs.</li>
-            </ul>
+              <div>
+                <PhFileCsv class="text-muted-foreground" size="128" />
+                <p class="text-muted-foreground">Drop CSV file here</p>
+              </div>
+            </div>
           </div>
         </CardContent>
 
@@ -181,8 +196,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
+import { useDropZone } from "@vueuse/core";
 import fill from "lodash/fill";
 import PapaParse from "papaparse";
 import PageHeader from "@/components/PageHeader.vue";
@@ -227,6 +243,7 @@ const possibleHeaders = new Map<
 ]);
 
 const router = useRouter();
+const dropZoneRef = useTemplateRef("drop-zone");
 
 const data = ref<Array<Array<string>>>([]);
 const headers = ref<ColumnHeader[]>([]);
@@ -239,13 +256,9 @@ watch(data, (newData) => {
 });
 const importingJobs = ref(false);
 
-const { open, reset, onChange } = useFileDialog({
-  accept: "text/csv",
-  multiple: false,
-});
-
-onChange((files) => {
+function parseFiles(files: FileList | File[] | null) {
   const file = files?.[0];
+
   if (file) {
     PapaParse.parse<string[]>(file, {
       complete(results) {
@@ -254,7 +267,20 @@ onChange((files) => {
       },
     });
   }
+}
+
+const { open, reset, onChange } = useFileDialog({
+  accept: "text/csv",
+  multiple: false,
 });
+const { isOverDropZone } = useDropZone(dropZoneRef, {
+  onDrop: parseFiles,
+  dataTypes: ["text/csv"],
+  multiple: false,
+  preventDefaultForUnhandled: true,
+});
+
+onChange(parseFiles);
 
 function prepareFirebaseData() {
   if (
@@ -308,7 +334,7 @@ async function importJobApplications() {
     importingJobs.value = false;
   }
 
-  await router.push('/dashboard/applications');
+  await router.push("/dashboard/applications");
 }
 </script>
 
