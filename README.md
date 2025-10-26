@@ -1,6 +1,8 @@
 # OpenApply
 
-Job application tracking system built with Vue 3 and Firebase.
+Open, self-hostable job application tracker with paste-a-link import and AI-assisted cover letters.
+
+Website: https://openapply.app
 
 ## Features
 
