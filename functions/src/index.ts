@@ -17,3 +17,4 @@ export * from "./createStripeCheckoutSession";
 export * from "./stripeWebhook";
 export * from "./migrateCoverLettersToJobApplications";
 export * from "./jobApplications";
+export * from "./sendWelcomeEmail";
