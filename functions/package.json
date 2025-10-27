@@ -45,6 +45,7 @@
     "lodash": "^4.17.21",
     "pdf-parse": "^2.1.7",
     "puppeteer-core": "^24.23.0",
+    "resend": "^6.3.0",
     "stripe": "^19.1.0"
   },
   "devDependencies": {

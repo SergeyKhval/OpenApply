@@ -101,6 +101,7 @@ For AI features, add Gemini API key:
 cd functions
 cp .env.example .env
 # Add GEMINI_API_KEY=AIza... to .env
+# optionally add Stripe and Resend keys
 firebase emulators:start --only functions
 ```
 
