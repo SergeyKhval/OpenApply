@@ -3,6 +3,7 @@ import { defineString } from "firebase-functions/params";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { genkit } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
+import { firestore } from "firebase-admin";
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -86,7 +87,7 @@ async function fetchAndValidateJobApplication(
     );
   }
 
-  return jobApplication;
+  return jobApplication as firestore.DocumentData;
 }
 
 async function fetchAndValidateResume(resumeId: string, userId: string) {
@@ -111,7 +112,7 @@ async function fetchAndValidateResume(resumeId: string, userId: string) {
     );
   }
 
-  return resume;
+  return resume as firestore.DocumentData;
 }
 
 async function getJobDescription(
@@ -138,61 +139,35 @@ async function getJobDescription(
   return jobDescription;
 }
 
-function buildCoverLetterPrompt(
-  jobApplication: any,
-  resume: any,
+async function buildCoverLetterPrompt(
+  jobApplication: firestore.DocumentData,
+  resume: firestore.DocumentData,
   jobDescription: string,
-): string {
-  return `You are an expert career coach and professional writer specializing in crafting compelling cover letters.
+): Promise<string> {
+  const promptTemplates = db.collection("promptTemplates").doc("coverLetter");
+  const promptTemplateDoc = await promptTemplates.get();
+  const coverLetterTemplate =
+    promptTemplateDoc.exists && promptTemplateDoc.data();
 
-Your task is to create a personalized, professional cover letter that effectively matches the candidate's experience with the job requirements.
+  if (!coverLetterTemplate) return "";
 
-CANDIDATE INFORMATION:
-Company: ${jobApplication?.companyName}
-Position: ${jobApplication?.position}
-
-RESUME CONTENT:
-${resume.text}
-
-JOB DESCRIPTION:
-${jobDescription}
-
-INSTRUCTIONS:
-1. Write a professional cover letter that:
-   - Opens with a strong, engaging introduction that shows enthusiasm for the specific role and company
-   - Highlights 2-3 of the most relevant experiences and achievements from the resume that directly align with the job requirements
-   - Demonstrates understanding of the company's needs and how the candidate can add value
-   - Uses specific examples and quantifiable achievements when available
-   - Maintains a professional yet personable tone
-   - Closes with a clear call to action
-
-2. Structure:
-   - Professional salutation (use "Dear Hiring Manager" if no specific name is available)
-   - 3-4 concise paragraphs (opening, 1-2 body paragraphs highlighting relevant experience, closing)
-   - Professional sign-off, make sure to include user's name and last name at the end
-
-3. Style Guidelines:
-   - Keep it concise (150-200 words)
-   - Use active voice
-   - Avoid clichés and generic statements
-   - Tailor language to match the company's tone (formal for traditional companies, slightly more casual for startups)
-   - Do not repeat the resume verbatim; instead, expand on key points with context
-
-4. DO NOT:
-   - Include placeholder text like [Your Name] or [Date]
-   - Add contact information headers (these will be added separately)
-   - Make up information not present in the resume
-   - Use overly aggressive or desperate language
-
-Generate the cover letter body text only, starting with the salutation and ending with the sign-off.`;
+  return coverLetterTemplate.template
+    .replace("{{ companyName }}", jobApplication.companyName)
+    .replace("{{ position }}", jobApplication.position)
+    .replace("{{ resumeText }}", resume.text)
+    .replace("{{ jobDescription }}", jobDescription);
 }
 
 async function generateCoverLetterWithAI(
-  jobApplication: any,
-  resume: any,
+  jobApplication: firestore.DocumentData,
+  resume: firestore.DocumentData,
   jobDescription: string,
 ): Promise<string> {
-  const prompt = buildCoverLetterPrompt(jobApplication, resume, jobDescription);
+  const prompt = await buildCoverLetterPrompt(
+    jobApplication,
+    resume,
+    jobDescription,
+  );
   const result = await ai.generate({ prompt });
   return result.text.trim();
 }
