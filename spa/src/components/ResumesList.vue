@@ -33,13 +33,24 @@
               </p>
               <p
                 v-if="resume.status === 'parsed'"
-                class="flex items-center text-xs gap-2 mt-2"
+                class="flex items-center text-xs gap-1 mt-2"
               >
+                <PhEnvelopeSimple class="text-emerald-500" :size="16" />
+
                 Ready for cover letters
-                <PhCheckFat class="text-emerald-500" weight="fill" :size="16" />
               </p>
             </div>
           </div>
+          <Alert
+            v-if="resume.status === 'parse-failed'"
+            variant="destructive"
+            class="mt-3"
+          >
+            <PhXCircle class="text-red-500" weight="fill" :size="16" />
+            <AlertDescription>
+              Parsing Error, try uploading again
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>
@@ -73,7 +84,12 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import { PhCheckFat, PhFilePdf, PhTrash } from "@phosphor-icons/vue";
+import {
+  PhEnvelopeSimple,
+  PhFilePdf,
+  PhTrash,
+  PhXCircle,
+} from "@phosphor-icons/vue";
 import type { Resume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
@@ -86,6 +102,7 @@ import {
 } from "@/components/ui/empty";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const user = useCurrentUser();
 const storage = useFirebaseStorage();

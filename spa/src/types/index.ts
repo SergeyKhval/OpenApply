@@ -84,7 +84,7 @@ export type Resume = {
   fileName: string;
   fileSize: number;
   url: string;
-  status: "uploaded" | "parsed";
+  status: "uploaded" | "parsed" | "parse-failed";
   storagePath: string;
   createdAt: Timestamp;
 };

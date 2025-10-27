@@ -46,7 +46,7 @@
             :key="resume.id"
             class="flex flex-col items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
           >
-            <div class="flex gap-4">
+            <div class="flex gap-4 grow">
               <PhFilePdf :size="32" class="shrink-0 text-primary mt-1" />
 
               <div class="flex items-start justify-between gap-2 grow">
@@ -64,7 +64,7 @@
                       v-if="resume.status === 'parsed'"
                       class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
                     >
-                      <PhCheckFat weight="fill" class="text-emerald-500" />
+                      <PhEnvelopeSimple class="text-emerald-500" />
                       Ready for cover letters
                     </p>
                     <p
@@ -80,6 +80,7 @@
             </div>
             <div class="flex items-center gap-2 mt-2">
               <Button
+                v-if="resume.id !== currentResumeId"
                 size="sm"
                 variant="default"
                 @click="handleSelect(resume.id)"
@@ -108,7 +109,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { PhCheckFat, PhFilePdf } from "@phosphor-icons/vue";
+import { PhCheckFat, PhEnvelopeSimple, PhFilePdf } from "@phosphor-icons/vue";
 import {
   Dialog,
   DialogDescription,
