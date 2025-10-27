@@ -1,0 +1,70 @@
+{
+  "name": "openapply-spa",
+  "version": "1.0.0",
+  "description": "OpenApply Vue SPA - Main application interface",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Sergey Khval",
+  "homepage": "https://openapply.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SergeyKhval/OpenApply.git",
+    "directory": "spa"
+  },
+  "bugs": {
+    "url": "https://github.com/SergeyKhval/OpenApply/issues"
+  },
+  "keywords": [
+    "vue",
+    "vite",
+    "spa",
+    "job-tracking",
+    "firebase"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@internationalized/date": "^3.9.0",
+    "@phosphor-icons/vue": "^2.2.1",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/papaparse": "^5.3.16",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
+    "@vueuse/core": "^13.9.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.3.0",
+    "lodash": "^4.17.21",
+    "lucide-vue-next": "^0.544.0",
+    "papaparse": "^5.5.3",
+    "pinia": "^3.0.3",
+    "posthog-js": "^1.279.3",
+    "reka-ui": "^2.5.0",
+    "tailwind-merge": "^3.3.1",
+    "tw-animate-css": "^1.3.8",
+    "vue": "^3.5.21",
+    "vue-router": "^4.5.1",
+    "vuefire": "^3.2.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.5.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-vue": "^10.5.0",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "unplugin-vue-router": "^0.15.0",
+    "vite": "^7.1.7",
+    "vue-tsc": "^3.0.8"
+  },
+  "packageManager": "pnpm@10.18.2+sha512.9fb969fa749b3ade6035e0f109f0b8a60b5d08a1a87fdf72e337da90dcc93336e2280ca4e44f2358a649b83c17959e9993e777c2080879f3801e6f0d999ad3dd"
+}

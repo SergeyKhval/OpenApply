@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "<firebase_project_id>",
+  },
+  "targets": {},
+  "etags": {}
+}

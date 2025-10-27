@@ -1,0 +1,715 @@
+---
+import PostHog from "../components/posthog.astro";
+---
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link
+                href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+                rel="stylesheet"
+        />
+
+    <title>OpenApply — Job Application Tracker with Paste-a-Link Import and Pay-as-You-Go AI Cover Letters</title>
+    <meta
+      name="description"
+      content="Track your job applications without the subscription guilt. Import your spreadsheet, paste a job link to auto-fill, and use credits only when you need AI cover letters."
+    />
+    <meta name="author" content="OpenApply" />
+    <meta name="keywords" content="job application tracker, job tracker app, AI cover letter generator, job tracker for software engineers, paste job link import, spreadsheet import job tracker, pay as you go job search tools" />
+
+    <meta
+      property="og:title"
+      content="OpenApply — Job Application Tracker with Paste-a-Link Import and Pay-as-You-Go AI Cover Letters"
+    />
+    <meta
+      property="og:description"
+      content="Track your job applications without the subscription guilt. Import your spreadsheet, paste a job link to auto-fill, and use credits only when you need AI cover letters."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="generator" content={Astro.generator} />
+    {import.meta.env.PUBLIC_POSTHOG_API_KEY &&
+      (<PostHog
+        apiKey={import.meta.env.PUBLIC_POSTHOG_API_KEY}
+        apiHost={import.meta.env.PUBLIC_POSTHOG_HOST}
+      />)
+    }
+	</head>
+	<body>
+  <div id="root">
+    <div
+      class="bg-background text-foreground antialiased"
+    >
+      <div>
+        <slot />
+        <section
+          class="relative flex min-h-screen items-center justify-center overflow-hidden"
+        >
+          <div
+            class="absolute inset-0 bg-linear-to-br from-primary/15 via-background to-secondary/20"
+          ></div>
+          <div
+            class="pointer-events-none absolute -left-32 top-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl"
+          ></div>
+          <div
+            class="pointer-events-none absolute bottom-12 right-6 h-72 w-72 rounded-full bg-accent/25 blur-3xl"
+          ></div>
+          <div class="container mx-auto px-4 py-20 relative z-10">
+            <div class="flex flex-col gap-8 items-center">
+              <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium shadow-sm"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-circle-check w-4 h-4"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m9 12 2 2 4-4"></path></svg
+                ><span>Job search without the subscription guilt</span>
+              </div>
+              <h1
+                class="bg-linear-to-r from-primary via-foreground to-primary bg-clip-text text-transparent text-5xl lg:text-6xl font-bold leading-tight tracking-tight drop-shadow-sm text-center"
+              >
+                Track applications. Paste job links. <br /> Get tailored cover letters.
+              </h1>
+              <p class="text-xl text-muted-foreground max-w-2xl text-center">
+                You've got a job and a life. OpenApply keeps the hunt tidy - import your spreadsheet, paste a job URL to auto-fill the basics, and spin up a focused cover letter only when you need it.
+              </p>
+              <div class="flex flex-col items-center gap-3">
+                <div class="flex items-center gap-4">
+                  <a
+                    href="/app"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 bg-linear-to-r from-primary via-foreground to-primary hover:opacity-90 transition-opacity shadow-lg shadow-primary/40"
+                  >
+                    Get Started Free<svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-arrow-right ml-2 w-4 h-4"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                  </a>
+                </div>
+                <p class="text-sm text-muted-foreground">No subscription needed.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="relative py-24 scroll-mt-16">
+          <div class="absolute inset-0 -z-10 bg-muted/40"></div>
+          <div
+            class="absolute inset-x-0 top-0 -z-10 h-px bg-linear-to-r from-transparent via-border to-transparent"
+          ></div>
+          <div class="container mx-auto relative px-4">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+              <h2 class="text-4xl font-bold mb-4">
+                How It Works
+              </h2>
+              <p class="text-xl text-muted-foreground">
+                Three simple steps to organize your job search.
+              </p>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div class="text-center space-y-4">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
+                  <span class="text-2xl font-bold text-primary">1</span>
+                </div>
+                <h3 class="text-xl font-semibold">Import your existing spreadsheet</h3>
+                <p class="text-muted-foreground">
+                  Bring your current tracking file and keep your history intact.
+                </p>
+              </div>
+              <div class="text-center space-y-4">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
+                  <span class="text-2xl font-bold text-primary">2</span>
+                </div>
+                <h3 class="text-xl font-semibold">Paste a job link</h3>
+                <p class="text-muted-foreground">
+                  We parse the page and fill in the role, company, and key details in seconds.
+                </p>
+              </div>
+              <div class="text-center space-y-4">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
+                  <span class="text-2xl font-bold text-primary">3</span>
+                </div>
+                <h3 class="text-xl font-semibold">Generate a tailored cover letter</h3>
+                <p class="text-muted-foreground">
+                  Use your resume + the job post to draft a clean, editable letter.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="relative py-24 scroll-mt-16">
+          <div class="container mx-auto relative px-4">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+              <h2 class="text-4xl font-bold mb-4">
+                Real Features. No Fluff.
+              </h2>
+              <p class="text-xl text-muted-foreground">
+                What OpenApply actually does well.
+              </p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-link w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Paste-a-link import</h3>
+                  <p class="text-muted-foreground">
+                    Add roles from job URLs without copy-paste gymnastics.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-layout-list w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                      <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                      <path d="M14 4h7"></path>
+                      <path d="M14 9h7"></path>
+                      <path d="M14 15h7"></path>
+                      <path d="M14 20h7"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Organized dashboard</h3>
+                  <p class="text-muted-foreground">
+                    Statuses, notes, due dates, and tags — tidy beats fancy.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-sparkles w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                      <path d="M20 3v4"></path>
+                      <path d="M22 5h-4"></path>
+                      <path d="M4 17v2"></path>
+                      <path d="M5 18H3"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Quick cover letters</h3>
+                  <p class="text-muted-foreground">
+                    AI that actually reads the job post and your resume.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-file-text w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                      <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                      <path d="M10 9H8"></path>
+                      <path d="M16 13H8"></path>
+                      <path d="M16 17H8"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Resume & letters in one place</h3>
+                  <p class="text-muted-foreground">
+                    Keep your documents where you work.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-upload w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" x2="12" y1="3" y2="15"></line>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Spreadsheet onboarding</h3>
+                  <p class="text-muted-foreground">
+                    Start in minutes, not hours.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+              >
+                <div class="p-6 space-y-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-linear-to-br from-primary/90 via-primary to-accent shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-coins w-6 h-6 text-primary-foreground"
+                      aria-hidden="true"
+                    >
+                      <circle cx="8" cy="8" r="6"></circle>
+                      <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
+                      <path d="M7 6h1v4"></path>
+                      <path d="m16.71 13.88.7.71-2.82 2.82"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold">Pay-as-you-go</h3>
+                  <p class="text-muted-foreground">
+                    Tracking is free. Credits only when you use AI.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="relative py-24 scroll-mt-16">
+          <div class="absolute inset-0 -z-10 bg-muted/40"></div>
+          <div
+            class="absolute inset-x-0 top-0 -z-10 h-px bg-linear-to-r from-transparent via-border to-transparent"
+          ></div>
+          <div class="container mx-auto relative px-4">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+              <h2 class="text-4xl font-bold mb-4">
+                Free to track. Pay as you go for AI.
+              </h2>
+              <p class="text-xl text-muted-foreground">
+                Track as many applications as you want — free. When you want a tailored cover letter, use credits. No monthly plans. No annual guilt. Just buy credits when you need them.
+              </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <!-- Free Forever Card -->
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
+              >
+                <h3 class="text-2xl font-bold mb-6">Free Forever</h3>
+                <ul class="space-y-4 flex-grow">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Unlimited application tracking</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Notes, due dates, and tags</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Document storage (limits may apply later)</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Spreadsheet/file import</span>
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <a
+                    href="/app"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
+                  >
+                    Get Started
+                  </a>
+                </div>
+              </div>
+              <!-- Self-Host Card -->
+              <div
+                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
+              >
+                <h3 class="text-2xl font-bold mb-6">Self‑Host</h3>
+                <ul class="space-y-4 flex-grow">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Run locally or on your own infra</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>All core features included</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Bring your own API keys</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Setup guide in README</span>
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <a
+                    href="https://github.com/SergeyKhval/OpenApply"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
+                  >
+                    View on GitHub
+                  </a>
+                </div>
+              </div>
+              <!-- Pay-as-you-go Card -->
+              <div
+                class="rounded-lg text-card-foreground border border-primary/40 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
+              >
+                <h3 class="text-2xl font-bold mb-6">Pay-as-you-go Credits</h3>
+                <ul class="space-y-4 flex-grow">
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>Only used for AI features</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>USD billing</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                    <span>No subscriptions, no lock-in</span>
+                  </li>
+                </ul>
+                <div class="mt-8">
+                  <a
+                    href="/app"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
+                  >
+                    Start Free
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="relative py-24 scroll-mt-16">
+          <div class="container mx-auto relative px-4">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+              <h2 class="text-4xl font-bold mb-4">
+                Frequently Asked Questions
+              </h2>
+            </div>
+            <div class="max-w-3xl mx-auto space-y-6">
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">How do credits work?</h3>
+                <p class="text-muted-foreground">
+                  Credits are only spent on AI features like generating cover letters. Tracking is free.
+                </p>
+              </div>
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">Can I import my spreadsheet?</h3>
+                <p class="text-muted-foreground">
+                  Yes. Bring your CSV or export from your spreadsheet and you're set.
+                </p>
+              </div>
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">Which job boards do you support?</h3>
+                <p class="text-muted-foreground">
+                  Paste a job link from most popular boards and we'll parse the basics. If a site is weird, you can still add it manually.
+                </p>
+              </div>
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">Do you have a Kanban board or charts?</h3>
+                <p class="text-muted-foreground">
+                  Not yet. We focus on a fast, clean dashboard with statuses, notes, due dates, and tags.
+                </p>
+              </div>
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">Do you have a browser extension?</h3>
+                <p class="text-muted-foreground">
+                  Not yet.
+                </p>
+              </div>
+              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
+                <h3 class="text-lg font-semibold mb-2">Which currencies do you support?</h3>
+                <p class="text-muted-foreground">
+                  USD only for now.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer
+          class="relative border-t border-border/60 bg-card/70 py-12 backdrop-blur"
+        >
+          <div
+            class="pointer-events-none absolute inset-x-0 top-0 -mt-px h-px bg-linear-to-r from-transparent via-primary/40 to-transparent"
+          ></div>
+          <div class="container relative mx-auto px-4">
+            <div class="text-center text-sm text-muted-foreground">
+              <p>© 2025 OpenApply. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+	</body>
+</html>
+
+<style>
+	/* Phosphor Icons CSS */
+	@import url("https://unpkg.com/@phosphor-icons/web@2.1.2/src/regular/style.css");
+	
+	html {
+		scroll-behavior: smooth;
+	}
+	
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>

@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Per-user resumes folder
+    match /resumes/{userId}/{fileName} {
+      // Allow the owner to read their own files
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow the owner to upload/replace files only if it's a PDF
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.contentType == 'application/pdf';
+
+      // Allow the owner to delete their own files
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write, delete: if false;
+    }
+  }
+}

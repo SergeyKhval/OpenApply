@@ -1,0 +1,74 @@
+<svg
+    version="1.0"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    width="512"
+    height="512"
+    viewBox="0 0 512 512"
+  >
+    <svg id="global-svg-defs" version="1.0" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 340.000000 250.000000" preserveAspectRatio="xMidYMid meet" color-interpolation-filters="sRGB" class="el-tooltip" style="margin: auto;" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+      <pattern id="watermark" patternUnits="userSpaceOnUse" width="100%" height="100%">
+        <image xlink:href="https://www.logoai.com/img/watermark/LOGOAI-watermark.png" x="0" y="0" width="100%" height="100%">
+        </image>
+      </pattern>
+                    <linearGradient id="92" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#fa71cd"></stop>
+          <stop offset="100%" stop-color="#9b59b6"></stop>
+        </linearGradient>
+              <linearGradient id="93" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f9d423"></stop>
+          <stop offset="100%" stop-color="#f83600"></stop>
+        </linearGradient>
+              <linearGradient id="94" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#0064d2"></stop>
+          <stop offset="100%" stop-color="#1cb0f6"></stop>
+        </linearGradient>
+              <linearGradient id="95" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f00978"></stop>
+          <stop offset="100%" stop-color="#3f51b1"></stop>
+        </linearGradient>
+              <linearGradient id="96" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#7873f5"></stop>
+          <stop offset="100%" stop-color="#ec77ab"></stop>
+        </linearGradient>
+              <linearGradient id="97" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f9d423"></stop>
+          <stop offset="100%" stop-color="#e14fad"></stop>
+        </linearGradient>
+              <linearGradient id="98" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#009efd"></stop>
+          <stop offset="100%" stop-color="#2af598"></stop>
+        </linearGradient>
+              <linearGradient id="99" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffcc00"></stop>
+          <stop offset="100%" stop-color="#00b140"></stop>
+        </linearGradient>
+              <linearGradient id="100" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#d51007"></stop>
+          <stop offset="100%" stop-color="#ff8177"></stop>
+        </linearGradient>
+              <linearGradient id="102" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#a2b6df"></stop>
+          <stop offset="100%" stop-color="#0c3483"></stop>
+        </linearGradient>
+              <linearGradient id="103" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#7ac5d8"></stop>
+          <stop offset="100%" stop-color="#eea2a2"></stop>
+        </linearGradient>
+              <linearGradient id="104" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00ecbc"></stop>
+          <stop offset="100%" stop-color="#007adf"></stop>
+        </linearGradient>
+          </defs>
+  </svg>
+    <rect
+      x="0"
+      y="0"
+      width="100%"
+      height="100%"
+      fill="transparent"
+      fill-opacity="1"
+    ></rect>
+    <svg data-v-0dd9719b="" version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" color-interpolation-filters="sRGB" style="margin: auto;"> <rect data-v-0dd9719b="" x="0" y="0" width="100%" height="100%" fill="#ffffff" fill-opacity="1" class="background" style="display: none;"/> <rect data-v-0dd9719b="" x="0" y="0" width="100%" height="100%" fill="url(#watermark)" fill-opacity="1" class="watermarklayer" style="display: none;"/> <g data-v-0dd9719b="" fill="#333" class="iconsvg-imagesvg"><rect fill="#333" fill-opacity="0" stroke-width="2" x="0" y="0" width="100" height="100" class="image-rect"/> <svg viewBox="0 0 60 60" x="0" y="0" width="100" height="100" class="image-svg-svg bn" style="overflow: visible;"><g hollow-target="iconBnFill" mask="url(#d340508b-783a-4dcf-8373-7f511bf93bca)"><g><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" viewBox="0 0 60 60" version="1.1" x="0" y="0" style="overflow: visible;" width="60" height="60" filtersec="colorsb1522556098" filter="url(#I_3DOjdKXLb-HhD5zfila)"><g transform="scale(1, 1) skewX(0)"><title>96 - Rounded (Solid)</title><desc>Created with Sketch.</desc><g stroke="none" stroke-width="1" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup"><path d="M49.001,0 L10.999,0 C4.934,0 0,4.934 0,10.999 L0,49.001 C0,55.066 4.934,60 10.999,60 L49.001,60 C55.065,60 60,55.066 60,49.001 L60,10.999 C60,4.934 55.065,0 49.001,0" sketch:type="MSShapeGroup"/></g></g></g><defs><filter id="I_3DOjdKXLb-HhD5zfila"><feColorMatrix type="matrix" values="0 0 0 0 0.19921875  0 0 0 0 0.19921875  0 0 0 0 0.19921875  0 0 0 1 0"/></filter></defs></svg></g> <g filter="url(#colors1395711962)"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 93.67200000000001 51.120000000000005" width="45" height="45" x="7.5" y="7.5" class="image-svg-letter"><path transform="translate(-0.792 51.120000000000005)" d="M0.79 0L6.48 0C10.08 0 11.30-0.94 12.46-4.18L15.62-13.10L32.90-13.10L36.07-4.18C37.22-0.94 38.52 0 42.12 0L47.74 0L47.74-7.99L46.58-7.99C45.36-7.99 44.78-8.28 44.35-9.58L29.23-51.12L19.37-51.12L4.18-9.58C3.74-8.28 3.17-7.99 1.94-7.99L0.79-7.99ZM17.78-20.88L22.18-33.70C23.11-36.50 24.19-41.33 24.19-41.33L24.34-41.33C24.34-41.33 25.42-36.50 26.35-33.70L30.74-20.88ZM67.32 0L76.75 0L76.75-43.13L84.60-43.13C85.61-43.13 86.18-42.55 86.18-41.54L86.18-38.45L94.46-38.45L94.46-46.51C94.46-49.90 93.31-51.12 89.86-51.12L54.22-51.12C50.76-51.12 49.61-49.90 49.61-46.51L49.61-38.45L57.89-38.45L57.89-41.54C57.89-42.55 58.46-43.13 59.47-43.13L67.32-43.13Z"/></svg></g></g><mask id="d340508b-783a-4dcf-8373-7f511bf93bca"><g fill="white"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" viewBox="0 0 60 60" version="1.1" x="0" y="0" style="overflow: visible;" width="60" height="60" filtersec="colorsb1522556098"><g transform="scale(1, 1) skewX(0)"><title>96 - Rounded (Solid)</title><desc>Created with Sketch.</desc><g stroke="white" stroke-width="1" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup"><path d="M49.001,0 L10.999,0 C4.934,0 0,4.934 0,10.999 L0,49.001 C0,55.066 4.934,60 10.999,60 L49.001,60 C55.065,60 60,55.066 60,49.001 L60,10.999 C60,4.934 55.065,0 49.001,0" sketch:type="MSShapeGroup"/></g></g></g><defs/></svg></g> <g fill="black"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 93.67200000000001 51.120000000000005" width="45" height="45" x="7.5" y="7.5" class="image-svg-letter"><path transform="translate(-0.792 51.120000000000005)" d="M0.79 0L6.48 0C10.08 0 11.30-0.94 12.46-4.18L15.62-13.10L32.90-13.10L36.07-4.18C37.22-0.94 38.52 0 42.12 0L47.74 0L47.74-7.99L46.58-7.99C45.36-7.99 44.78-8.28 44.35-9.58L29.23-51.12L19.37-51.12L4.18-9.58C3.74-8.28 3.17-7.99 1.94-7.99L0.79-7.99ZM17.78-20.88L22.18-33.70C23.11-36.50 24.19-41.33 24.19-41.33L24.34-41.33C24.34-41.33 25.42-36.50 26.35-33.70L30.74-20.88ZM67.32 0L76.75 0L76.75-43.13L84.60-43.13C85.61-43.13 86.18-42.55 86.18-41.54L86.18-38.45L94.46-38.45L94.46-46.51C94.46-49.90 93.31-51.12 89.86-51.12L54.22-51.12C50.76-51.12 49.61-49.90 49.61-46.51L49.61-38.45L57.89-38.45L57.89-41.54C57.89-42.55 58.46-43.13 59.47-43.13L67.32-43.13Z"/></svg></g></mask></svg> <defs><filter id="colors1395711962"><feColorMatrix type="matrix" values="0 0 0 0 0.19921875  0 0 0 0 0.19921875  0 0 0 0 0.19921875  0 0 0 1 0" class="icon-fecolormatrix"/></filter> <filter id="colorsf6454584946"><feColorMatrix type="matrix" values="0 0 0 0 0.99609375  0 0 0 0 0.99609375  0 0 0 0 0.99609375  0 0 0 1 0" class="icon-fecolormatrix"/></filter> <filter id="colorsb1522556098"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" class="icon-fecolormatrix"/></filter></defs></g><defs v-gra="od"/></svg>
+  </svg>
