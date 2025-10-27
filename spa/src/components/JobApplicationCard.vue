@@ -185,6 +185,7 @@ const JOB_STATUSES: JobStatus[] = [
   "interviewing",
   "offered",
   "hired",
+  "rejected",
   "archived",
 ];
 

@@ -6,6 +6,7 @@ export type JobStatus =
   | "interviewing"
   | "offered"
   | "hired"
+  | "rejected"
   | "archived";
 
 export type JobApplication = {

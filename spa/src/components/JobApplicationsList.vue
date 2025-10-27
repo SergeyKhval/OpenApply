@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, toRef } from "vue";
+import { computed, inject } from "vue";
 import { PhFileCsv, PhFileDashed, PhPlus } from "@phosphor-icons/vue";
 import type { JobStatus } from "@/types";
 import JobApplicationCard from "@/components/JobApplicationCard.vue";
@@ -114,16 +114,9 @@ import { Button } from "@/components/ui/button";
 
 type StatusFilter = JobStatus | "all";
 
-const props = withDefaults(
-  defineProps<{
-    statusFilter?: StatusFilter;
-  }>(),
-  {
-    statusFilter: "all",
-  },
-);
-
-const statusFilter = toRef(props, "statusFilter");
+const { statusFilter = "all" } = defineProps<{
+  statusFilter?: StatusFilter;
+}>();
 
 const search = inject(SearchSymbol);
 
@@ -143,15 +136,13 @@ const dashboardApplications = computed(() =>
   ),
 );
 
-const filteredByStatus = computed(() => {
-  if (statusFilter.value === "all") {
-    return dashboardApplications.value;
-  }
-
-  return dashboardApplications.value.filter(
-    (application) => application.status === statusFilter.value,
-  );
-});
+const filteredByStatus = computed(() =>
+  statusFilter === "all"
+    ? dashboardApplications.value
+    : jobApplications.value.filter(
+        (application) => application.status === statusFilter,
+      ),
+);
 
 const filteredApplications = computed(() => {
   const searchValue = search?.value ?? "";

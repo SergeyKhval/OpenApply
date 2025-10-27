@@ -335,6 +335,7 @@ const statusBar = computed(() => {
       interviewing: "Interviewing",
       offered: "Job Offer",
       hired: "Hired",
+      rejected: "",
       archived: "",
     }[status],
     isActive: index <= activeStatusIndex,

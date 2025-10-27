@@ -50,6 +50,7 @@ const statusOptions = [
   { label: "Interviewing", value: "interviewing" as const },
   { label: "Offered", value: "offered" as const },
   { label: "Hired", value: "hired" as const },
+  { label: "Rejected", value: "rejected" as const },
 ];
 
 provide(
