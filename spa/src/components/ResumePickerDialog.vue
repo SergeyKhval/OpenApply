@@ -54,19 +54,27 @@
                   <p class="font-medium break-all">
                     {{ resume.fileName }}
                   </p>
-                  <p
-                    v-if="resume.id === currentResumeId"
-                    class="text-sm flex items-center gap-1 text-muted-foreground font-normal mb-2"
-                  >
-                    <PhCheckFat
-                      weight="fill"
-                      class="text-emerald-500"
-                    />(Currently attached)
-                  </p>
+
                   <p class="text-sm text-muted-foreground">
                     {{ formatFileSize(resume.fileSize) }} •
                     {{ formatDate(resume.createdAt) }}
                   </p>
+                  <div class="mt-1 flex flex-col text-xs">
+                    <p
+                      v-if="resume.status === 'parsed'"
+                      class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
+                    >
+                      <PhCheckFat weight="fill" class="text-emerald-500" />
+                      Ready for cover letters
+                    </p>
+                    <p
+                      v-if="resume.id === currentResumeId"
+                      class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
+                    >
+                      <PhCheckFat weight="fill" class="text-emerald-500" />
+                      Currently attached
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

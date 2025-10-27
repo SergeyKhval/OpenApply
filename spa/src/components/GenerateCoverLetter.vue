@@ -318,7 +318,10 @@ const uploadResumeButtonRef = useTemplateRef("uploadResumeButtonRef");
 
 const { generateCoverLetter } = useCoverLetters();
 const { jobApplications } = useJobApplicationsData();
-const resumes = useResumes();
+const resumesCollection = useResumes();
+const resumes = computed(() =>
+  resumesCollection.value.filter((r) => r.status === "parsed"),
+);
 const { userProfile } = useAuth();
 const { startCheckout, isProcessing: generatingStripeLink } =
   useCreditsCheckout();
