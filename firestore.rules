@@ -3,6 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
+    }
+
     function canRead() {
       return request.auth != null;
     }
@@ -69,6 +73,13 @@ service cloud.firestore {
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
+    }
+
+    match /promptTemplates/{promptTemplateId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /users/{userId} {

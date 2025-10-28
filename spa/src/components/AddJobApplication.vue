@@ -81,6 +81,19 @@
                 {{ ingestionError }}
               </AlertDescription>
             </Alert>
+            <Alert
+              v-if="
+                !latestSnapshot?.parsedData?.companyName ||
+                !latestSnapshot?.parsedData?.position
+              "
+              class="mb-2"
+            >
+              <PhWarning />
+              <AlertDescription>
+                We couldn't scrape all job data. Please fill the missing parts
+                manually
+              </AlertDescription>
+            </Alert>
             <JobApplicationForm
               :company-name="latestSnapshot?.parsedData?.companyName || ''"
               :position="latestSnapshot?.parsedData?.position || ''"
@@ -113,6 +126,7 @@ import {
   PhPencilSimple,
   PhSkipForward,
   PhSpinner,
+  PhWarning,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useVuelidate } from "@vuelidate/core";

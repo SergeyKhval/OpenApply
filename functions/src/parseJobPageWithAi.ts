@@ -3,6 +3,7 @@ import { defineString } from "firebase-functions/params";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
+import { firestore } from "firebase-admin";
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -24,6 +25,22 @@ const JobSchema = z.object({
 type Job = z.infer<typeof JobSchema>;
 
 defineString("GEMINI_API_KEY");
+
+async function buildJobParserPrompt(
+  job: firestore.DocumentData,
+): Promise<string> {
+  const jobParserTemplateDoc = await db
+    .collection("promptTemplates")
+    .doc("jobParser")
+    .get();
+
+  const jobParserTemplate =
+    jobParserTemplateDoc.exists && jobParserTemplateDoc.data();
+
+  if (!jobParserTemplate) return "";
+
+  return jobParserTemplate.template.replace("{{ pageHtml }}", job.content);
+}
 
 export const parseJobPageWithAi = onDocumentWritten(
   "jobs/{docId}",
@@ -70,71 +87,7 @@ export const parseJobPageWithAi = onDocumentWritten(
       });
 
       // Create the prompt for structured extraction
-      const prompt = `System Role
-You are an expert data extraction model.
-Your task is to parse the provided HTML content and return a single valid JSON object that conforms exactly to the schema below.
-Output only raw JSON — no explanations, no markdown, no commentary.
-
-Schema:
-{
-  "companyName": "string | null",
-  "description": "string | null",
-  "position": "string | null",
-  "companyLogoUrl": "string | null",
-  "employmentType": "full-time | part-time | null",
-  "remotePolicy": "remote | in-office | hybrid | null",
-  "technologies": ["string", ...]
-}
-
-
-Extraction Guidelines:
-1. companyName
- - Extract from the visible job title area, company info block, or og:title / <title> tags.
- - If multiple candidates appear, choose the one directly associated with the posting.
- - If uncertain, return null.
-
-2. companyLogoUrl
- - Prefer meta[property="og:image"], then any <img> or <link> tag clearly tied to the company or job page.
- - Ensure URL is absolute (resolve relative paths if necessary).
- - If no clear logo, return null.
-
-3. position
- - Extract the job title from <h1> or relevant <title> / og:title tags.
- - Clean it of location or company name if appended.
-
-4. employmentType
- - Detect mentions of full-time, part-time, or variants (case-insensitive).
- - Return one of "full-time", "part-time", or null.
- - Do not infer based on tone or seniority.
-
-5. remotePolicy
- - Detect any indication of work model:
- - "remote" if fully remote,
- - "hybrid" if a mix of office and remote (e.g., “3 days per week in office”, “#LI-Hybrid”),
- - "in-office" if primarily on-site.
- - If absent or unclear, return null.
-
-6. description
- - Extract the main textual content describing the position, responsibilities, requirements, qualifications, and culture.
- - Remove boilerplate like “Apply now” or “Privacy notice.”
- - If the text exceeds 1000 words, summarize while preserving all key responsibilities and qualifications.
- - Keep it concise but information-rich.
-
-7. technologies
- - Extract explicit mentions of technical tools, programming languages, or methodologies (e.g., React, Python, Jira, Git, Scrum, AWS).
- - Return unique, normalized terms (capitalize proper names).
- - Omit duplicates and irrelevant nouns.
-
-8. Missing or uncertain data
- - If information is missing or unclear, set the field to null.
- - Do not fabricate or guess values.
- - Always ensure the output is valid JSON that can be parsed without errors.
-
-
-Parsing Context:
-The HTML content below represents a job posting. Extract data only from the visible textual and metadata content relevant to the posting.
-Ignore navigation, scripts, analytics, and unrelated footer text.
-${data.content}`;
+      const prompt = await buildJobParserPrompt(data);
 
       // Call the AI to extract structured data
       const result = await ai.generate({
