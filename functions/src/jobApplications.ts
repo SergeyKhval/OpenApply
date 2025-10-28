@@ -24,8 +24,7 @@ export const importJobApplications = onCall(async (request) => {
           return db.collection("jobApplications").add({
             ...application,
             userId: request.auth?.uid,
-            status: "applied",
-            appliedAt: FieldValue.serverTimestamp(),
+            status: "draft",
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
           });

@@ -124,6 +124,7 @@ const { jobApplications, isLoading: applicationsPending } =
   useJobApplicationsData();
 
 const ACTIVE_STATUSES: JobStatus[] = [
+  "draft",
   "applied",
   "interviewing",
   "offered",

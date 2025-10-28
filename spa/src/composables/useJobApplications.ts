@@ -8,11 +8,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useCurrentUser } from "vuefire";
-import type {
-  CreateJobApplicationInput,
-  JobStatus,
-} from "@/types";
-import { getLocalTimeZone, today } from "@internationalized/date";
+import type { CreateJobApplicationInput, JobStatus } from "@/types";
+import { getLocalTimeZone } from "@internationalized/date";
 
 export function useJobApplications() {
   const user = useCurrentUser();
@@ -25,14 +22,11 @@ export function useJobApplications() {
     }
 
     try {
-      const timezone = getLocalTimeZone();
       const docRef = await addDoc(collection(db, "jobApplications"), {
         ...payload,
-        status: "applied" as JobStatus,
+        status: "draft" as JobStatus,
         userId: user.value.uid,
         createdAt: serverTimestamp(),
-        appliedAt:
-          payload.appliedAt?.toDate(timezone) || today(timezone).toDate(timezone),
       });
 
       return { success: true, id: docRef.id };

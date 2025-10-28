@@ -46,6 +46,7 @@ const statusFilter = ref<JobStatus | "all">("all");
 
 const statusOptions = [
   { label: "All", value: "all" as const },
+  { label: "Draft", value: "draft" as const },
   { label: "Applied", value: "applied" as const },
   { label: "Interviewing", value: "interviewing" as const },
   { label: "Offered", value: "offered" as const },

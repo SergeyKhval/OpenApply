@@ -326,11 +326,18 @@ const { data: application } = useDocument<JobApplication>(
 
 const statusBar = computed(() => {
   if (!application.value) return [];
-  const statuses: JobStatus[] = ["applied", "interviewing", "offered", "hired"];
+  const statuses: JobStatus[] = [
+    "draft",
+    "applied",
+    "interviewing",
+    "offered",
+    "hired",
+  ];
   const activeStatusIndex = statuses.indexOf(application.value.status);
   return statuses.map((status, index) => ({
     status,
     name: {
+      draft: "Draft",
       applied: "Applied",
       interviewing: "Interviewing",
       offered: "Job Offer",

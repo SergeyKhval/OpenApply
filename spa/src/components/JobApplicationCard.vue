@@ -44,7 +44,7 @@
       </div>
       <div class="flex items-center gap-2 text-sm text-muted-foreground">
         <PhCalendar size="16" />
-        <span> Applied: {{ humanReadableAppliedAt }}</span>
+        <span> Created: {{ humanReadableCreatedAt }}</span>
       </div>
 
       <div
@@ -149,7 +149,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getLocalTimeZone } from "@internationalized/date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -181,6 +180,7 @@ import ResumeActionButton from "@/components/ResumeActionButton.vue";
 
 const DEFAULT_VISIBLE_TECHNOLOGIES = 5;
 const JOB_STATUSES: JobStatus[] = [
+  "draft",
   "applied",
   "interviewing",
   "offered",
@@ -197,11 +197,10 @@ const { application } = defineProps<JobApplicationCardProps>();
 
 const { updateJobApplicationStatus } = useUpdateJobApplicationStatus();
 
-const localTimezone = getLocalTimeZone();
 const showAllTechnologies = ref(false);
 
-const humanReadableAppliedAt = computed(() =>
-  application.appliedAt?.toDate(localTimezone).toLocaleDateString(),
+const humanReadableCreatedAt = computed(() =>
+  application.createdAt?.toDate().toLocaleDateString(),
 );
 
 const visibleTechnologies = computed(() => {

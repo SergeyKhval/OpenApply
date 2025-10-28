@@ -2,6 +2,7 @@ import { Timestamp } from "firebase/firestore";
 import { CalendarDate, ZonedDateTime } from "@internationalized/date";
 
 export type JobStatus =
+  | "draft"
   | "applied"
   | "interviewing"
   | "offered"

@@ -29,6 +29,14 @@ export function useUpdateJobApplicationStatus() {
       });
     else if (status === "archived")
       Object.assign(updates, { archivedAt: serverTimestamp() });
+    else if (status === "draft")
+      Object.assign(updates, {
+        appliedAt: null,
+        interviewedAt: null,
+        offeredAt: null,
+        hiredAt: null,
+        archivedAt: null,
+      });
 
     return updateDoc(doc(db, "jobApplications", applicationId), updates);
   }
