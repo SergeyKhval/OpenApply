@@ -50,7 +50,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.VITE_BASE_URL || "/app/"),
+  history: createWebHistory(import.meta.env.VITE_BASE_URL || "/app"),
   routes,
 });
 
