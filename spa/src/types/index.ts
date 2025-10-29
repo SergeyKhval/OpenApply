@@ -15,6 +15,7 @@ export type JobApplication = {
   companyName: string;
   companyLogoUrl?: string;
   position: string;
+  jobDescription: string;
   jobDescriptionLink?: string;
   technologies: string[];
   employmentType?: "full-time" | "part-time";

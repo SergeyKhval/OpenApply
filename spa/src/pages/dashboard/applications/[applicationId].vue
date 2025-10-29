@@ -129,19 +129,23 @@
 
       <div class="grid lg:grid-cols-2 gap-4">
         <div class="flex flex-col gap-4">
+          <JobApplicationDescription
+            v-if="application"
+            :application="application"
+          />
           <JobApplicationInterviews :application-id="applicationId" />
 
           <JobApplicationNotes :application-id="applicationId" />
         </div>
 
         <div class="flex flex-col gap-4">
-          <JobApplicationContacts :application-id="applicationId" />
-
           <JobApplicationAttachments
             :application-id="applicationId"
             :cover-letter-id="application?.coverLetterId"
             :resume-id="application?.resumeId"
           />
+
+          <JobApplicationContacts :application-id="applicationId" />
         </div>
       </div>
     </div>
@@ -181,6 +185,7 @@ import {
 } from "@/components/ui/tooltip";
 import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vue";
 import JobApplicationAttachments from "@/components/JobApplicationAttachments.vue";
+import JobApplicationDescription from "@/components/JobApplicationDescription.vue";
 
 type ApplicationPageProps = {
   applicationId: string;

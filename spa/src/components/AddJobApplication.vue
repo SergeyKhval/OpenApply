@@ -93,6 +93,9 @@
               :job-description-link="
                 latestSnapshot?.jobDescriptionLink || jobDescriptionLink || ''
               "
+              :job-description="
+                latestSnapshot?.parsedData?.jobDescription || ''
+              "
               :job-id="latestSnapshot?.id || ''"
               :parsing-failed="hasParsingFailure"
               @saved="onJobApplicationSaved"
@@ -167,9 +170,10 @@ const isProcessing = computed(
 
 const hasParsingFailure = computed(
   () =>
-    ["parse-failed", "failed"].includes(latestSnapshot.value?.status || "") ||
-    !latestSnapshot.value?.parsedData?.companyName ||
-    !latestSnapshot.value?.parsedData?.position,
+    !!latestSnapshot.value &&
+    (["parse-failed", "failed"].includes(latestSnapshot.value?.status || "") ||
+      !latestSnapshot.value?.parsedData?.companyName ||
+      !latestSnapshot.value?.parsedData?.position),
 );
 
 const prefilledRemotePolicy = computed<
