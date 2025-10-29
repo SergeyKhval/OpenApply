@@ -137,135 +137,11 @@
         <div class="flex flex-col gap-4">
           <JobApplicationContacts :application-id="applicationId" />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Attachments</CardTitle>
-            </CardHeader>
-            <CardContent class="flex flex-col gap-4 sm:flex-row">
-              <Empty
-                class="sm:w-50 relative pb-5 pt-10 px-2 gap-4"
-                :class="application?.resumeId && 'border-solid'"
-              >
-                <Badge variant="secondary" class="absolute top-2 left-2">
-                  Resume
-                </Badge>
-
-                <EmptyIcon
-                  :class="
-                    application?.resumeId &&
-                    'border-solid text-foreground border-foreground'
-                  "
-                >
-                  <PhFilePdf v-if="application?.resumeId" :size="36" />
-                  <PhReadCvLogo v-else :size="36" />
-                </EmptyIcon>
-                <EmptyDescription class="text-foreground">
-                  <div
-                    v-if="application?.resumeId"
-                    class="items-center gap-2 flex"
-                  >
-                    <Button size="sm" variant="outline" @click="openResume">
-                      <PhEye />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      @click="
-                        $router.replace({
-                          query: {
-                            ...$route.query,
-                            'dialog-name': 'resume-picker',
-                            'application-id': applicationId,
-                            'resume-id': application?.resumeId || '',
-                          },
-                        })
-                      "
-                    >
-                      <PhPencilSimple />
-                      Change
-                    </Button>
-                  </div>
-                  <template v-else>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      @click="
-                        $router.replace({
-                          query: {
-                            ...$route.query,
-                            'dialog-name': 'resume-picker',
-                            'application-id': applicationId,
-                            'resume-id': application?.resumeId || '',
-                          },
-                        })
-                      "
-                    >
-                      <PhFilePdf />
-                      Attach
-                    </Button></template
-                  >
-                </EmptyDescription>
-              </Empty>
-
-              <Empty
-                class="sm:w-50 pb-5 pt-10 px-2 gap-4 relative"
-                :class="{ 'border-solid': application?.coverLetterId }"
-              >
-                <Badge variant="secondary" class="absolute top-2 left-2"
-                  >Cover Letter</Badge
-                >
-                <EmptyIcon
-                  :class="{
-                    'border-solid text-foreground border-foreground':
-                      application?.coverLetterId,
-                  }"
-                >
-                  <PhEnvelopeSimpleOpen
-                    v-if="application?.coverLetterId"
-                    :size="36"
-                  />
-                  <PhEnvelopeSimple v-else :size="36" />
-                </EmptyIcon>
-                <EmptyDescription class="text-foreground">
-                  <Button
-                    v-if="application?.coverLetterId"
-                    variant="outline"
-                    size="sm"
-                    @click="
-                      $router.replace({
-                        query: {
-                          ...$route.query,
-                          'dialog-name': 'cover-letter-preview',
-                          'cover-letter-id': application.coverLetterId,
-                        },
-                      })
-                    "
-                  >
-                    <PhEye />
-                    View
-                  </Button>
-                  <Button
-                    v-else
-                    size="sm"
-                    variant="outline"
-                    @click="
-                      $router.replace({
-                        query: {
-                          ...$route.query,
-                          'dialog-name': 'generate-cover-letter',
-                          'application-id': applicationId,
-                        },
-                      })
-                    "
-                  >
-                    <PhSparkle />
-                    Generate
-                  </Button>
-                </EmptyDescription>
-              </Empty>
-            </CardContent>
-          </Card>
+          <JobApplicationAttachments
+            :application-id="applicationId"
+            :cover-letter-id="application?.coverLetterId"
+            :resume-id="application?.resumeId"
+          />
         </div>
       </div>
     </div>
@@ -273,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watchEffect } from "vue";
+import { computed } from "vue";
 import { useDocument } from "vuefire";
 import {
   collection,
@@ -305,14 +181,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { restoreJobApplication } from "@/firebase/restoreJobApplication.ts";
 import { getLocalTimeZone, today } from "@internationalized/date";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty";
 import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vue";
+import JobApplicationAttachments from "@/components/JobApplicationAttachments.vue";
 
 type ApplicationPageProps = {
   applicationId: string;
@@ -390,22 +265,6 @@ async function updateJobApplicationStatus(status: JobStatus) {
   }
 
   await updateDoc(doc(db, "jobApplications", application.value?.id), updates);
-}
-
-async function openResume() {
-  if (!application.value?.resumeId) return;
-
-  const resume = useDocument<Resume>(
-    doc(collection(db, "userResumes"), application.value.resumeId),
-    { once: true },
-  );
-
-  const unwatch = watchEffect(() => {
-    if (resume.value?.url) {
-      window.open(resume.value.url, "_blank");
-      unwatch();
-    }
-  });
 }
 </script>
 

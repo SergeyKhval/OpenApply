@@ -168,8 +168,9 @@ const isProcessing = computed(
 
 const hasParsingFailure = computed(
   () =>
-    latestSnapshot.value?.status === "parse-failed" ||
-    latestSnapshot.value?.status === "failed",
+    ["parse-failed", "failed"].includes(latestSnapshot.value?.status || "") ||
+    !latestSnapshot.value?.parsedData?.companyName ||
+    !latestSnapshot.value?.parsedData?.position,
 );
 
 const prefilledRemotePolicy = computed<
