@@ -91,7 +91,7 @@ onChange((files) => {
           fileName: file.name,
           fileSize: file.size,
           url: resumeUrl,
-          status: 'uploaded',
+          status: "uploaded",
           storagePath: metadata.value.fullPath,
           createdAt: serverTimestamp(),
         });
@@ -142,5 +142,6 @@ onChange((files) => {
   });
 });
 
+// todo: extract upload logic to composable
 defineExpose({ openFileDialog });
 </script>

@@ -31,27 +31,54 @@
                 {{ formatFileSize(resume.fileSize) }} •
                 {{ formatDate(resume.createdAt) }}
               </p>
-              <p
-                v-if="resume.status === 'parsed'"
-                class="flex items-center text-xs gap-1 mt-2"
-              >
-                <PhEnvelopeSimple class="text-emerald-500" :size="16" />
-
-                Ready for cover letters
-              </p>
             </div>
           </div>
-          <Alert
-            v-if="resume.status === 'parse-failed'"
-            variant="destructive"
-            class="mt-3"
-          >
-            <PhXCircle class="text-red-500" weight="fill" :size="16" />
+        </CardContent>
+        <CardFooter>
+          <!-- todo: figure out why some resumes are stuck in "uploaded" status -->
+          <Alert v-if="resume.status === 'parse-failed'" variant="destructive">
+            <PhXCircle class="text-destructive" weight="fill" :size="16" />
             <AlertDescription>
               Parsing Error, try uploading again
             </AlertDescription>
           </Alert>
-        </CardContent>
+          <div
+            v-else-if="resume.status === 'parsed'"
+            class="flex items-center gap-2"
+          >
+            <Button
+              size="sm"
+              @click="
+                $router.replace({
+                  query: {
+                    ...$route.query,
+                    'dialog-name': 'score-resume',
+                    'resume-id': resume.id,
+                  },
+                })
+              "
+            >
+              <PhScales />
+              AI Review
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              @click="
+                $router.replace({
+                  query: {
+                    ...$route.query,
+                    'dialog-name': 'generate-cover-letter',
+                    'resume-id': resume.id,
+                  },
+                })
+              "
+            >
+              <PhEnvelopeSimple />
+              Cover letter
+            </Button>
+          </div>
+        </CardFooter>
       </Card>
     </div>
     <Empty v-else class="py-12">
@@ -87,6 +114,7 @@ import { ref as storageRef, deleteObject } from "firebase/storage";
 import {
   PhEnvelopeSimple,
   PhFilePdf,
+  PhScales,
   PhTrash,
   PhXCircle,
 } from "@phosphor-icons/vue";
@@ -101,7 +129,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const user = useCurrentUser();

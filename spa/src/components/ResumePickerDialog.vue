@@ -25,7 +25,7 @@
           </EmptyDescription>
         </div>
         <EmptyAction>
-          <UploadResumeButton> Upload Resume </UploadResumeButton>
+          <UploadResumeButton>Upload Resume</UploadResumeButton>
         </EmptyAction>
       </Empty>
 
@@ -35,7 +35,7 @@
         class="flex flex-col w-full gap-4 sm:max-h-150 sm:overflow-y-auto"
       >
         <!-- Upload button at top when resumes exist -->
-        <div class="flex justify-end">
+        <div>
           <UploadResumeButton> Upload New Resume </UploadResumeButton>
         </div>
 
@@ -60,6 +60,7 @@
                     {{ formatDate(resume.createdAt) }}
                   </p>
                   <div class="mt-1 flex flex-col text-xs">
+                    <!-- todo: replace with a CTA to generate cover letter -->
                     <p
                       v-if="resume.status === 'parsed'"
                       class="flex items-center gap-1 text-muted-foreground font-normal mb-2"

@@ -45,7 +45,7 @@
         <!-- Loading State -->
         <div v-if="isProcessing" class="flex items-center flex-col py-8">
           <PhSpinner size="64" class="animate-spin" />
-          <p class="mt-4 text-muted-foreground">
+          <p class="mt-4 text-muted-foreground text-center">
             Generating your cover letter...
             <br />
             This may take 20-30 seconds. Hold tight!
@@ -99,100 +99,9 @@
           </Empty>
 
           <div v-else class="space-y-6">
-            <UploadResumeButton
-              ref="uploadResumeButtonRef"
-              :show-trigger="false"
-              @uploaded="handleResumeUploaded"
-            />
+            <JobApplicationSelect v-model="selectedJobApplicationId" />
 
-            <!-- Job Application Select -->
-            <div class="space-y-2 max-w-full">
-              <Label>Job Application</Label>
-              <Select
-                v-model="selectedJobApplicationId"
-                v-model:open="isJobApplicationSelectOpen"
-              >
-                <SelectTrigger class="w-full truncate">
-                  <SelectValue placeholder="Select a job application" />
-                </SelectTrigger>
-                <SelectContent class="max-w-[calc(100vw-5rem)]">
-                  <SelectItem
-                    v-for="app in filteredJobApplications"
-                    :key="app.id"
-                    :value="app.id"
-                  >
-                    <div class="flex items-center gap-2">
-                      <img
-                        v-if="app.companyLogoUrl"
-                        :src="app.companyLogoUrl"
-                        :alt="`${app.companyName} logo`"
-                        class="w-6 h-6 rounded object-cover"
-                      />
-                      <div
-                        v-else
-                        class="w-6 h-6 rounded bg-gray-100 flex items-center justify-center"
-                      >
-                        <PhBuildings :size="12" class="text-gray-400" />
-                      </div>
-                      <div>
-                        <span class="font-medium">{{ app.companyName }}</span>
-                        <span class="text-muted-foreground">
-                          - {{ app.position }}</span
-                        >
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="w-full justify-start"
-                    @click="
-                      $router.replace({
-                        query: {
-                          ...$route.query,
-                          'dialog-name': 'add-job-application',
-                        },
-                      })
-                    "
-                  >
-                    <PhPlus />
-                    Add new job application
-                  </Button>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <!-- Resume Select -->
-            <div class="space-y-2">
-              <Label>Resume</Label>
-              <Select v-model="selectedResumeId">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select a resume" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="resume in resumes"
-                    :key="resume.id"
-                    :value="resume.id"
-                  >
-                    <div class="flex items-center gap-2">
-                      <PhFile :size="16" class="text-gray-400" />
-                      <span>{{ resume.fileName }}</span>
-                    </div>
-                  </SelectItem>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    class="w-full justify-start mb-2"
-                    @click="uploadResumeButtonRef?.openFileDialog()"
-                  >
-                    <PhUploadSimple />
-                    Upload new resume
-                  </Button>
-                </SelectContent>
-              </Select>
-            </div>
+            <ResumeSelect v-model="selectedResumeId" />
 
             <!-- Manual Job Description (if needed) -->
             <div v-if="showManualJobDescription" class="space-y-2">
@@ -238,16 +147,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, useTemplateRef } from "vue";
+import { ref, computed, watch } from "vue";
 import {
-  PhBuildings,
   PhCoins,
   PhFile,
-  PhPlus,
   PhSparkle,
   PhSpinner,
   PhSuitcase,
-  PhUploadSimple,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import {
@@ -258,13 +164,6 @@ import {
   DialogScrollContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -284,12 +183,20 @@ import { useCreditsCheckout } from "@/composables/useCreditsCheckout";
 import CreditPackOptions from "@/components/CreditPackOptions.vue";
 import { omit } from "lodash";
 import { useRoute, useRouter } from "vue-router";
+import ResumeSelect from "@/components/inputs/ResumeSelect.vue";
+import JobApplicationSelect from "@/components/inputs/JobApplicationSelect.vue";
 
 type GenerateCoverLetterProps = {
   isOpen: boolean;
 };
 
 const { isOpen } = defineProps<GenerateCoverLetterProps>();
+watch(
+  () => isOpen,
+  (newValue) => {
+    if (!newValue) resetForm();
+  },
+);
 
 const router = useRouter();
 const route = useRoute();
@@ -307,21 +214,86 @@ watch(
   },
   { immediate: true },
 );
+
+const selectedJobApplication = computed(() => {
+  if (!selectedJobApplicationId.value || !jobApplications.value) return null;
+  return (
+    jobApplications.value.find(
+      (app) => app.id === selectedJobApplicationId.value,
+    ) || null
+  );
+});
+// Pre-select resume if job application has one linked
+watch(selectedJobApplication, (newApp) => {
+  if (newApp?.resumeId && resumes.value) {
+    const linkedResume = resumes.value.find((r) => r.id === newApp.resumeId);
+    if (linkedResume) {
+      selectedResumeId.value = linkedResume.id;
+    }
+  }
+});
+
 const selectedResumeId = ref("");
+watch(
+  () => route.query["resume-id"],
+  (newResumeId) => {
+    if (newResumeId && newResumeId !== selectedResumeId.value) {
+      selectedResumeId.value = newResumeId as string;
+    }
+  },
+  { immediate: true },
+);
 const manualJobDescription = ref("");
 const isProcessing = ref(false);
 const errorMessage = ref("");
 const pendingResumeId = ref<string | null>(null);
 const pendingJobApplicationId = ref<string | null>(null);
-const isJobApplicationSelectOpen = ref(false);
-const uploadResumeButtonRef = useTemplateRef("uploadResumeButtonRef");
 
 const { generateCoverLetter } = useCoverLetters();
+
 const { jobApplications } = useJobApplicationsData();
+watch(jobApplications, (newApplications) => {
+  if (pendingJobApplicationId.value && newApplications) {
+    const createdApplication = newApplications.find(
+      (app) => app.id === pendingJobApplicationId.value,
+    );
+
+    if (createdApplication) {
+      selectedJobApplicationId.value = createdApplication.id;
+      pendingJobApplicationId.value = null;
+    }
+  } else if (newApplications && newApplications.length) {
+    if (isOpen && !selectedJobApplicationId.value) {
+      selectedJobApplicationId.value = newApplications[0].id;
+    }
+  } else if (newApplications && newApplications.length === 0) {
+    selectedJobApplicationId.value = "";
+  }
+});
+
 const resumesCollection = useResumes();
 const resumes = computed(() =>
   resumesCollection.value.filter((r) => r.status === "parsed"),
 );
+watch(resumes, (newResumes) => {
+  if (pendingResumeId.value && newResumes) {
+    const createdResume = newResumes.find(
+      (resume) => resume.id === pendingResumeId.value,
+    );
+
+    if (createdResume) {
+      selectedResumeId.value = createdResume.id;
+      pendingResumeId.value = null;
+    }
+  } else if (newResumes && newResumes.length) {
+    if (isOpen && !selectedResumeId.value) {
+      selectedResumeId.value = newResumes[0].id;
+    }
+  } else if (newResumes && newResumes.length === 0) {
+    selectedResumeId.value = "";
+  }
+});
+
 const { userProfile } = useAuth();
 const { startCheckout, isProcessing: generatingStripeLink } =
   useCreditsCheckout();
@@ -332,26 +304,11 @@ const hasJobApplications = computed(
   () => (jobApplications.value?.length ?? 0) > 0,
 );
 const hasResumes = computed(() => (resumes.value?.length ?? 0) > 0);
-
 const currentBalance = computed(
   () => userProfile.value?.billingProfile?.currentBalance ?? 0,
 );
-
 const hasSufficientCredits = computed(
   () => currentBalance.value >= requiredCredits,
-);
-
-const selectedJobApplication = computed(() => {
-  if (!selectedJobApplicationId.value || !jobApplications.value) return null;
-  return (
-    jobApplications.value.find(
-      (app) => app.id === selectedJobApplicationId.value,
-    ) || null
-  );
-});
-
-const filteredJobApplications = computed(() =>
-  jobApplications.value.filter((a) => a.status !== "archived"),
 );
 
 // Check if the selected job application has a job description
@@ -361,6 +318,11 @@ const showManualJobDescription = computed(() => {
   // If there's no jobId, we need manual description
   // Later this will check if the linked job has parsedData.description
   return !selectedJobApplication.value.jobId;
+});
+watch(showManualJobDescription, (needsManualDescription) => {
+  if (!needsManualDescription) {
+    manualJobDescription.value = "";
+  }
 });
 
 const canGenerate = computed(() =>
@@ -412,78 +374,10 @@ const resetForm = () => {
   pendingJobApplicationId.value = null;
 };
 
-// Pre-select resume if job application has one linked
-watch(selectedJobApplication, (newApp) => {
-  if (newApp?.resumeId && resumes.value) {
-    const linkedResume = resumes.value.find((r) => r.id === newApp.resumeId);
-    if (linkedResume) {
-      selectedResumeId.value = linkedResume.id;
-    }
-  }
-});
-
-watch(showManualJobDescription, (needsManualDescription) => {
-  if (!needsManualDescription) {
-    manualJobDescription.value = "";
-  }
-});
-
-watch(
-  () => resumes.value,
-  (newResumes) => {
-    if (pendingResumeId.value && newResumes) {
-      const createdResume = newResumes.find(
-        (resume) => resume.id === pendingResumeId.value,
-      );
-
-      if (createdResume) {
-        selectedResumeId.value = createdResume.id;
-        pendingResumeId.value = null;
-      }
-    } else if (newResumes && newResumes.length) {
-      if (isOpen && !selectedResumeId.value) {
-        selectedResumeId.value = newResumes[0].id;
-      }
-    } else if (newResumes && newResumes.length === 0) {
-      selectedResumeId.value = "";
-    }
-  },
-);
-
-watch(
-  () => jobApplications.value,
-  (newApplications) => {
-    if (pendingJobApplicationId.value && newApplications) {
-      const createdApplication = newApplications.find(
-        (app) => app.id === pendingJobApplicationId.value,
-      );
-
-      if (createdApplication) {
-        selectedJobApplicationId.value = createdApplication.id;
-        pendingJobApplicationId.value = null;
-      }
-    } else if (newApplications && newApplications.length) {
-      if (isOpen && !selectedJobApplicationId.value) {
-        selectedJobApplicationId.value = newApplications[0].id;
-      }
-    } else if (newApplications && newApplications.length === 0) {
-      selectedJobApplicationId.value = "";
-    }
-  },
-);
-
-// Reset form when dialog closes / initialize on open
-watch(
-  () => isOpen,
-  (newValue) => {
-    if (!newValue) resetForm();
-  },
-);
-
 async function updateDialogOpenState(open: boolean) {
   if (!open) {
     await router.replace({
-      query: omit(route.query, ["dialog-name", "application-id"]),
+      query: omit(route.query, ["dialog-name", "application-id", "resume-id"]),
     });
   }
 }

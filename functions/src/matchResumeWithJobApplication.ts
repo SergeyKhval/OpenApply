@@ -1,7 +1,15 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { onCall } from "firebase-functions/v2/https";
-import { z } from "genkit";
+import { genkit, z } from "genkit";
+import { googleAI } from "@genkit-ai/googleai";
+import { defineString } from "firebase-functions/params";
 
+defineString("GEMINI_API_KEY");
+
+const ai = genkit({
+  plugins: [googleAI()],
+  model: googleAI.model("gemini-2.5-flash", { temperature: 0, topK: 1 }),
+});
 const db = getFirestore();
 
 // Define the schema for the resume and job description match result
@@ -16,7 +24,7 @@ const ResumeJDMatchSchema = z.object({
       .array(
         z.object({
           skill: z.string(),
-          status: z.literal("matched"),
+          status: z.enum(["matched"]),
           evidence: z.string(),
         }),
       )
@@ -25,7 +33,7 @@ const ResumeJDMatchSchema = z.object({
       .array(
         z.object({
           skill: z.string(),
-          status: z.literal("partial"),
+          status: z.enum(["partial"]),
           evidence: z.string(),
         }),
       )
@@ -34,7 +42,7 @@ const ResumeJDMatchSchema = z.object({
       .array(
         z.object({
           skill: z.string(),
-          status: z.literal("missing"),
+          status: z.enum(["missing"]),
         }),
       )
       .optional(),
@@ -57,6 +65,10 @@ const ResumeJDMatchSchema = z.object({
 });
 
 export const matchResumeWithJobApplication = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error("Authentication required");
+  }
+
   const { resumeId, jobApplicationId } = request.data;
 
   if (!resumeId || !jobApplicationId) {
@@ -70,4 +82,46 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
       db.collection("jobApplications").doc(jobApplicationId).get(),
     ],
   );
+
+  const job = await db
+    .collection("jobs")
+    .doc(jobApplication.data()?.jobId)
+    .get();
+
+  const promptTemplateData = resumeMatchPromptTemplate.data();
+  const resumeData = resume.data();
+  const jobData = job.data();
+
+  if (
+    !promptTemplateData ||
+    !resumeData ||
+    !jobData ||
+    !resumeData.text ||
+    !jobData.parsedData?.description
+  ) {
+    throw new Error("Invalid data for resume or job application");
+  }
+
+  const prompt = promptTemplateData.template
+    .replace("{{ resumeText }}", resumeData.text)
+    .replace("{{ jobDescriptionText }}", jobData.parsedData.description);
+
+  const result = await ai.generate({
+    prompt,
+    output: {
+      schema: ResumeJDMatchSchema,
+      format: "json",
+    },
+  });
+
+  console.log("===>>>>> Review output:", result.output);
+
+  await db.collection("resumeJobMatches").add({
+    userId: request.auth?.uid,
+    resumeId,
+    jobApplicationId,
+    matchResult: result.output,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 });

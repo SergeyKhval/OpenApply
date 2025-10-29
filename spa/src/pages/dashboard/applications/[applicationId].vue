@@ -163,15 +163,8 @@ import {
   PhClockClockwise,
   PhFire,
   PhHandsClapping,
-  PhEye,
-  PhEnvelopeSimple,
-  PhEnvelopeSimpleOpen,
-  PhReadCvLogo,
-  PhSparkle,
-  PhFilePdf,
-  PhPencilSimple,
 } from "@phosphor-icons/vue";
-import { JobApplication, JobStatus, Resume } from "@/types";
+import { JobApplication, JobStatus } from "@/types";
 import { db } from "@/firebase/config.ts";
 import PageHeader from "@/components/PageHeader.vue";
 import JobApplicationNotes from "@/components/JobApplicationNotes.vue";
