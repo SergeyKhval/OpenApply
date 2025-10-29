@@ -83,28 +83,23 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
     ],
   );
 
-  const job = await db
-    .collection("jobs")
-    .doc(jobApplication.data()?.jobId)
-    .get();
-
   const promptTemplateData = resumeMatchPromptTemplate.data();
   const resumeData = resume.data();
-  const jobData = job.data();
+  const jobApplicationData = jobApplication.data();
 
   if (
     !promptTemplateData ||
     !resumeData ||
-    !jobData ||
+    !jobApplicationData ||
     !resumeData.text ||
-    !jobData.parsedData?.description
+    !jobApplicationData.jobDescription
   ) {
     throw new Error("Invalid data for resume or job application");
   }
 
   const prompt = promptTemplateData.template
     .replace("{{ resumeText }}", resumeData.text)
-    .replace("{{ jobDescriptionText }}", jobData.parsedData.description);
+    .replace("{{ jobDescriptionText }}", jobApplicationData.jobDescription);
 
   const result = await ai.generate({
     prompt,
@@ -113,8 +108,6 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
       format: "json",
     },
   });
-
-  console.log("===>>>>> Review output:", result.output);
 
   await db.collection("resumeJobMatches").add({
     userId: request.auth?.uid,
