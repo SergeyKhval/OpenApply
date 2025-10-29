@@ -6,17 +6,32 @@
 
     <CardContent>
       <template v-if="viewMode === 'view'">
-        <p :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'">
-          {{ jobDescription }}
-        </p>
-        <Button
-          size="sm"
-          variant="link"
-          @click="isWholeDescriptionVisible = !isWholeDescriptionVisible"
-        >
-          <PhEye />
-          {{ isWholeDescriptionVisible ? "Show less" : "Show more" }}
-        </Button>
+        <template v-if="jobDescription">
+          <p :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'">
+            {{ jobDescription }}
+          </p>
+          <Button
+            size="sm"
+            variant="link"
+            @click="isWholeDescriptionVisible = !isWholeDescriptionVisible"
+          >
+            <PhEye />
+            {{ isWholeDescriptionVisible ? "Show less" : "Show more" }}
+          </Button>
+        </template>
+        <template v-else>
+          <div class="text-muted-foreground flex flex-col items-center gap-2">
+            <PhFileDashed size="64" />
+            <p class="text-center mb-4">
+              This job doesn't have a description yet. It is required for AI
+              features to work correctly.
+            </p>
+            <Button size="sm" @click="viewMode = 'edit'">
+              <PhVideoConference />
+              Add job description
+            </Button>
+          </div>
+        </template>
       </template>
       <Textarea
         v-else
@@ -37,11 +52,15 @@
       </p>
     </CardContent>
     <CardFooter class="justify-end">
-      <Button v-if="viewMode === 'view'" size="sm" @click="viewMode = 'edit'">
+      <Button
+        v-if="viewMode === 'view' && jobDescription"
+        size="sm"
+        @click="viewMode = 'edit'"
+      >
         <PhPencilSimple />
         Edit
       </Button>
-      <div v-else class="flex gap-2 items-center">
+      <div v-else-if="viewMode === 'edit'" class="flex gap-2 items-center">
         <Button size="sm" @click="updateJobDescription()">
           <PhCheckFat />
           Save</Button
@@ -70,8 +89,10 @@ import { Button } from "@/components/ui/button";
 import {
   PhCheckFat,
   PhEye,
+  PhFileDashed,
   PhPencilSimple,
   PhRewind,
+  PhVideoConference,
 } from "@phosphor-icons/vue";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, updateDoc } from "firebase/firestore";
