@@ -33,7 +33,6 @@ defineString("GEMINI_API_KEY");
 interface GenerateCoverLetterRequest {
   jobApplicationId: string;
   resumeId: string;
-  manualJobDescription?: string;
 }
 
 interface GenerateCoverLetterResponse {
@@ -115,34 +114,9 @@ async function fetchAndValidateResume(resumeId: string, userId: string) {
   return resume as firestore.DocumentData;
 }
 
-async function getJobDescription(
-  manualJobDescription: string | undefined,
-  jobApplication: any,
-): Promise<string> {
-  let jobDescription = manualJobDescription;
-
-  if (!jobDescription && jobApplication?.jobId) {
-    const jobDoc = await db.collection("jobs").doc(jobApplication.jobId).get();
-
-    if (jobDoc.exists) {
-      const jobData = jobDoc.data();
-      if (jobData?.parsedData?.description) {
-        jobDescription = jobData.parsedData.description;
-      }
-    }
-  }
-
-  if (!jobDescription) {
-    throw new HttpsError("failed-precondition", "No job description available");
-  }
-
-  return jobDescription;
-}
-
 async function buildCoverLetterPrompt(
   jobApplication: firestore.DocumentData,
   resume: firestore.DocumentData,
-  jobDescription: string,
 ): Promise<string> {
   const promptTemplates = db.collection("promptTemplates").doc("coverLetter");
   const promptTemplateDoc = await promptTemplates.get();
@@ -155,19 +129,14 @@ async function buildCoverLetterPrompt(
     .replace("{{ companyName }}", jobApplication.companyName)
     .replace("{{ position }}", jobApplication.position)
     .replace("{{ resumeText }}", resume.text)
-    .replace("{{ jobDescription }}", jobDescription);
+    .replace("{{ jobDescription }}", jobApplication.jobDescription);
 }
 
 async function generateCoverLetterWithAI(
   jobApplication: firestore.DocumentData,
   resume: firestore.DocumentData,
-  jobDescription: string,
 ): Promise<string> {
-  const prompt = await buildCoverLetterPrompt(
-    jobApplication,
-    resume,
-    jobDescription,
-  );
+  const prompt = await buildCoverLetterPrompt(jobApplication, resume);
   const result = await ai.generate({ prompt });
   return result.text.trim();
 }
@@ -223,7 +192,7 @@ function handleError(
 export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
   async (request) => {
     const userId = validateAuth(request);
-    const { jobApplicationId, resumeId, manualJobDescription } = request.data;
+    const { jobApplicationId, resumeId } = request.data;
 
     if (!jobApplicationId || !resumeId) {
       throw new HttpsError(
@@ -240,15 +209,10 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
         userId,
       );
       const resume = await fetchAndValidateResume(resumeId, userId);
-      const jobDescription = await getJobDescription(
-        manualJobDescription,
-        jobApplication,
-      );
 
       const coverLetterBody = await generateCoverLetterWithAI(
         jobApplication,
         resume,
-        jobDescription,
       );
 
       const coverLetterRef = db.collection("coverLetters").doc();
@@ -295,11 +259,9 @@ export const regenerateCoverLetter = onCall<{
   coverLetterId: string;
   jobApplicationId: string;
   resumeId: string;
-  manualJobDescription?: string;
 }>(async (request) => {
   const userId = validateAuth(request);
-  const { coverLetterId, jobApplicationId, resumeId, manualJobDescription } =
-    request.data;
+  const { coverLetterId, jobApplicationId, resumeId } = request.data;
 
   if (!coverLetterId || !jobApplicationId || !resumeId) {
     throw new HttpsError(
@@ -334,16 +296,8 @@ export const regenerateCoverLetter = onCall<{
       userId,
     );
     const resume = await fetchAndValidateResume(resumeId, userId);
-    const jobDescription = await getJobDescription(
-      manualJobDescription,
-      jobApplication,
-    );
 
-    const newBody = await generateCoverLetterWithAI(
-      jobApplication,
-      resume,
-      jobDescription,
-    );
+    const newBody = await generateCoverLetterWithAI(jobApplication, resume);
 
     const coverLetterRef = db.collection("coverLetters").doc(coverLetterId);
 

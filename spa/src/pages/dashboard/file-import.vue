@@ -319,6 +319,10 @@ function setHeader(header: ColumnHeader, index: number) {
 async function importJobApplications() {
   importingJobs.value = true;
   const preparedData = prepareFirebaseData();
+  if (!preparedData.length) {
+    importingJobs.value = false;
+    return;
+  }
   const importJobApplications = httpsCallable(
     functions,
     "importJobApplications",

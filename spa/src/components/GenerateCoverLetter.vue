@@ -99,28 +99,35 @@
           </Empty>
 
           <div v-else class="space-y-6">
-            <JobApplicationSelect v-model="selectedJobApplicationId" />
-
             <ResumeSelect v-model="selectedResumeId" />
 
-            <!-- Manual Job Description (if needed) -->
-            <div v-if="showManualJobDescription" class="space-y-2">
-              <Label for="jobDescription">
-                <span>
-                  Job Description
-                  <br />
-                  <span class="text-sm text-muted-foreground">
-                    No description found, please provide one
-                  </span>
-                </span>
-              </Label>
-              <textarea
-                id="jobDescription"
-                v-model="manualJobDescription"
-                class="w-full min-h-[150px] px-3 py-2 text-sm rounded-md border border-input bg-background"
-                placeholder="Paste the job description here..."
-              />
-            </div>
+            <JobApplicationSelect v-model="selectedJobApplicationId" />
+
+            <Alert
+              v-if="
+                selectedJobApplicationId &&
+                !selectedJobApplication?.jobDescription
+              "
+            >
+              <PhWarningCircle class="text-destructive!" />
+              <AlertDescription>
+                <p>
+                  Selected job application does not have a job description.
+                  Cover letter quality may be impacted. You can add a job
+                  description on the
+                  <RouterLink
+                    :to="`/dashboard/applications/${selectedJobApplicationId}`"
+                    class="text-primary hover:underline"
+                  >
+                    job application details page </RouterLink
+                  >.
+                </p>
+                <p>
+                  You will be able to generate cover letter from that page as
+                  well
+                </p>
+              </AlertDescription>
+            </Alert>
 
             <!-- Error Message -->
             <Alert v-if="errorMessage" variant="destructive">
@@ -165,7 +172,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { useCoverLetters } from "@/composables/useCoverLetters";
@@ -243,7 +249,6 @@ watch(
   },
   { immediate: true },
 );
-const manualJobDescription = ref("");
 const isProcessing = ref(false);
 const errorMessage = ref("");
 const pendingResumeId = ref<string | null>(null);
@@ -311,26 +316,8 @@ const hasSufficientCredits = computed(
   () => currentBalance.value >= requiredCredits,
 );
 
-// Check if the selected job application has a job description
-// For now, we'll check if it has a jobId linked
-const showManualJobDescription = computed(() => {
-  if (!selectedJobApplication.value) return false;
-  // If there's no jobId, we need manual description
-  // Later this will check if the linked job has parsedData.description
-  return !selectedJobApplication.value.jobId;
-});
-watch(showManualJobDescription, (needsManualDescription) => {
-  if (!needsManualDescription) {
-    manualJobDescription.value = "";
-  }
-});
-
 const canGenerate = computed(() =>
-  Boolean(
-    selectedJobApplicationId.value &&
-      selectedResumeId.value &&
-      (!showManualJobDescription.value || manualJobDescription.value.trim()),
-  ),
+  Boolean(selectedJobApplicationId.value && selectedResumeId.value),
 );
 
 const canSubmit = computed(
@@ -351,7 +338,6 @@ const handleGenerateCoverLetter = async () => {
   const result = await generateCoverLetter(
     selectedJobApplicationId.value,
     selectedResumeId.value,
-    showManualJobDescription.value ? manualJobDescription.value : undefined,
   );
 
   isProcessing.value = false;
@@ -368,7 +354,6 @@ const handleGenerateCoverLetter = async () => {
 const resetForm = () => {
   selectedJobApplicationId.value = "";
   selectedResumeId.value = "";
-  manualJobDescription.value = "";
   errorMessage.value = "";
   pendingResumeId.value = null;
   pendingJobApplicationId.value = null;

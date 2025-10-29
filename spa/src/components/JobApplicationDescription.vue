@@ -5,7 +5,21 @@
     </CardHeader>
 
     <CardContent>
+      <template v-if="viewMode === 'view'">
+        <p :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'">
+          {{ jobDescription }}
+        </p>
+        <Button
+          size="sm"
+          variant="link"
+          @click="isWholeDescriptionVisible = !isWholeDescriptionVisible"
+        >
+          <PhEye />
+          {{ isWholeDescriptionVisible ? "Show less" : "Show more" }}
+        </Button>
+      </template>
       <Textarea
+        v-else
         v-model="jobDescription"
         class="max-h-50"
         :class="
@@ -23,10 +37,20 @@
       </p>
     </CardContent>
     <CardFooter class="justify-end">
-      <Button size="sm" @click="updateJobDescription()">
-        <PhFloppyDisk />
-        Update
+      <Button v-if="viewMode === 'view'" size="sm" @click="viewMode = 'edit'">
+        <PhPencilSimple />
+        Edit
       </Button>
+      <div v-else class="flex gap-2 items-center">
+        <Button size="sm" @click="updateJobDescription()">
+          <PhCheckFat />
+          Save</Button
+        >
+        <Button size="sm" variant="secondary" @click="viewMode = 'view'">
+          <PhRewind />
+          Cancel</Button
+        >
+      </div>
     </CardFooter>
   </Card>
 </template>
@@ -43,11 +67,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PhFloppyDisk } from "@phosphor-icons/vue";
+import {
+  PhCheckFat,
+  PhEye,
+  PhPencilSimple,
+  PhRewind,
+} from "@phosphor-icons/vue";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config.ts";
 import { useToast } from "@/components/ui/toast";
+import { onKeyStroke } from "@vueuse/core";
 
 type JobApplicationDescriptionProps = {
   application: {
@@ -61,6 +91,8 @@ const { application } = defineProps<JobApplicationDescriptionProps>();
 const { toast } = useToast();
 
 const jobDescription = ref(application.jobDescription);
+const isWholeDescriptionVisible = ref(false);
+const viewMode = ref<"view" | "edit">("view");
 
 const v$ = useVuelidate(
   {
@@ -86,5 +118,14 @@ async function updateJobDescription() {
     description: "Job description updated successfully.",
     duration: 3000,
   });
+  viewMode.value = "view";
 }
+
+onKeyStroke("Escape", () => {
+  if (viewMode.value === "edit") {
+    viewMode.value = "view";
+    jobDescription.value = application.jobDescription;
+    v$.value.$reset();
+  }
+});
 </script>
