@@ -30,7 +30,7 @@
     "bundle:vercel": "rm -rf dist && mkdir -p dist/app && cp -r astro/dist/* dist/ && cp -r spa/dist/* dist/app/",
     "build:vercel": "pnpm run build:spa && pnpm run build:astro && pnpm run bundle:vercel",
     "build": "pnpm run build:spa && pnpm run build:astro && pnpm run build:functions",
-    "emulate": "firebase emulators:start",
+    "emulate": "firebase emulators:start --import=./emulator-data --export-on-exit",
     "deploy:functions": "firebase deploy --only functions"
   },
   "packageManager": "pnpm@10.18.2+sha512.9fb969fa749b3ade6035e0f109f0b8a60b5d08a1a87fdf72e337da90dcc93336e2280ca4e44f2358a649b83c17959e9993e777c2080879f3801e6f0d999ad3dd"

@@ -3,7 +3,8 @@
     <Alert v-if="parsingFailed" variant="default">
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
-        We couldn't automatically extract all job details from the provided link. Please fill in the information manually.
+        We couldn't automatically extract all job details from the provided
+        link. Please fill in the information manually.
       </AlertDescription>
     </Alert>
     <div class="flex flex-col gap-2">
@@ -24,37 +25,6 @@
         placeholder="e.g., Senior Software Engineer"
         required
       />
-    </div>
-
-    <div class="flex flex-col gap-2">
-      <Label for="appliedDate">Applied Date</Label>
-      <Popover v-model:open="isDatePickerOpen">
-        <PopoverTrigger as-child>
-          <Button
-            variant="outline"
-            :class="
-              cn(
-                'w-full justify-start text-left font-normal',
-                !formData.appliedAt && 'text-muted-foreground',
-              )
-            "
-          >
-            <PhCalendar />
-            {{
-              formData.appliedAt
-                ? df.format(formData.appliedAt.toDate(getLocalTimeZone()))
-                : "Select date"
-            }}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent class="w-auto p-0">
-          <!-- @vue-skip -->
-          <Calendar
-            v-model="formData.appliedAt"
-            @update:model-value="handleDateSelect"
-          />
-        </PopoverContent>
-      </Popover>
     </div>
 
     <div class="flex flex-col gap-2">
@@ -127,29 +97,16 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
 import {
-  PhCalendar,
   PhFloppyDisk,
   PhRewind,
   PhSpinner,
   PhX,
   PhInfo,
 } from "@phosphor-icons/vue";
-import {
-  DateFormatter,
-  getLocalTimeZone,
-  today,
-} from "@internationalized/date";
 import { useJobApplications } from "@/composables/useJobApplications";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -191,18 +148,14 @@ const {
   remotePolicy = "",
   employmentType = "",
   technologies = [],
-  jobDescriptionLink = '',
-  parsingFailed = false
+  jobDescriptionLink = "",
+  parsingFailed = false,
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
 const { addJobApplication } = useJobApplications();
 
 const isDatePickerOpen = ref(false);
-
-const df = new DateFormatter("en-US", {
-  dateStyle: "long",
-});
 
 const isSubmitting = ref(false);
 const error = ref<string | null>(null);
@@ -217,7 +170,6 @@ function getInitialForm() {
     jobDescriptionLink,
     jobId,
     technologies: technologies.slice(),
-    appliedAt: today(getLocalTimeZone()),
   };
 }
 
