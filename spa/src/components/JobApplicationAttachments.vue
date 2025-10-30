@@ -13,17 +13,25 @@
         </Badge>
 
         <EmptyIcon
-          :class="resumeId && 'border-solid text-foreground border-foreground'"
+          :class="
+            resumeId
+              ? 'border-solid text-foreground border-foreground'
+              : 'animate-pulse'
+          "
         >
           <PhFilePdf v-if="resumeId" :size="36" />
           <PhReadCvLogo v-else :size="36" />
         </EmptyIcon>
+        <a
+          v-if="resume"
+          class="truncate max-w-full text-xs text-primary hover:underline"
+          target="_blank"
+          :href="resume.url"
+        >
+          {{ resume.fileName }}
+        </a>
         <EmptyDescription class="text-foreground">
           <div v-if="resumeId" class="items-center gap-2 flex">
-            <Button size="sm" variant="outline" @click="openResume">
-              <PhEye />
-              View
-            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -43,23 +51,31 @@
             </Button>
           </div>
           <template v-else>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="
-                $router.replace({
-                  query: {
-                    ...$route.query,
-                    'dialog-name': 'resume-picker',
-                    'application-id': applicationId,
-                    'resume-id': resumeId,
-                  },
-                })
-              "
-            >
-              <PhFilePdf />
-              Attach
-            </Button>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  @click="
+                    $router.replace({
+                      query: {
+                        ...$route.query,
+                        'dialog-name': 'resume-picker',
+                        'application-id': applicationId,
+                        'resume-id': resumeId,
+                      },
+                    })
+                  "
+                >
+                  <PhFilePdf />
+                  Attach
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-center">
+                You will be able to do AI review <br />
+                once you attach a resume.
+              </TooltipContent>
+            </Tooltip>
           </template>
         </EmptyDescription>
       </Empty>
@@ -72,9 +88,11 @@
           Cover Letter
         </Badge>
         <EmptyIcon
-          :class="{
-            'border-solid text-foreground border-foreground': coverLetterId,
-          }"
+          :class="
+            coverLetterId
+              ? 'border-solid text-foreground border-foreground'
+              : 'animate-pulse'
+          "
         >
           <PhEnvelopeSimpleOpen v-if="coverLetterId" :size="36" />
           <PhEnvelopeSimple v-else :size="36" />
@@ -138,7 +156,12 @@ import { useDocument } from "vuefire";
 import { Resume } from "@/types";
 import { collection, doc } from "firebase/firestore";
 import { db } from "@/firebase/config.ts";
-import { watchEffect } from "vue";
+import { computed } from "vue";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type JobApplicationAttachmentsProps = {
   applicationId: string;
@@ -152,19 +175,8 @@ const {
   coverLetterId = "",
 } = defineProps<JobApplicationAttachmentsProps>();
 
-async function openResume() {
-  if (!resumeId) return;
-
-  const resume = useDocument<Resume>(
-    doc(collection(db, "userResumes"), resumeId),
-    { once: true },
-  );
-
-  const unwatch = watchEffect(() => {
-    if (resume.value?.url) {
-      window.open(resume.value.url, "_blank");
-      unwatch();
-    }
-  });
-}
+const resumeRef = computed(() =>
+  resumeId ? doc(collection(db, "userResumes"), resumeId) : null,
+);
+const resume = useDocument<Resume>(resumeRef);
 </script>

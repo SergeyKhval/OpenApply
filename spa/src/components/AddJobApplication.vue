@@ -93,9 +93,7 @@
               :job-description-link="
                 latestSnapshot?.jobDescriptionLink || jobDescriptionLink || ''
               "
-              :job-description="
-                latestSnapshot?.parsedData?.jobDescription || ''
-              "
+              :job-description="latestSnapshot?.parsedData?.description || ''"
               :job-id="latestSnapshot?.id || ''"
               :parsing-failed="hasParsingFailure"
               @saved="onJobApplicationSaved"
@@ -139,8 +137,6 @@ import { useJobIngestion } from "@/composables/useJobIngestion.ts";
 type AddJobApplicationProps = { isOpen: boolean };
 
 const { isOpen } = defineProps<AddJobApplicationProps>();
-
-const emit = defineEmits<{ (event: "saved", id: string): void }>();
 
 const router = useRouter();
 const route = useRoute();
@@ -212,10 +208,10 @@ function handleManualEntry() {
   viewMode.value = "form";
 }
 
-function onJobApplicationSaved(id: string) {
+async function onJobApplicationSaved(id: string) {
   toggleDialog(false);
   resetForm();
-  emit("saved", id);
+  await router.push(`/dashboard/applications/${id}`);
 }
 
 function handleBack() {

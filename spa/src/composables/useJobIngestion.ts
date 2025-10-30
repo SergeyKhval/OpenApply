@@ -30,7 +30,7 @@ export type JobSnapshot = {
     employmentType?: string;
     technologies?: string[];
     companyLogoUrl?: string;
-    jobDescription?: string;
+    description?: string;
   } | null;
   errorMessage?: string | null;
   [key: string]: unknown;

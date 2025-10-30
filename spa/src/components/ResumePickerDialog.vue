@@ -68,26 +68,19 @@
                       <PhEnvelopeSimple class="text-emerald-500" />
                       Ready for cover letters
                     </p>
-                    <p
-                      v-if="resume.id === currentResumeId"
-                      class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
-                    >
-                      <PhCheckFat weight="fill" class="text-emerald-500" />
-                      Currently attached
-                    </p>
                   </div>
                 </div>
               </div>
             </div>
             <div class="flex items-center gap-2 mt-2">
               <Button
-                v-if="resume.id !== currentResumeId"
                 size="sm"
                 variant="default"
+                :disabled="isSelecting || resume.id === currentResumeId"
                 @click="handleSelect(resume.id)"
-                :disabled="isSelecting"
               >
-                Select
+                <PhCheck v-if="currentResumeId === resume.id" />
+                {{ resume.id === currentResumeId ? "Selected" : "Select" }}
               </Button>
               <Button
                 size="sm"
@@ -110,7 +103,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { PhCheckFat, PhEnvelopeSimple, PhFilePdf } from "@phosphor-icons/vue";
+import { PhCheck, PhEnvelopeSimple, PhFilePdf } from "@phosphor-icons/vue";
 import {
   Dialog,
   DialogDescription,
