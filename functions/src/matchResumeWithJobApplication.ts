@@ -69,17 +69,17 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
     throw new Error("Authentication required");
   }
 
-  const { resumeId, jobApplicationId } = request.data;
+  const { resumeId, applicationId } = request.data;
 
-  if (!resumeId || !jobApplicationId) {
-    throw new Error("Missing resumeId or jobApplicationId");
+  if (!resumeId || !applicationId) {
+    throw new Error("Missing resumeId or applicationId");
   }
 
   const [resumeMatchPromptTemplate, resume, jobApplication] = await Promise.all(
     [
       db.collection("promptTemplates").doc("resumeMatcher").get(),
       db.collection("userResumes").doc(resumeId).get(),
-      db.collection("jobApplications").doc(jobApplicationId).get(),
+      db.collection("jobApplications").doc(applicationId).get(),
     ],
   );
 
@@ -112,7 +112,7 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
   await db.collection("resumeJobMatches").add({
     userId: request.auth?.uid,
     resumeId,
-    jobApplicationId,
+    jobApplicationId: applicationId,
     matchResult: result.output,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),

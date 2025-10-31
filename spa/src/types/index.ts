@@ -111,3 +111,32 @@ export type CoverLetter = {
     temperature?: number;
   };
 };
+
+type ScoredSkill = {
+  evidence?: string;
+  skill: string;
+  status: "matched";
+};
+
+export type ResumeJobMatch = {
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  jobApplicationId: string;
+  resumeId: string;
+  userId: string;
+  matchResult: {
+    match_summary: {
+      overall_match_percent: number;
+      summary: string;
+    };
+    recommendations: {
+      improvement_areas?: string[];
+      potential_match_boost?: string;
+    };
+    skills_comparison: {
+      matched_skills?: ScoredSkill[];
+      missing_skills?: ScoredSkill[];
+      partially_matched_skills?: ScoredSkill[];
+    };
+  };
+};

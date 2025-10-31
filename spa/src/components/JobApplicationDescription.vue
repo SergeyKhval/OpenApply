@@ -26,7 +26,7 @@
               This job doesn't have a description yet. It is required for AI
               features to work correctly.
             </p>
-            <Button size="sm" @click="viewMode = 'edit'">
+            <Button size="sm" variant="outline" @click="viewMode = 'edit'">
               <PhVideoConference />
               Add job description
             </Button>
@@ -55,6 +55,7 @@
       <Button
         v-if="viewMode === 'view' && jobDescription"
         size="sm"
+        variant="outline"
         @click="viewMode = 'edit'"
       >
         <PhPencilSimple />

@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle>Choose Resume</DialogTitle>
         <DialogDescription>
-          Select a resume to attach to this job application
+          Select a resume that you want to use for this job application.
         </DialogDescription>
       </DialogHeader>
 
@@ -80,7 +80,7 @@
                 @click="handleSelect(resume.id)"
               >
                 <PhCheck v-if="currentResumeId === resume.id" />
-                {{ resume.id === currentResumeId ? "Selected" : "Select" }}
+                {{ resume.id === currentResumeId ? "Attached" : "Attach" }}
               </Button>
               <Button
                 size="sm"
@@ -147,7 +147,7 @@ const isSelecting = ref(false);
 const handleOpenChange = (isOpen: boolean) => {
   if (!isOpen) {
     router.replace({
-      query: omit(route.query, ["dialog-name", "application-id"]),
+      query: omit(route.query, ["dialog-name", "application-id", "resume-id"]),
     });
   }
 };
@@ -161,8 +161,9 @@ const handleSelect = async (resumeId: string) => {
     });
 
     if (result.success) {
-      // Close modal on success
-      handleOpenChange(false);
+      await router.replace({
+        query: { ...route.query, "resume-id": resumeId },
+      });
     } else {
       // Show error toast and keep modal open
       toast({

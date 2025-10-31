@@ -43,7 +43,7 @@
           <p class="text-center mb-4">
             You don't have any interviews for this role. Let's schedule?
           </p>
-          <Button size="sm" @click="viewMode = 'form'">
+          <Button size="sm" variant="outline" @click="viewMode = 'form'">
             <PhVideoConference />
             Add first interview
           </Button>
@@ -121,15 +121,13 @@ const { data: interviews } = useCollection<Interview>(q);
 
 const now = new Date();
 const upcomingInterviews = computed(() =>
-  interviews.value.filter((interview) =>
-    interview.conductedAt.toDate() >= now
-  )
+  interviews.value.filter((interview) => interview.conductedAt.toDate() >= now),
 );
 
 const pastInterviews = computed(() =>
   interviews.value
     .filter((interview) => interview.conductedAt.toDate() < now)
-    .reverse()
+    .reverse(),
 );
 
 async function addInterview(interviewForm: InterviewFormInterview) {
