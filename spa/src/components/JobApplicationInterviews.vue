@@ -41,7 +41,7 @@
         >
           <PhUsersThree size="64" />
           <p class="text-center mb-4">
-            You don't have any interviews for this role. Let's schedule?
+            No interviews yet. Add one to track progress and stay organized.
           </p>
           <Button size="sm" variant="outline" @click="viewMode = 'form'">
             <PhVideoConference />
@@ -87,7 +87,7 @@ import {
   PhUsersThree,
   PhVideoConference,
 } from "@phosphor-icons/vue";
-import { type Interview, type InterviewFormInterview } from "@/types";
+import type { Interview, InterviewFormInterview } from "@/types";
 import { Button } from "@/components/ui/button";
 import InterviewForm from "@/components/InterviewForm.vue";
 import InterviewList from "@/components/InterviewList.vue";
