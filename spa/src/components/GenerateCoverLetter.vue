@@ -65,9 +65,7 @@
               </EmptyDescription>
             </div>
             <EmptyAction>
-              <UploadResumeButton size="lg" @uploaded="handleResumeUploaded">
-                Upload Resume
-              </UploadResumeButton>
+              <UploadResumeButton> Upload Resume </UploadResumeButton>
             </EmptyAction>
           </Empty>
 
@@ -251,7 +249,6 @@ watch(
 );
 const isProcessing = ref(false);
 const errorMessage = ref("");
-const pendingResumeId = ref<string | null>(null);
 const pendingJobApplicationId = ref<string | null>(null);
 
 const { generateCoverLetter } = useCoverLetters();
@@ -281,21 +278,8 @@ const resumes = computed(() =>
   resumesCollection.value.filter((r) => r.status === "parsed"),
 );
 watch(resumes, (newResumes) => {
-  if (pendingResumeId.value && newResumes) {
-    const createdResume = newResumes.find(
-      (resume) => resume.id === pendingResumeId.value,
-    );
-
-    if (createdResume) {
-      selectedResumeId.value = createdResume.id;
-      pendingResumeId.value = null;
-    }
-  } else if (newResumes && newResumes.length) {
-    if (isOpen && !selectedResumeId.value) {
-      selectedResumeId.value = newResumes[0].id;
-    }
-  } else if (newResumes && newResumes.length === 0) {
-    selectedResumeId.value = "";
+  if (newResumes && newResumes.length && isOpen && !selectedResumeId.value) {
+    selectedResumeId.value = newResumes[0].id;
   }
 });
 
@@ -324,11 +308,6 @@ const canSubmit = computed(
   () => canGenerate.value && hasSufficientCredits.value,
 );
 
-const handleResumeUploaded = (resumeId: string) => {
-  if (!resumeId) return;
-  pendingResumeId.value = resumeId;
-};
-
 const handleGenerateCoverLetter = async () => {
   if (!canGenerate.value) return;
 
@@ -355,7 +334,6 @@ const resetForm = () => {
   selectedJobApplicationId.value = "";
   selectedResumeId.value = "";
   errorMessage.value = "";
-  pendingResumeId.value = null;
   pendingJobApplicationId.value = null;
 };
 
