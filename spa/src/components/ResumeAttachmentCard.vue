@@ -1,0 +1,305 @@
+<template>
+  <Empty
+    class="sm:w-50 relative pb-5 pt-10 px-2 gap-4"
+    :class="resumeId && 'border-solid'"
+  >
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Checkbox
+          :model-value="isAttached"
+          @update:model-value="handleAttachResume"
+          class="absolute top-2 left-2"
+        />
+      </TooltipTrigger>
+      <TooltipContent>
+        {{
+          isAttached ? "Detach resume" : "Attach resume to this job application"
+        }}
+      </TooltipContent>
+    </Tooltip>
+
+    <ResumeScore
+      v-if="resumeJobMatch"
+      class="absolute top-2 right-2 size-8"
+      :score="resumeJobMatch.matchResult.match_summary.overall_match_percent"
+    />
+
+    <EmptyIcon
+      :class="
+        resumeId
+          ? 'border-solid text-foreground border-foreground'
+          : 'animate-pulse'
+      "
+    >
+      <PhFilePdf v-if="resumeId" :size="36" />
+      <PhReadCvLogo v-else :size="36" />
+    </EmptyIcon>
+    <a
+      class="truncate max-w-full text-xs text-primary hover:underline"
+      target="_blank"
+      :href="url"
+    >
+      {{ fileName }}
+    </a>
+    <EmptyDescription class="text-foreground">
+      <div v-if="resumeId" class="items-center gap-2 flex">
+        <Dialog>
+          <DialogTrigger as-child>
+            <Button size="sm" variant="outline">
+              <PhScales />
+              AI Review
+            </Button>
+          </DialogTrigger>
+
+          <DialogScrollContent class="sm:max-w-150">
+            <DialogHeader>
+              <DialogTitle>AI Resume Reviewer</DialogTitle>
+              <DialogDescription>
+                Check how your resume matches with the vacancy and get
+                actionable feedback
+              </DialogDescription>
+            </DialogHeader>
+
+            <div>
+              <div v-if="resumeJobMatch">
+                <div class="flex flex-col items-center justify-around mb-8">
+                  <ResumeScore
+                    class="size-35"
+                    :score="
+                      resumeJobMatch.matchResult.match_summary
+                        .overall_match_percent
+                    "
+                  />
+                  <p>Your overall match score</p>
+                </div>
+                <Tabs default-value="summary">
+                  <TabsList class="w-full">
+                    <TabsTrigger value="summary">Summary</TabsTrigger>
+                    <TabsTrigger value="recommendations"
+                      >Recommendations</TabsTrigger
+                    >
+                    <TabsTrigger value="skills">Skills</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="summary">
+                    <p class="text-base/7">
+                      {{ resumeJobMatch.matchResult.match_summary.summary }}
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="recommendations">
+                    <ul
+                      class="list-disc list-outside pl-5 text-base/7 flex flex-col gap-4"
+                    >
+                      <li
+                        v-for="recommendation in resumeJobMatch.matchResult
+                          .recommendations.improvement_areas"
+                      >
+                        {{ recommendation }}
+                      </li>
+                    </ul>
+                  </TabsContent>
+                  <TabsContent value="skills" class="max-h-75 overflow-y-auto">
+                    <table class="text-xs">
+                      <thead>
+                        <tr class="text-left">
+                          <th></th>
+                          <th>Skill</th>
+                          <th>Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-border">
+                        <tr
+                          v-for="skill in resumeJobMatch.matchResult
+                            .skills_comparison.missing_skills"
+                          :key="skill.skill"
+                        >
+                          <td class="pr-2">
+                            <PhXCircle
+                              size="16"
+                              class="text-destructive shrink-0"
+                            />
+                          </td>
+                          <td class="py-2 pr-2">
+                            {{ skill.skill }}
+                          </td>
+                          <td class="py-2 pr-2 italic leading-5">
+                            {{ skill.evidence || "N/A" }}
+                          </td>
+                        </tr>
+                        <tr
+                          v-for="skill in resumeJobMatch.matchResult
+                            .skills_comparison.partially_matched_skills"
+                          :key="skill.skill"
+                        >
+                          <td class="pr-2">
+                            <PhWarningCircle
+                              size="16"
+                              class="shrink-0 text-yellow-500"
+                            />
+                          </td>
+                          <td class="py-2 pr-2">
+                            {{ skill.skill }}
+                          </td>
+
+                          <td class="py-2 pr-2 italic leading-5">
+                            {{ skill.evidence }}
+                          </td>
+                        </tr>
+                        <tr
+                          v-for="skill in resumeJobMatch.matchResult
+                            .skills_comparison.matched_skills"
+                          :key="skill.skill"
+                        >
+                          <td class="pr-2">
+                            <PhCheckFat
+                              size="16"
+                              weight="fill"
+                              class="text-emerald-600"
+                            />
+                          </td>
+                          <td class="py-2 pr-2">{{ skill.skill }}</td>
+                          <td class="py-2 pr-2 leading-5 italic">
+                            {{ skill.evidence }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              <div v-else>
+                <Button
+                  @click="handleReviewResume()"
+                  :disabled="isMatchingResume"
+                >
+                  <Spinner v-if="isMatchingResume" />
+                  Run review
+                </Button>
+              </div>
+            </div>
+          </DialogScrollContent>
+        </Dialog>
+      </div>
+      <template v-else>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              variant="outline"
+              size="sm"
+              @click="
+                $router.replace({
+                  query: {
+                    ...$route.query,
+                    'dialog-name': 'resume-picker',
+                    'application-id': applicationId,
+                    'resume-id': resumeId,
+                  },
+                })
+              "
+            >
+              <PhFilePdf />
+              Attach
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-center">
+            You will be able to do AI review <br />
+            once you attach a resume.
+          </TooltipContent>
+        </Tooltip>
+      </template>
+    </EmptyDescription>
+  </Empty>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import {
+  PhCheckFat,
+  PhFilePdf,
+  PhReadCvLogo,
+  PhScales,
+  PhWarningCircle,
+  PhXCircle,
+} from "@phosphor-icons/vue";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { collection, limit, query, where } from "firebase/firestore";
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogScrollContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ResumeScore from "@/components/ResumeScore.vue";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { db, functions } from "@/firebase/config.ts";
+import { useCollection, useCurrentUser } from "vuefire";
+import { ResumeJobMatch } from "@/types";
+import { httpsCallable } from "firebase/functions";
+import { useJobApplications } from "@/composables/useJobApplications.ts";
+
+type ResumeAttachmentCardProps = {
+  resumeId: string;
+  applicationId: string;
+  fileName: string;
+  url: string;
+  isAttached?: boolean;
+  aiScore?: number;
+  hideReviewButton?: boolean;
+  isDeleting?: boolean;
+};
+
+const { resumeId, applicationId, fileName, url, isAttached } =
+  defineProps<ResumeAttachmentCardProps>();
+
+const user = useCurrentUser();
+const { updateJobApplication } = useJobApplications();
+
+function handleAttachResume(isAttached: boolean | "indeterminate") {
+  if (isAttached === "indeterminate") return;
+
+  updateJobApplication(applicationId, {
+    resumeId: isAttached ? resumeId : null,
+  });
+}
+
+async function handleReviewResume() {
+  if (!resumeId || !applicationId) return;
+
+  isMatchingResume.value = true;
+  await matchResumeWithJobApplication({
+    resumeId,
+    applicationId,
+  });
+  isMatchingResume.value = false;
+}
+
+const isMatchingResume = ref(false);
+
+const resumeJobMatchQuery = computed(() =>
+  user.value
+    ? query(
+        collection(db, "resumeJobMatches"),
+        where("userId", "==", user.value.uid),
+        where("resumeId", "==", resumeId),
+        where("jobApplicationId", "==", applicationId),
+        limit(1),
+      )
+    : null,
+);
+const resumeJobMatches = useCollection<ResumeJobMatch>(resumeJobMatchQuery);
+const resumeJobMatch = computed(() => resumeJobMatches.value[0] || null);
+
+const matchResumeWithJobApplication = httpsCallable(
+  functions,
+  "matchResumeWithJobApplication",
+);
+</script>

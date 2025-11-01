@@ -27,7 +27,7 @@ import { useRouter, useRoute } from "vue-router";
 
 type ResumeActionButtonProps = {
   applicationId: string;
-  resumeId?: string;
+  resumeId?: string | null;
 };
 
 const { resumeId = "", applicationId } = defineProps<ResumeActionButtonProps>();

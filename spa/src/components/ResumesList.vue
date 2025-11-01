@@ -18,15 +18,7 @@
           <div class="flex items-start gap-3">
             <PhFilePdf :size="36" class="shrink-0 text-primary" />
             <div class="flex flex-col gap-1">
-              <a
-                :href="resume.url"
-                target="_blank"
-                class="text-xl text-primary hover:text-primary/80 hover:underline transition-colors"
-              >
-                <span class="break-all">
-                  {{ resume.fileName || "Resume" }}
-                </span>
-              </a>
+              <ResumeLink :resume="resume" />
               <p class="text-muted-foreground text-xs">
                 {{ formatFileSize(resume.fileSize) }} •
                 {{ formatDate(resume.createdAt) }}
@@ -35,49 +27,12 @@
           </div>
         </CardContent>
         <CardFooter>
-          <!-- todo: figure out why some resumes are stuck in "uploaded" status -->
           <Alert v-if="resume.status === 'parse-failed'" variant="destructive">
             <PhXCircle class="text-destructive" weight="fill" :size="16" />
             <AlertDescription>
               Parsing Error, try uploading again
             </AlertDescription>
           </Alert>
-          <div
-            v-else-if="resume.status === 'parsed'"
-            class="flex items-center gap-2"
-          >
-            <Button
-              size="sm"
-              @click="
-                $router.replace({
-                  query: {
-                    ...$route.query,
-                    'dialog-name': 'score-resume',
-                    'resume-id': resume.id,
-                  },
-                })
-              "
-            >
-              <PhScales />
-              AI Review
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              @click="
-                $router.replace({
-                  query: {
-                    ...$route.query,
-                    'dialog-name': 'generate-cover-letter',
-                    'resume-id': resume.id,
-                  },
-                })
-              "
-            >
-              <PhEnvelopeSimple />
-              Cover letter
-            </Button>
-          </div>
         </CardFooter>
       </Card>
     </div>
@@ -111,13 +66,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import {
-  PhEnvelopeSimple,
-  PhFilePdf,
-  PhScales,
-  PhTrash,
-  PhXCircle,
-} from "@phosphor-icons/vue";
+import { PhFilePdf, PhTrash, PhXCircle } from "@phosphor-icons/vue";
 import type { Resume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
@@ -131,6 +80,7 @@ import {
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ResumeLink from "@/components/ResumeLink.vue";
 
 const user = useCurrentUser();
 const storage = useFirebaseStorage();

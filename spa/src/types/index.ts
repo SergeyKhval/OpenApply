@@ -21,7 +21,7 @@ export type JobApplication = {
   employmentType?: "full-time" | "part-time";
   remotePolicy?: "remote" | "in-office" | "hybrid";
   jobId?: string;
-  resumeId?: string;
+  resumeId?: string | null;
   coverLetterId?: string;
   status: JobStatus;
   createdAt: Timestamp;
