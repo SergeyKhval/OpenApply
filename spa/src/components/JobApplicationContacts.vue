@@ -83,7 +83,7 @@
         >
           <PhUsers size="64" />
           <p class="mb-4 text-center">
-            Keep track of important contacts for this job — you may need them
+            Keep track of important contacts for this job - you may need them
             later.
           </p>
           <Button size="sm" variant="outline" @click="viewMode = 'form'">
