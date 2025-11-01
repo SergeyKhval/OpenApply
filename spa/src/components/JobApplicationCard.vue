@@ -58,17 +58,6 @@
         >
       </div>
 
-      <div class="flex items-center gap-2 my-3">
-        <ResumeActionButton
-          :application-id="application.id"
-          :resume-id="application.resumeId"
-        />
-        <CoverLetterActionButton
-          :application-id="application.id"
-          :cover-letter-id="application.coverLetterId"
-        />
-      </div>
-
       <!-- Technologies badges -->
       <div
         v-if="application.technologies && application.technologies.length > 0"
@@ -175,8 +164,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus.ts";
-import CoverLetterActionButton from "@/components/CoverLetterActionButton.vue";
-import ResumeActionButton from "@/components/ResumeActionButton.vue";
 
 const DEFAULT_VISIBLE_TECHNOLOGIES = 5;
 const JOB_STATUSES: JobStatus[] = [

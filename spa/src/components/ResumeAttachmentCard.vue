@@ -1,20 +1,5 @@
 <template>
-  <Empty class="sm:w-50 relative pb-5 pt-10 px-2 gap-4 border-solid">
-    <Tooltip>
-      <TooltipTrigger as-child>
-        <Checkbox
-          :model-value="isAttached"
-          @update:model-value="handleAttachResume"
-          class="absolute top-2 left-2"
-        />
-      </TooltipTrigger>
-      <TooltipContent>
-        {{
-          isAttached ? "Detach resume" : "Attach resume to this job application"
-        }}
-      </TooltipContent>
-    </Tooltip>
-
+  <Empty class="sm:w-50 relative py-5 px-2 gap-4 border-solid">
     <ResumeScore
       v-if="resumeJobMatch"
       class="absolute top-2 right-2 size-8"
@@ -42,10 +27,19 @@
 
           <DialogScrollContent class="sm:max-w-150">
             <DialogHeader>
-              <DialogTitle>AI Resume Reviewer</DialogTitle>
+              <DialogTitle>
+                {{
+                  resumeJobMatch
+                    ? "Your personalized match is ready"
+                    : "Get your personalized match in seconds"
+                }}
+              </DialogTitle>
               <DialogDescription>
-                Check how your resume matches with the vacancy and get
-                actionable feedback
+                {{
+                  resumeJobMatch
+                    ? ""
+                    : "Run a quick AI review to see your match score and targeted suggestions to strengthen this application."
+                }}
               </DialogDescription>
             </DialogHeader>
 
@@ -155,14 +149,42 @@
                   </TabsContent>
                 </Tabs>
               </div>
-              <div v-else>
-                <Button
-                  @click="handleReviewResume()"
-                  :disabled="isMatchingResume"
+              <div v-else-if="isMatchingResume">
+                <div
+                  class="flex flex-col items-center justify-center space-y-4 my-10"
                 >
-                  <Spinner v-if="isMatchingResume" />
-                  Run review
-                </Button>
+                  <PhSpinner size="64" class="animate-spin" />
+
+                  <p class="text-center text-sm text-foreground-muted">
+                    Reviewing your resume against the job application... <br />
+                    This may take up to a minute.
+                  </p>
+                </div>
+              </div>
+              <div v-else>
+                <div class="flex flex-col">
+                  <ul
+                    class="text-sm list-disc list-inside space-y-1 text-left mb-6"
+                  >
+                    <li>Overall match score</li>
+                    <li>Top strengths recruiters will notice</li>
+                    <li>Missing or weak skills to address</li>
+                    <li>Specific edits to boost your chances</li>
+                  </ul>
+                  <div>
+                    <Button
+                      @click="handleReviewResume()"
+                      :disabled="isMatchingResume"
+                    >
+                      <Spinner v-if="isMatchingResume" />
+                      Run review
+                    </Button>
+                    <p class="text-xs text-muted-foreground mt-2">
+                      Takes under a minute. You can re‑run after updating your
+                      resume.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </DialogScrollContent>
@@ -178,6 +200,7 @@ import {
   PhCheckFat,
   PhFilePdf,
   PhScales,
+  PhSpinner,
   PhWarningCircle,
   PhXCircle,
 } from "@phosphor-icons/vue";
@@ -195,41 +218,27 @@ import {
 import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResumeScore from "@/components/ResumeScore.vue";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Checkbox } from "@/components/ui/checkbox";
 import { db, functions } from "@/firebase/config.ts";
 import { useCollection, useCurrentUser } from "vuefire";
 import { Resume, ResumeJobMatch } from "@/types";
 import { httpsCallable } from "firebase/functions";
-import { useJobApplications } from "@/composables/useJobApplications.ts";
 import ResumeLink from "@/components/ResumeLink.vue";
 
 type ResumeAttachmentCardProps = {
   resume: Resume;
   applicationId: string;
-  isAttached?: boolean;
-  aiScore?: number;
-  hideReviewButton?: boolean;
-  isDeleting?: boolean;
 };
 
-const { resume, applicationId, isAttached } =
-  defineProps<ResumeAttachmentCardProps>();
+const { resume, applicationId } = defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
-const { updateJobApplication } = useJobApplications();
 
-function handleAttachResume(isAttached: boolean | "indeterminate") {
-  if (isAttached === "indeterminate") return;
+const isMatchingResume = ref(false);
 
-  updateJobApplication(applicationId, {
-    resumeId: isAttached ? resume.id : null,
-  });
-}
+const matchResumeWithJobApplication = httpsCallable(
+  functions,
+  "matchResumeWithJobApplication",
+);
 
 async function handleReviewResume() {
   if (!resume.id || !applicationId) return;
@@ -241,8 +250,6 @@ async function handleReviewResume() {
   });
   isMatchingResume.value = false;
 }
-
-const isMatchingResume = ref(false);
 
 const resumeJobMatchQuery = computed(() =>
   user.value
@@ -257,9 +264,4 @@ const resumeJobMatchQuery = computed(() =>
 );
 const resumeJobMatches = useCollection<ResumeJobMatch>(resumeJobMatchQuery);
 const resumeJobMatch = computed(() => resumeJobMatches.value[0] || null);
-
-const matchResumeWithJobApplication = httpsCallable(
-  functions,
-  "matchResumeWithJobApplication",
-);
 </script>
