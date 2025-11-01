@@ -7,7 +7,10 @@
       <ul v-if="notes.length" class="flex flex-col gap-6">
         <JobApplicationNote v-for="note in notes" :key="note.id" :note="note" />
       </ul>
-      <p v-else class="text-muted-foreground flex flex-col items-center gap-2 text-center">
+      <p
+        v-else
+        class="text-muted-foreground flex flex-col items-center gap-2 text-center"
+      >
         <PhNoteBlank size="64" />
         It feels a little empty here... Maybe add a note?
       </p>
@@ -23,7 +26,7 @@
 Ctrl+Enter to save"
           @keydown.ctrl.enter="addNote()"
         />
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" variant="outline">
           <PhNotePencil />
           Add note
         </Button>
@@ -68,6 +71,7 @@ const user = useCurrentUser();
 const { data: notes } = useCollection<JobApplicationNoteType>(
   query(
     collection(db, "jobApplicationNotes"),
+    where("userId", "==", user.value?.uid || ""),
     where("jobApplicationId", "==", applicationId),
     orderBy("createdAt", "desc"),
   ),

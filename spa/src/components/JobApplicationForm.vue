@@ -28,6 +28,17 @@
     </div>
 
     <div class="flex flex-col gap-2">
+      <Label for="job-description">Job Description</Label>
+      <Textarea
+        id="job-description"
+        v-model="formData.jobDescription"
+        placeholder="Job description is used for tailored cover letters, resume scoring etc. Make sure to include key details."
+        class="max-h-50"
+        required
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
       <Label for="remotePolicy">Remote Policy (optional)</Label>
       <Select v-model="formData.remotePolicy">
         <SelectTrigger id="remotePolicy" class="w-full">
@@ -123,6 +134,7 @@ import {
 } from "@/components/ui/tags-input";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 
 type JobApplicationFormProps = {
   jobId?: string;
@@ -133,6 +145,7 @@ type JobApplicationFormProps = {
   employmentType?: "full-time" | "part-time";
   technologies?: string[];
   jobDescriptionLink?: string;
+  jobDescription?: string;
   parsingFailed?: boolean;
 };
 type JobApplicationFormEmits = {
@@ -149,13 +162,12 @@ const {
   employmentType = "",
   technologies = [],
   jobDescriptionLink = "",
+  jobDescription = "",
   parsingFailed = false,
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
 const { addJobApplication } = useJobApplications();
-
-const isDatePickerOpen = ref(false);
 
 const isSubmitting = ref(false);
 const error = ref<string | null>(null);
@@ -165,6 +177,7 @@ function getInitialForm() {
     companyName,
     companyLogoUrl,
     position,
+    jobDescription,
     remotePolicy,
     employmentType,
     jobDescriptionLink,
@@ -195,10 +208,5 @@ const handleSubmit = async () => {
   }
 
   isSubmitting.value = false;
-};
-
-// @ts-expect-error - Used in template for Calendar component
-const handleDateSelect = () => {
-  isDatePickerOpen.value = false;
 };
 </script>

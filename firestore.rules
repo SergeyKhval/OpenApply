@@ -11,6 +11,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function canReadOwn() {
+      return request.auth != null &&
+             request.auth.uid == resource.data.userId;
+    }
+
     function canCreateOwn() {
       return request.auth != null &&
              request.auth.uid == request.resource.data.userId;
@@ -27,41 +32,41 @@ service cloud.firestore {
     }
 
     match /jobApplications/{applicationId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
     }
 
     match /jobApplicationNotes/{noteId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
     }
     
     match /userResumes/{resumeId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
     }
     
     match /contacts/{contactId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
     }
     
     match /interviews/{interviewId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
     }
     
-    match /jobs/{interviewId} {
+    match /jobs/{jobId} {
       allow read: if canRead();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
@@ -69,7 +74,14 @@ service cloud.firestore {
     }
     
     match /coverLetters/{coverLetterId} {
-      allow read: if canRead();
+      allow read: if canReadOwn();
+      allow create: if canCreateOwn();
+      allow update: if canUpdateOwn();
+      allow delete: if canDeleteOwn();
+    }
+
+    match /resumeJobMatches/{resumeJobMatchId} {
+      allow read: if canReadOwn();
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();

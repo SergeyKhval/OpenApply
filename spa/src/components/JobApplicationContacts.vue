@@ -82,11 +82,14 @@
           class="flex flex-col gap-2 items-center text-muted-foreground"
         >
           <PhUsers size="64" />
-          <p class="mb-4 text-center">You haven't added any contacts yet.</p>
-          <Button size="sm" @click="viewMode = 'form'">
+          <p class="mb-4 text-center">
+            Keep track of important contacts for this job - you may need them
+            later.
+          </p>
+          <Button size="sm" variant="outline" @click="viewMode = 'form'">
             <PhUserPlus />
-            Add first contact</Button
-          >
+            Add first contact
+          </Button>
         </div>
       </template>
 

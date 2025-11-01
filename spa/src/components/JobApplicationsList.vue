@@ -3,11 +3,6 @@
     v-if="!applicationsPending && filteredApplications.length"
     class="grid grid-cols-1 gap-4 pr-6 pb-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
   >
-    <JobApplicationCard
-      v-for="application in filteredApplications"
-      :key="application.id"
-      :application="application"
-    />
     <div class="h-full">
       <button
         type="button"
@@ -29,6 +24,11 @@
         </span>
       </button>
     </div>
+    <JobApplicationCard
+      v-for="application in filteredApplications"
+      :key="application.id"
+      :application="application"
+    />
   </div>
 
   <Empty

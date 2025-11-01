@@ -85,7 +85,7 @@
               <PhUser />
             </AvatarFallback>
           </Avatar>
-          <span class="grow text-left">
+          <span class="grow text-left truncate">
             {{ user?.displayName || user?.email }}
           </span>
 

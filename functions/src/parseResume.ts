@@ -3,16 +3,18 @@ import { getStorage } from "firebase-admin/storage";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { PDFParse } from "pdf-parse";
 
+const db = getFirestore();
+
 export const parseResume = onObjectFinalized(async (object) => {
   const filePath = object.data.name;
-  if (!filePath.startsWith("resumes/")) return;
 
-  const bucket = getStorage().bucket(object.bucket);
-  const file = bucket.file(filePath);
-  const snapshot = await getFirestore()
-    .collection("userResumes")
-    .where("storagePath", "==", filePath)
-    .get();
+  if (!filePath.startsWith("resumes/")) {
+    console.log("File is not in resumes/ directory, skipping parse.");
+    return;
+  }
+
+  const [, userId, fileName] = filePath.split("/");
+  const file = getStorage().bucket().file(object.data.name);
 
   try {
     const [buffer] = await file.download();
@@ -20,20 +22,18 @@ export const parseResume = onObjectFinalized(async (object) => {
     const { text } = await parser.getText();
     await parser.destroy();
 
-    for (const doc of snapshot.docs) {
-      await doc.ref.update({
-        status: "parsed",
-        text,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    }
+    await db.collection("userResumes").add({
+      userId,
+      // filename comes in format: <timestamp>-<originalFileName>
+      fileName: fileName.split("-").slice(1).join("-"),
+      fileSize: object.data.size,
+      text,
+      status: "parsed",
+      storagePath: object.data.name,
+      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+    });
   } catch (e) {
     console.error("Error parsing resume:", e);
-    for (const doc of snapshot.docs) {
-      await doc.ref.update({
-        status: "parse-failed",
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    }
   }
 });
