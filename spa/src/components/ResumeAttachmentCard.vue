@@ -1,8 +1,5 @@
 <template>
-  <Empty
-    class="sm:w-50 relative pb-5 pt-10 px-2 gap-4"
-    :class="resumeId && 'border-solid'"
-  >
+  <Empty class="sm:w-50 relative pb-5 pt-10 px-2 gap-4 border-solid">
     <Tooltip>
       <TooltipTrigger as-child>
         <Checkbox
@@ -24,25 +21,17 @@
       :score="resumeJobMatch.matchResult.match_summary.overall_match_percent"
     />
 
-    <EmptyIcon
-      :class="
-        resumeId
-          ? 'border-solid text-foreground border-foreground'
-          : 'animate-pulse'
-      "
-    >
-      <PhFilePdf v-if="resumeId" :size="36" />
-      <PhReadCvLogo v-else :size="36" />
+    <EmptyIcon class="border-solid text-foreground border-foreground">
+      <PhFilePdf :size="36" />
     </EmptyIcon>
-    <a
+
+    <ResumeLink
+      :resume="resume"
       class="truncate max-w-full text-xs text-primary hover:underline"
-      target="_blank"
-      :href="url"
-    >
-      {{ fileName }}
-    </a>
+    />
+
     <EmptyDescription class="text-foreground">
-      <div v-if="resumeId" class="items-center gap-2 flex">
+      <div class="items-center gap-2 flex">
         <Dialog>
           <DialogTrigger as-child>
             <Button size="sm" variant="outline">
@@ -179,33 +168,6 @@
           </DialogScrollContent>
         </Dialog>
       </div>
-      <template v-else>
-        <Tooltip>
-          <TooltipTrigger>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="
-                $router.replace({
-                  query: {
-                    ...$route.query,
-                    'dialog-name': 'resume-picker',
-                    'application-id': applicationId,
-                    'resume-id': resumeId,
-                  },
-                })
-              "
-            >
-              <PhFilePdf />
-              Attach
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent class="text-center">
-            You will be able to do AI review <br />
-            once you attach a resume.
-          </TooltipContent>
-        </Tooltip>
-      </template>
     </EmptyDescription>
   </Empty>
 </template>
@@ -215,7 +177,6 @@ import { computed, ref } from "vue";
 import {
   PhCheckFat,
   PhFilePdf,
-  PhReadCvLogo,
   PhScales,
   PhWarningCircle,
   PhXCircle,
@@ -242,22 +203,21 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { db, functions } from "@/firebase/config.ts";
 import { useCollection, useCurrentUser } from "vuefire";
-import { ResumeJobMatch } from "@/types";
+import { Resume, ResumeJobMatch } from "@/types";
 import { httpsCallable } from "firebase/functions";
 import { useJobApplications } from "@/composables/useJobApplications.ts";
+import ResumeLink from "@/components/ResumeLink.vue";
 
 type ResumeAttachmentCardProps = {
-  resumeId: string;
+  resume: Resume;
   applicationId: string;
-  fileName: string;
-  url: string;
   isAttached?: boolean;
   aiScore?: number;
   hideReviewButton?: boolean;
   isDeleting?: boolean;
 };
 
-const { resumeId, applicationId, fileName, url, isAttached } =
+const { resume, applicationId, isAttached } =
   defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
@@ -267,16 +227,16 @@ function handleAttachResume(isAttached: boolean | "indeterminate") {
   if (isAttached === "indeterminate") return;
 
   updateJobApplication(applicationId, {
-    resumeId: isAttached ? resumeId : null,
+    resumeId: isAttached ? resume.id : null,
   });
 }
 
 async function handleReviewResume() {
-  if (!resumeId || !applicationId) return;
+  if (!resume.id || !applicationId) return;
 
   isMatchingResume.value = true;
   await matchResumeWithJobApplication({
-    resumeId,
+    resumeId: resume.id,
     applicationId,
   });
   isMatchingResume.value = false;
@@ -289,7 +249,7 @@ const resumeJobMatchQuery = computed(() =>
     ? query(
         collection(db, "resumeJobMatches"),
         where("userId", "==", user.value.uid),
-        where("resumeId", "==", resumeId),
+        where("resumeId", "==", resume.id),
         where("jobApplicationId", "==", applicationId),
         limit(1),
       )

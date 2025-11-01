@@ -7,13 +7,20 @@
       <div>
         <h3 class="mb-2">Resumes</h3>
         <div class="flex flex-col gap-4 sm:flex-row">
+          <Empty
+            class="group sm:w-50 hover:border-solid cursor-pointer pb-5 pt-10 px-2 gap-4"
+            @click="openFileDialog()"
+          >
+            <EmptyIcon class="group-hover:border-solid">
+              <PhPlus />
+            </EmptyIcon>
+            <EmptyDescription> Click to upload a new resume </EmptyDescription>
+          </Empty>
           <ResumeAttachmentCard
             v-for="resume in resumes"
             :key="resume.id"
-            :resume-id="resume.id"
+            :resume="resume"
             :application-id="applicationId"
-            :file-name="resume.fileName"
-            :url="resume.url"
             :is-attached="resumeId === resume.id"
           />
         </div>
@@ -90,11 +97,13 @@ import {
   PhEnvelopeSimple,
   PhEnvelopeSimpleOpen,
   PhEye,
+  PhPlus,
   PhSparkle,
 } from "@phosphor-icons/vue";
 import { Button } from "@/components/ui/button";
 import ResumeAttachmentCard from "@/components/ResumeAttachmentCard.vue";
 import { useResumes } from "@/composables/useResumes.ts";
+import { useResumeUpload } from "@/composables/useResumeUpload.ts";
 
 type JobApplicationAttachmentsProps = {
   applicationId: string;
@@ -109,4 +118,5 @@ const {
 } = defineProps<JobApplicationAttachmentsProps>();
 
 const resumes = useResumes();
+const { openFileDialog } = useResumeUpload();
 </script>
