@@ -127,12 +127,9 @@
         </div>
       </div>
 
-      <div class="grid lg:grid-cols-2 gap-4">
+      <div v-if="application" class="grid lg:grid-cols-2 gap-4">
         <div class="flex flex-col gap-4">
-          <JobApplicationAttachments
-            :application-id="applicationId"
-            :cover-letter-id="application?.coverLetterId"
-          />
+          <JobApplicationAttachments :application="application" />
 
           <JobApplicationInterviews :application-id="applicationId" />
 

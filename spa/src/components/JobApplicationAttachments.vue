@@ -25,7 +25,8 @@
               v-for="resume in resumes"
               :key="resume.id"
               :resume="resume"
-              :application-id="applicationId"
+              :application-id="application.id"
+              :application-has-description="!!application.jobDescription"
             />
           </div>
         </div>
@@ -35,24 +36,27 @@
           <div class="flex flex-col gap-4 sm:flex-row">
             <Empty
               class="sm:w-50 pb-5 pt-10 px-2 gap-4 relative"
-              :class="{ 'border-solid': coverLetterId }"
+              :class="{ 'border-solid': application.coverLetterId }"
             >
               <Badge variant="secondary" class="absolute top-2 left-2">
                 Cover Letter
               </Badge>
               <EmptyIcon
                 :class="
-                  coverLetterId
+                  application.coverLetterId
                     ? 'border-solid text-foreground border-foreground'
                     : 'animate-pulse'
                 "
               >
-                <PhEnvelopeSimpleOpen v-if="coverLetterId" :size="36" />
+                <PhEnvelopeSimpleOpen
+                  v-if="application.coverLetterId"
+                  :size="36"
+                />
                 <PhEnvelopeSimple v-else :size="36" />
               </EmptyIcon>
               <EmptyDescription class="text-foreground">
                 <Button
-                  v-if="coverLetterId"
+                  v-if="application.coverLetterId"
                   variant="outline"
                   size="sm"
                   @click="
@@ -60,7 +64,7 @@
                       query: {
                         ...$route.query,
                         'dialog-name': 'cover-letter-preview',
-                        'cover-letter-id': coverLetterId,
+                        'cover-letter-id': application.coverLetterId,
                       },
                     })
                   "
@@ -77,7 +81,7 @@
                       query: {
                         ...$route.query,
                         'dialog-name': 'generate-cover-letter',
-                        'application-id': applicationId,
+                        'application-id': application.id,
                       },
                     })
                   "
@@ -126,14 +130,13 @@ import { Button } from "@/components/ui/button";
 import ResumeAttachmentCard from "@/components/ResumeAttachmentCard.vue";
 import { useResumes } from "@/composables/useResumes.ts";
 import { useResumeUpload } from "@/composables/useResumeUpload.ts";
+import { JobApplication } from "@/types";
 
 type JobApplicationAttachmentsProps = {
-  applicationId: string;
-  coverLetterId?: string;
+  application: JobApplication;
 };
 
-const { applicationId, coverLetterId = "" } =
-  defineProps<JobApplicationAttachmentsProps>();
+const { application } = defineProps<JobApplicationAttachmentsProps>();
 
 const resumes = useResumes();
 const { openFileDialog } = useResumeUpload();

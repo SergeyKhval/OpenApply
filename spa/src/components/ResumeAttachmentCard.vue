@@ -58,9 +58,9 @@
                 <Tabs default-value="summary">
                   <TabsList class="w-full">
                     <TabsTrigger value="summary">Summary</TabsTrigger>
-                    <TabsTrigger value="recommendations"
-                      >Recommendations</TabsTrigger
-                    >
+                    <TabsTrigger value="recommendations">
+                      Recommendations
+                    </TabsTrigger>
                     <TabsTrigger value="skills">Skills</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary">
@@ -85,8 +85,8 @@
                       <thead>
                         <tr class="text-left">
                           <th></th>
-                          <th>Skill</th>
-                          <th>Notes</th>
+                          <th>Required skill for job</th>
+                          <th>Evidence from your resume</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-border">
@@ -95,16 +95,19 @@
                             .skills_comparison.missing_skills"
                           :key="skill.skill"
                         >
-                          <td class="pr-2">
+                          <td
+                            class="pr-2 py-2 align-top"
+                            title="You miss this skill"
+                          >
                             <PhXCircle
                               size="16"
                               class="text-destructive shrink-0"
                             />
                           </td>
-                          <td class="py-2 pr-2">
+                          <td class="py-2 pr-2 align-top">
                             {{ skill.skill }}
                           </td>
-                          <td class="py-2 pr-2 italic leading-5">
+                          <td class="py-2 pr-2 italic leading-5 align-top">
                             {{ skill.evidence || "N/A" }}
                           </td>
                         </tr>
@@ -113,17 +116,20 @@
                             .skills_comparison.partially_matched_skills"
                           :key="skill.skill"
                         >
-                          <td class="pr-2">
+                          <td
+                            class="pr-2 align-top py-2"
+                            title="Partially matched skill"
+                          >
                             <PhWarningCircle
                               size="16"
                               class="shrink-0 text-yellow-500"
                             />
                           </td>
-                          <td class="py-2 pr-2">
+                          <td class="py-2 pr-2 align-top">
                             {{ skill.skill }}
                           </td>
 
-                          <td class="py-2 pr-2 italic leading-5">
+                          <td class="py-2 pr-2 italic leading-5 align-top">
                             {{ skill.evidence }}
                           </td>
                         </tr>
@@ -132,15 +138,18 @@
                             .skills_comparison.matched_skills"
                           :key="skill.skill"
                         >
-                          <td class="pr-2">
+                          <td
+                            class="pr-2 py-2 align-top"
+                            title="Fully matched skill"
+                          >
                             <PhCheckFat
                               size="16"
                               weight="fill"
                               class="text-emerald-600"
                             />
                           </td>
-                          <td class="py-2 pr-2">{{ skill.skill }}</td>
-                          <td class="py-2 pr-2 leading-5 italic">
+                          <td class="py-2 pr-2 align-top">{{ skill.skill }}</td>
+                          <td class="py-2 pr-2 leading-5 italic align-top">
                             {{ skill.evidence }}
                           </td>
                         </tr>
@@ -171,18 +180,26 @@
                     <li>Missing or weak skills to address</li>
                     <li>Specific edits to boost your chances</li>
                   </ul>
-                  <div>
-                    <Button
-                      @click="handleReviewResume()"
-                      :disabled="isMatchingResume"
-                    >
-                      <Spinner v-if="isMatchingResume" />
-                      Run review
-                    </Button>
-                    <p class="text-xs text-muted-foreground mt-2">
-                      Takes under a minute. You can re‑run after updating your
-                      resume.
-                    </p>
+                  <div class="flex flex-col items-start gap-2">
+                    <template v-if="applicationHasDescription">
+                      <Button
+                        :disabled="!applicationHasDescription"
+                        @click="handleReviewResume()"
+                      >
+                        Run review
+                      </Button>
+                      <p class="text-xs text-muted-foreground">
+                        Takes under a minute. You can re‑run after updating your
+                        resume.
+                      </p>
+                    </template>
+                    <Alert v-else variant="destructive">
+                      <PhWarningCircle />
+                      <AlertDescription>
+                        This job application does not have a description. Please
+                        add one to unlock AI resume reviews.
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 </div>
               </div>
@@ -205,7 +222,6 @@ import {
   PhXCircle,
 } from "@phosphor-icons/vue";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { collection, limit, query, where } from "firebase/firestore";
 import {
   Dialog,
@@ -223,13 +239,19 @@ import { useCollection, useCurrentUser } from "vuefire";
 import { Resume, ResumeJobMatch } from "@/types";
 import { httpsCallable } from "firebase/functions";
 import ResumeLink from "@/components/ResumeLink.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type ResumeAttachmentCardProps = {
   resume: Resume;
   applicationId: string;
+  applicationHasDescription?: boolean;
 };
 
-const { resume, applicationId } = defineProps<ResumeAttachmentCardProps>();
+const {
+  resume,
+  applicationId,
+  applicationHasDescription = false,
+} = defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
 
