@@ -109,10 +109,6 @@
                     job application details page </RouterLink
                   >.
                 </p>
-                <p>
-                  You will be able to generate cover letter from that page as
-                  well
-                </p>
               </AlertDescription>
             </Alert>
 
