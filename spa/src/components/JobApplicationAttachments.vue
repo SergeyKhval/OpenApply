@@ -6,7 +6,12 @@
     <CardContent class="flex flex-col gap-6">
       <template v-if="resumes.length">
         <div>
-          <h3 class="mb-2">Resumes</h3>
+          <h3 class="mb-2">
+            Resumes
+            <span class="text-sm text-muted-foreground">
+              (available for all your jobs)
+            </span>
+          </h3>
           <div class="flex flex-col gap-4 sm:flex-row flex-wrap">
             <Empty
               class="group sm:w-50 hover:border-solid cursor-pointer pb-5 pt-10 px-2 gap-4"
@@ -15,11 +20,7 @@
               <EmptyIcon class="group-hover:border-solid">
                 <PhPlus />
               </EmptyIcon>
-              <EmptyDescription>
-                Upload another resume.
-                <br />
-                Resumes are available for all your applications.
-              </EmptyDescription>
+              <EmptyDescription> Upload another resume. </EmptyDescription>
             </Empty>
             <ResumeAttachmentCard
               v-for="resume in resumes"
@@ -32,7 +33,12 @@
         </div>
 
         <div>
-          <h3 class="mb-2">Cover Letters</h3>
+          <h3 class="mb-2">
+            Cover Letters
+            <span class="text-sm text-muted-foreground">
+              (tailored for this application)
+            </span>
+          </h3>
           <div class="flex flex-col gap-4 sm:flex-row">
             <Empty
               class="sm:w-50 pb-5 pt-10 px-2 gap-4 relative"
