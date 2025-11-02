@@ -25,7 +25,7 @@
             </Button>
           </DialogTrigger>
 
-          <DialogScrollContent class="sm:max-w-150">
+          <DialogScrollContent class="sm:max-w-200">
             <DialogHeader>
               <DialogTitle>
                 {{
@@ -171,7 +171,31 @@
                 </div>
               </div>
               <div v-else>
-                <div class="flex flex-col">
+                <AvailableCoins
+                  :current-balance="currentBalance"
+                  cost-text="10 coins per AI review"
+                  class="mb-6"
+                />
+
+                <div v-if="!hasSufficientCredits" class="space-y-6">
+                  <div
+                    class="rounded-lg border border-border bg-muted/10 p-6 space-y-2"
+                  >
+                    <p class="text-lg font-semibold">
+                      Add more coins to continue
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                      You need at least {{ requiredCredits }} coins to generate
+                      an AI resume review. Choose a pack below to keep going.
+                    </p>
+                  </div>
+                  <CreditPackOptions
+                    :loading="generatingStripeLink"
+                    @purchase="startCheckout"
+                  />
+                </div>
+
+                <div v-else class="flex flex-col">
                   <ul
                     class="text-sm list-disc list-inside space-y-1 text-left mb-6"
                   >
@@ -180,6 +204,15 @@
                     <li>Missing or weak skills to address</li>
                     <li>Specific edits to boost your chances</li>
                   </ul>
+
+                  <!-- Error Message -->
+                  <Alert v-if="errorMessage" variant="destructive" class="mb-4">
+                    <PhWarningCircle />
+                    <AlertDescription>
+                      {{ errorMessage }}
+                    </AlertDescription>
+                  </Alert>
+
                   <div class="flex flex-col items-start gap-2">
                     <template v-if="applicationHasDescription">
                       <Button
@@ -240,6 +273,10 @@ import { Resume, ResumeJobMatch } from "@/types";
 import { httpsCallable } from "firebase/functions";
 import ResumeLink from "@/components/ResumeLink.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/composables/useAuth";
+import { useCreditsCheckout } from "@/composables/useCreditsCheckout";
+import CreditPackOptions from "@/components/CreditPackOptions.vue";
+import AvailableCoins from "@/components/AvailableCoins.vue";
 
 type ResumeAttachmentCardProps = {
   resume: Resume;
@@ -254,8 +291,22 @@ const {
 } = defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
+const { userProfile } = useAuth();
+const { startCheckout, isProcessing: generatingStripeLink } =
+  useCreditsCheckout();
 
 const isMatchingResume = ref(false);
+const errorMessage = ref("");
+
+const requiredCredits = 10;
+
+const currentBalance = computed(
+  () => userProfile.value?.billingProfile?.currentBalance ?? 0,
+);
+
+const hasSufficientCredits = computed(
+  () => currentBalance.value >= requiredCredits,
+);
 
 const matchResumeWithJobApplication = httpsCallable(
   functions,
@@ -266,11 +317,34 @@ async function handleReviewResume() {
   if (!resume.id || !applicationId) return;
 
   isMatchingResume.value = true;
-  await matchResumeWithJobApplication({
-    resumeId: resume.id,
-    applicationId,
-  });
-  isMatchingResume.value = false;
+  errorMessage.value = "";
+
+  try {
+    await matchResumeWithJobApplication({
+      resumeId: resume.id,
+      applicationId,
+    });
+  } catch (err: unknown) {
+    console.error("Error generating resume review:", err);
+
+    const maybeError = err as {
+      code?: string;
+      message?: string;
+      details?: { code?: string };
+    };
+
+    // Check for insufficient credits error
+    const errorCode =
+      maybeError.code?.replace("functions/", "") ||
+      (maybeError.details as { code?: string })?.code;
+
+    if (errorCode !== "insufficient-credits") {
+      errorMessage.value =
+        maybeError.message || "Failed to generate AI resume review";
+    }
+  } finally {
+    isMatchingResume.value = false;
+  }
 }
 
 const resumeJobMatchQuery = computed(() =>

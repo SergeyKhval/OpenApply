@@ -10,21 +10,10 @@
       </DialogHeader>
 
       <div class="py-4 space-y-4">
-        <div
-          class="rounded-lg border border-dashed border-border p-4 bg-muted/20 flex items-center justify-between"
-        >
-          <div>
-            <p class="text-sm font-medium text-muted-foreground">
-              Available coins
-            </p>
-            <p class="text-2xl font-semibold flex items-center gap-1">
-              <PhCoins />{{ currentBalance }}
-            </p>
-            <span class="text-xs text-muted-foreground text-right">
-              10 coins per cover letter
-            </span>
-          </div>
-        </div>
+        <AvailableCoins
+          :current-balance="currentBalance"
+          cost-text="10 coins per cover letter"
+        />
 
         <div v-if="!hasSufficientCredits" class="space-y-6">
           <div
@@ -154,7 +143,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import {
-  PhCoins,
   PhFile,
   PhSparkle,
   PhSpinner,
@@ -172,6 +160,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import AvailableCoins from "@/components/AvailableCoins.vue";
 import { useCoverLetters } from "@/composables/useCoverLetters";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { useResumes } from "@/composables/useResumes";

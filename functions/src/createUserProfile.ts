@@ -27,7 +27,7 @@ export const createUserProfile = user().onCreate(async (user) => {
 
     await billingProfileRef.set({
       stripeCustomerId: customer.id,
-      currentBalance: 20,
+      currentBalance: 100,
       lifetimeCreditsPurchased: 0,
       welcomeCreditsGrantedAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),

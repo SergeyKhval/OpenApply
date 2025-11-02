@@ -1,5 +1,5 @@
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { defineString } from "firebase-functions/params";
@@ -11,6 +11,22 @@ const ai = genkit({
   model: googleAI.model("gemini-2.5-flash", { temperature: 0, topK: 1 }),
 });
 const db = getFirestore();
+
+const REQUIRED_CREDITS = 10;
+
+const billingProfileRefForUser = (userId: string) =>
+  db
+    .collection("users")
+    .doc(userId)
+    .collection("billingProfile")
+    .doc("profile");
+
+const createInsufficientCreditsError = () =>
+  new HttpsError(
+    "failed-precondition",
+    `You need at least ${REQUIRED_CREDITS} coins to generate an AI resume review.`,
+    { code: "insufficient-credits" },
+  );
 
 // Define the schema for the resume and job description match result
 const ResumeJDMatchSchema = z.object({
@@ -66,55 +82,130 @@ const ResumeJDMatchSchema = z.object({
 
 export const matchResumeWithJobApplication = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error("Authentication required");
+    throw new HttpsError("unauthenticated", "User must be authenticated");
   }
 
+  const userId = request.auth.uid;
   const { resumeId, applicationId } = request.data;
 
   if (!resumeId || !applicationId) {
-    throw new Error("Missing resumeId or applicationId");
+    throw new HttpsError(
+      "invalid-argument",
+      "resumeId and applicationId are required",
+    );
   }
 
-  const [resumeMatchPromptTemplate, resume, jobApplication] = await Promise.all(
-    [
-      db.collection("promptTemplates").doc("resumeMatcher").get(),
-      db.collection("userResumes").doc(resumeId).get(),
-      db.collection("jobApplications").doc(applicationId).get(),
-    ],
-  );
+  try {
+    // Validate billing balance
+    const billingProfileRef = billingProfileRefForUser(userId);
+    const billingSnapshot = await billingProfileRef.get();
 
-  const promptTemplateData = resumeMatchPromptTemplate.data();
-  const resumeData = resume.data();
-  const jobApplicationData = jobApplication.data();
+    if (!billingSnapshot.exists) {
+      throw new HttpsError("failed-precondition", "Billing profile not found");
+    }
 
-  if (
-    !promptTemplateData ||
-    !resumeData ||
-    !jobApplicationData ||
-    !resumeData.text ||
-    !jobApplicationData.jobDescription
-  ) {
-    throw new Error("Invalid data for resume or job application");
+    const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
+
+    if (currentBalance < REQUIRED_CREDITS) {
+      throw createInsufficientCreditsError();
+    }
+
+    // Fetch data
+    const [resumeMatchPromptTemplate, resume, jobApplication] =
+      await Promise.all([
+        db.collection("promptTemplates").doc("resumeMatcher").get(),
+        db.collection("userResumes").doc(resumeId).get(),
+        db.collection("jobApplications").doc(applicationId).get(),
+      ]);
+
+    const promptTemplateData = resumeMatchPromptTemplate.data();
+    const resumeData = resume.data();
+    const jobApplicationData = jobApplication.data();
+
+    // Validate ownership
+    if (resumeData?.userId !== userId) {
+      throw new HttpsError(
+        "permission-denied",
+        "User does not have access to this resume",
+      );
+    }
+
+    if (jobApplicationData?.userId !== userId) {
+      throw new HttpsError(
+        "permission-denied",
+        "User does not have access to this job application",
+      );
+    }
+
+    if (
+      !promptTemplateData ||
+      !resumeData ||
+      !jobApplicationData ||
+      !resumeData.text ||
+      !jobApplicationData.jobDescription
+    ) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Invalid data for resume or job application",
+      );
+    }
+
+    const prompt = promptTemplateData.template
+      .replace("{{ resumeText }}", resumeData.text)
+      .replace("{{ jobDescriptionText }}", jobApplicationData.jobDescription);
+
+    const result = await ai.generate({
+      prompt,
+      output: {
+        schema: ResumeJDMatchSchema,
+        format: "json",
+      },
+    });
+
+    // Create match result and deduct credits in a transaction
+    const matchRef = db.collection("resumeJobMatches").doc();
+
+    await db.runTransaction(async (transaction) => {
+      const billingSnap = await transaction.get(billingProfileRef);
+
+      if (!billingSnap.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Billing profile not found",
+        );
+      }
+
+      const currentBalance = billingSnap.data()?.currentBalance ?? 0;
+
+      if (currentBalance < REQUIRED_CREDITS) {
+        throw createInsufficientCreditsError();
+      }
+
+      transaction.create(matchRef, {
+        userId,
+        resumeId,
+        jobApplicationId: applicationId,
+        matchResult: result.output,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(billingProfileRef, {
+        currentBalance: FieldValue.increment(-REQUIRED_CREDITS),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error generating resume match:", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to generate AI review";
+    throw new HttpsError("internal", errorMessage);
   }
-
-  const prompt = promptTemplateData.template
-    .replace("{{ resumeText }}", resumeData.text)
-    .replace("{{ jobDescriptionText }}", jobApplicationData.jobDescription);
-
-  const result = await ai.generate({
-    prompt,
-    output: {
-      schema: ResumeJDMatchSchema,
-      format: "json",
-    },
-  });
-
-  await db.collection("resumeJobMatches").add({
-    userId: request.auth?.uid,
-    resumeId,
-    jobApplicationId: applicationId,
-    matchResult: result.output,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
 });
