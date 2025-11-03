@@ -1,16 +1,16 @@
 # OpenApply
 
-Open, self-hostable job application tracker with paste-a-link import and AI-assisted cover letters.
+Open, self-hostable, AI-powered job search assistant.
 
 Website: https://openapply.app
 
 ## Features
 
+- AI resume reviews and tailored cover letters
 - Job application tracking
 - Interview / contact management
 - One click link-based or CSV job import
 - Resume storage
-- AI-powered cover letter generation
 
 ## Prerequisites
 
