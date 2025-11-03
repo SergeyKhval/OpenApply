@@ -4,7 +4,7 @@
       <h2 class="text-2xl font-semibold text-foreground whitespace-nowrap grow">
         Resumes
       </h2>
-      <UploadResumeButton  />
+      <UploadResumeButton />
     </PageHeader>
 
     <div class="px-6">

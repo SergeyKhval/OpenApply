@@ -7,19 +7,17 @@
     </CardHeader>
 
     <CardContent class="flex flex-col gap-3 mb-4 grow">
-      <p class="text-4xl flex items-center">
-        ${{ price }}.00
-      </p>
-      <span class="text-chart-5 text-lg" :class="{ 'invisible hidden md:inline': !discount }">
+      <p class="text-4xl flex items-center">${{ price }}.00</p>
+      <span
+        class="text-chart-5 text-lg"
+        :class="{ 'invisible hidden md:inline': !discount }"
+      >
         Save {{ discount }}%
       </span>
 
       <Separator />
       <p class="text-muted-foreground">
-        Generate {{ credits / 10 }} cover letters at ${{
-          ((price / credits) * 10).toFixed(2)
-        }}
-        per cover letter
+        {{ Math.floor(credits / 10) }} AI resume reviews or cover letters
       </p>
     </CardContent>
 

@@ -255,7 +255,8 @@ const handleRegenerate = async () => {
   }
 
   isProcessing.value = true;
-  processingMessage.value = "Regenerating cover letter...";
+  processingMessage.value =
+    "Regenerating cover letter... it may take 20-30 seconds.";
   errorMessage.value = "";
 
   const result = await regenerateCoverLetter(

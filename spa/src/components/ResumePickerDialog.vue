@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle>Choose Resume</DialogTitle>
         <DialogDescription>
-          Select a resume to attach to this job application
+          Select a resume that you want to use for this job application.
         </DialogDescription>
       </DialogHeader>
 
@@ -25,7 +25,7 @@
           </EmptyDescription>
         </div>
         <EmptyAction>
-          <UploadResumeButton> Upload Resume </UploadResumeButton>
+          <UploadResumeButton>Upload Resume</UploadResumeButton>
         </EmptyAction>
       </Empty>
 
@@ -35,7 +35,7 @@
         class="flex flex-col w-full gap-4 sm:max-h-150 sm:overflow-y-auto"
       >
         <!-- Upload button at top when resumes exist -->
-        <div class="flex justify-end">
+        <div>
           <UploadResumeButton> Upload New Resume </UploadResumeButton>
         </div>
 
@@ -60,6 +60,7 @@
                     {{ formatDate(resume.createdAt) }}
                   </p>
                   <div class="mt-1 flex flex-col text-xs">
+                    <!-- todo: replace with a CTA to generate cover letter -->
                     <p
                       v-if="resume.status === 'parsed'"
                       class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
@@ -67,26 +68,19 @@
                       <PhEnvelopeSimple class="text-emerald-500" />
                       Ready for cover letters
                     </p>
-                    <p
-                      v-if="resume.id === currentResumeId"
-                      class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
-                    >
-                      <PhCheckFat weight="fill" class="text-emerald-500" />
-                      Currently attached
-                    </p>
                   </div>
                 </div>
               </div>
             </div>
             <div class="flex items-center gap-2 mt-2">
               <Button
-                v-if="resume.id !== currentResumeId"
                 size="sm"
                 variant="default"
+                :disabled="isSelecting || resume.id === currentResumeId"
                 @click="handleSelect(resume.id)"
-                :disabled="isSelecting"
               >
-                Select
+                <PhCheck v-if="currentResumeId === resume.id" />
+                {{ resume.id === currentResumeId ? "Attached" : "Attach" }}
               </Button>
               <Button
                 size="sm"
@@ -109,7 +103,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { PhCheckFat, PhEnvelopeSimple, PhFilePdf } from "@phosphor-icons/vue";
+import { PhCheck, PhEnvelopeSimple, PhFilePdf } from "@phosphor-icons/vue";
 import {
   Dialog,
   DialogDescription,
@@ -153,7 +147,7 @@ const isSelecting = ref(false);
 const handleOpenChange = (isOpen: boolean) => {
   if (!isOpen) {
     router.replace({
-      query: omit(route.query, ["dialog-name", "application-id"]),
+      query: omit(route.query, ["dialog-name", "application-id", "resume-id"]),
     });
   }
 };
@@ -167,8 +161,9 @@ const handleSelect = async (resumeId: string) => {
     });
 
     if (result.success) {
-      // Close modal on success
-      handleOpenChange(false);
+      await router.replace({
+        query: { ...route.query, "resume-id": resumeId },
+      });
     } else {
       // Show error toast and keep modal open
       toast({

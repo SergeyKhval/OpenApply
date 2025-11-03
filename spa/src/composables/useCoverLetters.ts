@@ -1,6 +1,14 @@
 import { computed } from "vue";
 import { useCollection, useCurrentUser } from "vuefire";
-import { collection, deleteDoc, doc, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "@/firebase/config";
 import type { CoverLetter } from "@/types";
@@ -16,7 +24,9 @@ type GenerateCoverLetterSuccess = {
   data: { coverLetterId: string; body: string };
 };
 
-type GenerateCoverLetterResult = GenerateCoverLetterSuccess | CoverLetterActionError;
+type GenerateCoverLetterResult =
+  | GenerateCoverLetterSuccess
+  | CoverLetterActionError;
 
 type RegenerateCoverLetterSuccess = {
   success: true;
@@ -72,17 +82,17 @@ export function useCoverLetters() {
       ? query(
           collection(db, "coverLetters"),
           where("userId", "==", user.value.uid),
-          orderBy("createdAt", "desc")
+          orderBy("createdAt", "desc"),
         )
-      : null
+      : null,
   );
 
-  const { data: coverLetters, pending: isLoading } = useCollection<CoverLetter>(coverLettersQuery);
+  const { data: coverLetters, pending: isLoading } =
+    useCollection<CoverLetter>(coverLettersQuery);
 
   const generateCoverLetter = async (
     jobApplicationId: string,
     resumeId: string,
-    manualJobDescription?: string
   ): Promise<GenerateCoverLetterResult> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -93,7 +103,6 @@ export function useCoverLetters() {
       const result = await generateFunction({
         jobApplicationId,
         resumeId,
-        manualJobDescription,
       });
 
       const data = result.data as { coverLetterId: string; body: string };
@@ -106,7 +115,7 @@ export function useCoverLetters() {
 
   const updateCoverLetter = async (
     coverLetterId: string,
-    body: string
+    body: string,
   ): Promise<{ success: boolean; error?: string }> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -127,42 +136,24 @@ export function useCoverLetters() {
     }
   };
 
-  const deleteCoverLetter = async (
-    coverLetterId: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    if (!user.value) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    try {
-      const docRef = doc(db, "coverLetters", coverLetterId);
-      await deleteDoc(docRef);
-
-      return { success: true };
-    } catch (err) {
-      console.error("Error deleting cover letter:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      return { success: false, error: errorMessage };
-    }
-  };
-
   const regenerateCoverLetter = async (
     coverLetterId: string,
     jobApplicationId: string,
     resumeId: string,
-    manualJobDescription?: string
   ): Promise<RegenerateCoverLetterResult> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
     }
 
     try {
-      const regenerateFunction = httpsCallable(functions, "regenerateCoverLetter");
+      const regenerateFunction = httpsCallable(
+        functions,
+        "regenerateCoverLetter",
+      );
       const result = await regenerateFunction({
         coverLetterId,
         jobApplicationId,
         resumeId,
-        manualJobDescription,
       });
 
       const data = result.data as { body: string };
@@ -178,7 +169,6 @@ export function useCoverLetters() {
     isLoading,
     generateCoverLetter,
     updateCoverLetter,
-    deleteCoverLetter,
     regenerateCoverLetter,
   };
 }

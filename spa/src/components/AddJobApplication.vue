@@ -81,19 +81,6 @@
                 {{ ingestionError }}
               </AlertDescription>
             </Alert>
-            <Alert
-              v-if="
-                !latestSnapshot?.parsedData?.companyName ||
-                !latestSnapshot?.parsedData?.position
-              "
-              class="mb-2"
-            >
-              <PhWarning />
-              <AlertDescription>
-                We couldn't scrape all job data. Please fill the missing parts
-                manually
-              </AlertDescription>
-            </Alert>
             <JobApplicationForm
               :company-name="latestSnapshot?.parsedData?.companyName || ''"
               :position="latestSnapshot?.parsedData?.position || ''"
@@ -106,6 +93,7 @@
               :job-description-link="
                 latestSnapshot?.jobDescriptionLink || jobDescriptionLink || ''
               "
+              :job-description="latestSnapshot?.parsedData?.description || ''"
               :job-id="latestSnapshot?.id || ''"
               :parsing-failed="hasParsingFailure"
               @saved="onJobApplicationSaved"
@@ -126,7 +114,6 @@ import {
   PhPencilSimple,
   PhSkipForward,
   PhSpinner,
-  PhWarning,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useVuelidate } from "@vuelidate/core";
@@ -150,8 +137,6 @@ import { useJobIngestion } from "@/composables/useJobIngestion.ts";
 type AddJobApplicationProps = { isOpen: boolean };
 
 const { isOpen } = defineProps<AddJobApplicationProps>();
-
-const emit = defineEmits<{ (event: "saved", id: string): void }>();
 
 const router = useRouter();
 const route = useRoute();
@@ -181,8 +166,10 @@ const isProcessing = computed(
 
 const hasParsingFailure = computed(
   () =>
-    latestSnapshot.value?.status === "parse-failed" ||
-    latestSnapshot.value?.status === "failed",
+    !!latestSnapshot.value &&
+    (["parse-failed", "failed"].includes(latestSnapshot.value?.status || "") ||
+      !latestSnapshot.value?.parsedData?.companyName ||
+      !latestSnapshot.value?.parsedData?.position),
 );
 
 const prefilledRemotePolicy = computed<
@@ -221,10 +208,10 @@ function handleManualEntry() {
   viewMode.value = "form";
 }
 
-function onJobApplicationSaved(id: string) {
+async function onJobApplicationSaved(id: string) {
   toggleDialog(false);
   resetForm();
-  emit("saved", id);
+  await router.push(`/dashboard/applications/${id}`);
 }
 
 function handleBack() {

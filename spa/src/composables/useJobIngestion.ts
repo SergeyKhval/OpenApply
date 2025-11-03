@@ -24,12 +24,13 @@ export type JobSnapshot = {
   status: JobIngestionStatus;
   jobDescriptionLink?: string;
   parsedData?: {
-    companyName?: string | null;
-    position?: string | null;
-    remotePolicy?: string | null;
-    employmentType?: string | null;
+    companyName?: string;
+    position?: string;
+    remotePolicy?: string;
+    employmentType?: string;
     technologies?: string[];
-    companyLogoUrl?: string | null;
+    companyLogoUrl?: string;
+    description?: string;
   } | null;
   errorMessage?: string | null;
   [key: string]: unknown;
@@ -65,8 +66,8 @@ export const useJobIngestion = () => {
 
   const latestSnapshot = useDocument<JobSnapshot>(documentRef);
 
-  const errorMessage = computed(() =>
-    requestError.value ?? latestSnapshot.value?.errorMessage ?? null,
+  const errorMessage = computed(
+    () => requestError.value ?? latestSnapshot.value?.errorMessage ?? null,
   );
 
   const status = computed<JobIngestionState>(() => {
@@ -135,8 +136,8 @@ export const useJobIngestion = () => {
         errValue instanceof Error
           ? errValue.message
           : typeof errValue === "string"
-          ? errValue
-          : "Unable to start job ingestion.";
+            ? errValue
+            : "Unable to start job ingestion.";
       return;
     }
     // @ts-expect-error id is present on data here

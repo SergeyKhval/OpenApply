@@ -18,40 +18,22 @@
           <div class="flex items-start gap-3">
             <PhFilePdf :size="36" class="shrink-0 text-primary" />
             <div class="flex flex-col gap-1">
-              <a
-                :href="resume.url"
-                target="_blank"
-                class="text-xl text-primary hover:text-primary/80 hover:underline transition-colors"
-              >
-                <span class="break-all">
-                  {{ resume.fileName || "Resume" }}
-                </span>
-              </a>
+              <ResumeLink :resume="resume" />
               <p class="text-muted-foreground text-xs">
                 {{ formatFileSize(resume.fileSize) }} •
                 {{ formatDate(resume.createdAt) }}
               </p>
-              <p
-                v-if="resume.status === 'parsed'"
-                class="flex items-center text-xs gap-1 mt-2"
-              >
-                <PhEnvelopeSimple class="text-emerald-500" :size="16" />
-
-                Ready for cover letters
-              </p>
             </div>
           </div>
-          <Alert
-            v-if="resume.status === 'parse-failed'"
-            variant="destructive"
-            class="mt-3"
-          >
-            <PhXCircle class="text-red-500" weight="fill" :size="16" />
+        </CardContent>
+        <CardFooter>
+          <Alert v-if="resume.status === 'parse-failed'" variant="destructive">
+            <PhXCircle class="text-destructive" weight="fill" :size="16" />
             <AlertDescription>
               Parsing Error, try uploading again
             </AlertDescription>
           </Alert>
-        </CardContent>
+        </CardFooter>
       </Card>
     </div>
     <Empty v-else class="py-12">
@@ -84,12 +66,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import {
-  PhEnvelopeSimple,
-  PhFilePdf,
-  PhTrash,
-  PhXCircle,
-} from "@phosphor-icons/vue";
+import { PhFilePdf, PhTrash, PhXCircle } from "@phosphor-icons/vue";
 import type { Resume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
@@ -101,8 +78,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ResumeLink from "@/components/ResumeLink.vue";
 
 const user = useCurrentUser();
 const storage = useFirebaseStorage();

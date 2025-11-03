@@ -1,30 +1,10 @@
 <template>
   <div class="p-6 grid grid-cols-8 gap-4">
-    <Card>
-      <CardHeader>
-        <CardTitle>Create billing profiles</CardTitle>
-        <CardDescription>
-          Create billing profiles and connect stripe account for users without
-          them
-        </CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <Button @click="connectStripe">Connect stripe</Button>
-      </CardFooter>
-    </Card>
-
-    <Card>
-      <CardHeader>
-        <CardTitle>Migrate cover letters</CardTitle>
-        <CardDescription>
-          Nest job application data inside cover letters
-        </CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <Button @click="migrateCoverLetters"> Migrate </Button>
-      </CardFooter>
-    </Card>
-
+    <div>
+      <Button @click="migrateJobDescriptions()">
+        Migrate job descriptions
+      </Button>
+    </div>
     <div class="col-span-8 grid-cols-subgrid grid">
       <Card v-if="jobParserTemplate" class="col-span-3">
         <CardContent>
@@ -68,14 +48,7 @@ import { ref, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "@/firebase/config.ts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useDocument } from "vuefire";
 import { collection, doc, updateDoc } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,10 +72,9 @@ watch(coverLetterTemplateDoc, (newDoc) => {
   }
 });
 
-const connectStripe = httpsCallable(functions, "addProfilesToExistingUsers");
-const migrateCoverLetters = httpsCallable(
+const migrateJobDescriptions = httpsCallable(
   functions,
-  "migrateCoverLettersToJobApplications",
+  "migrateJobDescriptions",
 );
 </script>
 

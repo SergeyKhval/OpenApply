@@ -5,6 +5,8 @@ import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { firestore } from "firebase-admin";
 
+defineString("GEMINI_API_KEY");
+
 const ai = genkit({
   plugins: [googleAI()],
   model: googleAI.model("gemini-2.5-flash", { temperature: 0, topK: 1 }),
@@ -23,8 +25,6 @@ const JobSchema = z.object({
 });
 
 type Job = z.infer<typeof JobSchema>;
-
-defineString("GEMINI_API_KEY");
 
 async function buildJobParserPrompt(
   job: firestore.DocumentData,
