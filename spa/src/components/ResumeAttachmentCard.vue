@@ -348,7 +348,7 @@ async function handleReviewResume() {
 }
 
 const resumeJobMatchQuery = computed(() =>
-  user.value
+  user.value && resume && applicationId
     ? query(
         collection(db, "resumeJobMatches"),
         where("userId", "==", user.value.uid),
