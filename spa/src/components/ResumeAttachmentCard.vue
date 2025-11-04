@@ -85,7 +85,7 @@
                       <thead>
                         <tr class="text-left">
                           <th></th>
-                          <th>Required skill for job</th>
+                          <th class="pr-2 min-w-35">Required skill for job</th>
                           <th>Evidence from your resume</th>
                         </tr>
                       </thead>
