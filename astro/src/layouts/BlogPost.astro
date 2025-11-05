@@ -2,6 +2,7 @@
 import Layout from './Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SocialShare from '../components/SocialShare.astro';
 
 const { frontmatter } = Astro.props;
 const currentPath = Astro.url.pathname;
@@ -130,6 +131,9 @@ const breadcrumbSchema = {
       <div class="prose prose-lg dark:prose-invert max-w-none">
         <slot />
       </div>
+
+      <!-- Social share at the bottom -->
+      <SocialShare title={frontmatter.title} url={canonicalUrl} />
     </article>
   </main>
   <Footer />
@@ -187,7 +191,7 @@ const breadcrumbSchema = {
   }
 
   .prose :global(a:hover) {
-    color: var(--primary-foreground);
+    color: var(--secondary);
   }
 
   .prose :global(strong) {
