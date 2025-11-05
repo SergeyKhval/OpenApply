@@ -1,0 +1,66 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Header from "../components/Header.astro";
+
+type PostModule = {
+  url?: string;
+  frontmatter: {
+    title: string;
+    description?: string;
+    pubDate?: string;
+    author?: string;
+    tags?: string[];
+  };
+}
+
+const posts = Object.values(import.meta.glob<PostModule>('./blog/*.md', { eager: true }));
+const currentPath = Astro.url.pathname;
+---
+
+<Layout>
+  <Header showHashLinks={false} currentPath={currentPath} />
+  <main class="min-h-screen bg-background">
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
+      <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">Blog</h1>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {posts.map((post) => (
+          <article class="border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col h-full">
+            <a href={post.url} class="block group flex flex-col h-full">
+              <h2 class="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
+                {post.frontmatter.title}
+              </h2>
+              {post.frontmatter.description && (
+                <p class="text-muted-foreground mb-4 text-sm line-clamp-3 flex-grow">{post.frontmatter.description}</p>
+              )}
+              <div class="mt-auto">
+                <div class="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+                  {post.frontmatter.pubDate && (
+                    <time datetime={post.frontmatter.pubDate}>
+                      {new Date(post.frontmatter.pubDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </time>
+                  )}
+                  {post.frontmatter.author && (
+                    <span>by {post.frontmatter.author}</span>
+                  )}
+                </div>
+                {post.frontmatter.tags && post.frontmatter.tags.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {post.frontmatter.tags.map((tag) => (
+                      <span class="px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </main>
+</Layout>
