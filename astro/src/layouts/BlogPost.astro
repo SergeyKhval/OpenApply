@@ -3,6 +3,7 @@ import Layout from './Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SocialShare from '../components/SocialShare.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 
 const { frontmatter } = Astro.props;
 const currentPath = Astro.url.pathname;
@@ -70,6 +71,13 @@ const breadcrumbSchema = {
     }
   ]
 };
+
+// Breadcrumb items for navigation
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: frontmatter.title, url: currentPath }
+];
 ---
 
 <Layout
@@ -92,6 +100,9 @@ const breadcrumbSchema = {
 
   <main class="min-h-screen bg-background">
     <article class="container mx-auto px-4 py-12 max-w-4xl">
+      <!-- Breadcrumbs -->
+      <Breadcrumbs items={breadcrumbItems} />
+
       <!-- Post header -->
       <header class="mb-12 border-b border-border pb-8">
         <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">
