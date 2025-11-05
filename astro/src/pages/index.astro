@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 
 ---
 
@@ -666,18 +667,7 @@ import Header from '../components/Header.astro';
             </div>
           </div>
         </section>
-        <footer
-          class="relative border-t border-border/60 bg-card/70 py-12 backdrop-blur"
-        >
-          <div
-            class="pointer-events-none absolute inset-x-0 top-0 -mt-px h-px bg-linear-to-r from-transparent via-primary/40 to-transparent"
-          ></div>
-          <div class="container relative mx-auto px-4">
-            <div class="text-center text-sm text-muted-foreground">
-              <p>© 2025 OpenApply. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   </div>
