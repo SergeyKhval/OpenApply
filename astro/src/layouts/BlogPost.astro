@@ -1,0 +1,312 @@
+---
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SocialShare from '../components/SocialShare.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+
+const { frontmatter } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+// SEO data
+const pageTitle = `${frontmatter.title} | OpenApply Blog`;
+const pageDescription = frontmatter.description || frontmatter.title;
+const canonicalUrl = new URL(currentPath, Astro.site || 'https://openapply.app').href;
+const ogImage = frontmatter.image?.url || 'https://openapply.app/og-image.png';
+const publishedTime = frontmatter.pubDate ? new Date(frontmatter.pubDate).toISOString() : undefined;
+const modifiedTime = frontmatter.modifiedDate ? new Date(frontmatter.modifiedDate).toISOString() : undefined;
+
+// Structured Data - Article Schema
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": frontmatter.title,
+  "description": pageDescription,
+  "image": ogImage,
+  "datePublished": publishedTime,
+  "dateModified": modifiedTime || publishedTime,
+  "author": {
+    "@type": "Person",
+    "name": frontmatter.author || "OpenApply Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenApply",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://openapply.app/favicon.ico"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalUrl
+  },
+  ...(frontmatter.tags && frontmatter.tags.length > 0 && {
+    "keywords": frontmatter.tags.join(", ")
+  })
+};
+
+// Breadcrumb Schema
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://openapply.app"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://openapply.app/blog"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": frontmatter.title,
+      "item": canonicalUrl
+    }
+  ]
+};
+
+// Breadcrumb items for navigation
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: frontmatter.title, url: currentPath }
+];
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  author={frontmatter.author}
+  ogImage={ogImage}
+  ogType="article"
+  canonicalUrl={canonicalUrl}
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  articleTags={frontmatter.tags}
+  keywords={frontmatter.tags ? frontmatter.tags.join(", ") : undefined}
+>
+  <Header showHashLinks={false} currentPath={currentPath} />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
+  <main class="min-h-screen bg-background">
+    <article class="container mx-auto px-4 py-12 max-w-4xl">
+      <!-- Breadcrumbs -->
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <!-- Post header -->
+      <header class="mb-12 border-b border-border pb-8">
+        <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          {frontmatter.title}
+        </h1>
+        <div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          {frontmatter.pubDate && (
+            <time datetime={frontmatter.pubDate}>
+              {new Date(frontmatter.pubDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </time>
+          )}
+          {frontmatter.author && (
+            <span>by {frontmatter.author}</span>
+          )}
+        </div>
+        {frontmatter.description && (
+          <p class="mt-4 text-lg text-muted-foreground">
+            {frontmatter.description}
+          </p>
+        )}
+        {frontmatter.tags && frontmatter.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mt-4">
+            {frontmatter.tags.map((tag: string) => (
+              <span class="px-3 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <!-- Post content -->
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <slot />
+      </div>
+
+      <!-- Social share at the bottom -->
+      <SocialShare title={frontmatter.title} url={canonicalUrl} />
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  /* Blog post typography styles */
+  .prose {
+    color: var(--foreground);
+  }
+
+  .prose :global(h1),
+  .prose :global(h2),
+  .prose :global(h3),
+  .prose :global(h4),
+  .prose :global(h5),
+  .prose :global(h6) {
+    color: var(--foreground);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .prose :global(h1) {
+    font-size: 2.25em;
+    margin-top: 2em;
+    margin-bottom: 1em;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.875em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5em;
+    margin-top: 2.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .prose :global(h3) {
+    font-size: 1.5em;
+  }
+
+  .prose :global(h4) {
+    font-size: 1.25em;
+  }
+
+  .prose :global(p) {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    line-height: 1.75;
+  }
+
+  .prose :global(a) {
+    color: var(--primary);
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+
+  .prose :global(a:hover) {
+    color: var(--secondary);
+  }
+
+  .prose :global(strong) {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+  }
+
+  .prose :global(ol) {
+    list-style-type: decimal;
+  }
+
+  .prose :global(ul) {
+    list-style-type: disc;
+  }
+
+  .prose :global(li) {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.75;
+    display: list-item;
+  }
+
+  .prose :global(ul > li) {
+    padding-left: 0.375em;
+  }
+
+  .prose :global(ul > li::marker) {
+    color: var(--primary);
+  }
+
+  .prose :global(ol > li::marker) {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .prose :global(code) {
+    color: var(--foreground);
+    background-color: var(--muted);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: var(--font-mono);
+  }
+
+  .prose :global(pre) {
+    background-color: var(--muted);
+    padding: 1.5em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .prose :global(pre code) {
+    background-color: transparent;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .prose :global(blockquote) {
+    border-left: 4px solid var(--primary);
+    padding-left: 1em;
+    font-style: italic;
+    color: var(--muted-foreground);
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .prose :global(img) {
+    border-radius: 0.5rem;
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+
+  .prose :global(hr) {
+    border-color: var(--border);
+    margin-top: 3em;
+    margin-bottom: 3em;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.75em;
+    text-align: left;
+  }
+
+  .prose :global(th) {
+    background-color: var(--muted);
+    font-weight: 600;
+  }
+</style>
+

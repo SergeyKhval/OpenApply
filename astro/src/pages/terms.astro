@@ -1,0 +1,288 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const currentPath = Astro.url.pathname;
+const pageTitle = "Terms of Service | OpenApply";
+const pageDescription = "Terms of Service for OpenApply - Read our terms and conditions for using our job tracking platform.";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header showHashLinks={false} currentPath={currentPath} />
+  
+  <main class="min-h-screen bg-background">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+      <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">Terms of Service</h1>
+      <p class="text-sm text-muted-foreground mb-8">Last updated: November 5, 2025</p>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none space-y-8">
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Agreement to Terms</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            By accessing or using OpenApply ("Service", "Platform", "we", "us", or "our"), you agree to be bound 
+            by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Description of Service</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            OpenApply is a job application tracking platform that helps users:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>Track and organize job applications</li>
+            <li>Store resumes and related documents</li>
+            <li>Parse job postings from URLs</li>
+            <li>Access AI-powered resume reviews (paid feature)</li>
+            <li>Generate cover letters using AI (paid feature)</li>
+            <li>Import and export application data</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Account Registration</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            To use certain features of the Service, you must register for an account. You agree to:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>Provide accurate, current, and complete information</li>
+            <li>Maintain and update your information to keep it accurate</li>
+            <li>Maintain the security of your account credentials</li>
+            <li>Accept responsibility for all activities under your account</li>
+            <li>Notify us immediately of any unauthorized access</li>
+            <li>Be at least 16 years of age</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">User Content and Responsibilities</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            You retain ownership of all content you upload to OpenApply, including resumes, cover letters, 
+            and application notes. By uploading content, you grant us a license to use, store, and process 
+            this content solely to provide the Service.
+          </p>
+          <p class="text-muted-foreground leading-relaxed mb-4">You agree NOT to:</p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>Upload malicious code, viruses, or harmful content</li>
+            <li>Use the Service for any illegal purpose</li>
+            <li>Attempt to gain unauthorized access to our systems</li>
+            <li>Scrape, copy, or harvest data from the Service</li>
+            <li>Share your account credentials with others</li>
+            <li>Use the Service to spam or harass others</li>
+            <li>Reverse engineer or attempt to extract our source code</li>
+            <li>Violate any applicable laws or regulations</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Pricing and Payment</h2>
+          <h3 class="text-xl font-semibold text-foreground mb-3">Free Features</h3>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            The following features are free to use indefinitely:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+            <li>Unlimited job application tracking</li>
+            <li>Notes, tags, and status management</li>
+            <li>Document storage (subject to reasonable limits)</li>
+            <li>Spreadsheet import/export</li>
+          </ul>
+
+          <h3 class="text-xl font-semibold text-foreground mb-3">Pay-as-you-go Coins</h3>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            AI-powered features require coins, which you purchase in advance:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+            <li>Coins are non-refundable once purchased</li>
+            <li>Coins do not expire</li>
+            <li>Prices are displayed at checkout</li>
+            <li>Payments are processed securely through Stripe</li>
+            <li>We reserve the right to adjust coin pricing with notice</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">AI-Powered Features</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            Our AI features (resume reviews, cover letter generation) use third-party AI services. You acknowledge:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>AI-generated content may contain errors or inaccuracies</li>
+            <li>You are responsible for reviewing and editing AI outputs</li>
+            <li>We do not guarantee specific outcomes from AI features</li>
+            <li>AI processing involves sharing your data with our AI providers</li>
+            <li>You should not rely solely on AI recommendations</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Service Availability</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            We strive to provide reliable service but do not guarantee uninterrupted access. The Service may be 
+            unavailable due to maintenance, updates, or circumstances beyond our control. We are not liable for 
+            any disruption, data loss, or damages resulting from service downtime.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Data and Privacy</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            Your use of the Service is also governed by our <a href="/privacy" class="text-primary hover:underline">Privacy Policy</a>. 
+            We recommend reviewing it to understand how we collect, use, and protect your data.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Intellectual Property</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            The Service, including its design, code, features, and branding, is owned by OpenApply or our licensors 
+            and is protected by copyright, trademark, and other laws. OpenApply is open-source software:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>The source code is available on GitHub under the specified license</li>
+            <li>You may self-host OpenApply according to the license terms</li>
+            <li>Our hosted service branding and infrastructure remain our property</li>
+            <li>You may not use our trademarks without permission</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Third-Party Services</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            The Service integrates with third-party services, including:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>Firebase (Google) - hosting and authentication</li>
+            <li>Stripe - payment processing</li>
+            <li>OpenAI - AI processing</li>
+            <li>Job board websites - for parsing job postings</li>
+          </ul>
+          <p class="text-muted-foreground leading-relaxed mt-4">
+            Your use of these services is subject to their respective terms and privacy policies. We are not 
+            responsible for third-party service performance or policies.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Termination</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            We may terminate or suspend your account immediately, without prior notice, for:
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>Violation of these Terms of Service</li>
+            <li>Fraudulent or illegal activity</li>
+            <li>Abuse of the Service or other users</li>
+            <li>Non-payment or payment disputes</li>
+            <li>Inactivity (after reasonable notice)</li>
+          </ul>
+          <p class="text-muted-foreground leading-relaxed mt-4">
+            You may terminate your account at any time through account settings. Upon termination, your right 
+            to use the Service ceases immediately. Unused coins are non-refundable.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Disclaimer of Warranties</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS 
+            OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+            PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, 
+            SECURE, OR ERROR-FREE.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Limitation of Liability</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            TO THE MAXIMUM EXTENT PERMITTED BY LAW, OPENAPPLY SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, 
+            SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFITS, DATA LOSS, OR BUSINESS 
+            INTERRUPTION, ARISING FROM YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT 
+            YOU PAID US IN THE PAST 12 MONTHS, OR $100, WHICHEVER IS GREATER.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Indemnification</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            You agree to indemnify and hold harmless OpenApply and its affiliates from any claims, damages, 
+            losses, or expenses (including legal fees) arising from your use of the Service, violation of these 
+            Terms, or infringement of any rights of another party.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Governing Law and Disputes</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            These Terms are governed by the laws of the jurisdiction where OpenApply operates, without regard 
+            to conflict of law provisions. Any disputes shall be resolved through binding arbitration or in the 
+            courts of our jurisdiction, as applicable.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Changes to Terms</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            We reserve the right to modify these Terms at any time. We will notify users of material changes 
+            via email or through the Service. Your continued use of the Service after changes constitutes 
+            acceptance of the new Terms. If you disagree with the changes, you must stop using the Service.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Severability</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            If any provision of these Terms is found to be unenforceable or invalid, that provision will be 
+            limited or eliminated to the minimum extent necessary, and the remaining provisions will remain 
+            in full force and effect.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Entire Agreement</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            These Terms, together with our Privacy Policy, constitute the entire agreement between you and 
+            OpenApply regarding the Service and supersede all prior agreements.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Contact Information</h2>
+          <p class="text-muted-foreground leading-relaxed">
+            If you have questions about these Terms of Service, please contact us at:
+          </p>
+          <p class="text-muted-foreground leading-relaxed mt-4">
+            Email: <a href="mailto:support@openapply.app" class="text-primary hover:underline">support@openapply.app</a><br />
+            GitHub: <a href="https://github.com/SergeyKhval/OpenApply/issues" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">OpenApply Issues</a>
+          </p>
+        </section>
+
+        <section class="bg-muted/40 p-6 rounded-lg border border-border">
+          <p class="text-sm text-muted-foreground">
+            <strong>Note:</strong> These Terms of Service apply only to the hosted version of OpenApply. 
+            If you self-host OpenApply, you are responsible for your own terms of service and legal compliance.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .prose h2 {
+    margin-top: 2em;
+  }
+  
+  .prose h3 {
+    margin-top: 1.5em;
+  }
+  
+  .prose a {
+    color: hsl(var(--primary));
+  }
+  
+  .prose a:hover {
+    text-decoration: underline;
+  }
+</style>

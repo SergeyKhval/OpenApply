@@ -1,5 +1,12 @@
 ---
 // Header component with navigation and external links
+interface Props {
+  showHashLinks?: boolean;
+  currentPath?: string;
+}
+
+const { showHashLinks = true, currentPath = '' } = Astro.props;
+const isOnBlogPage = currentPath.startsWith('/blog');
 ---
 
 <header class="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -21,10 +28,15 @@
       <!-- Navigation -->
       <nav class="peer-checked:translate-y-0 -mx-4 peer-checked:opacity-100 peer-checked:visible peer-checked:pointer-events-auto absolute lg:relative top-full left-0 right-0 lg:top-auto bg-background lg:bg-transparent border-b lg:border-0 border-border flex flex-col lg:flex-row items-stretch lg:items-center gap-6 lg:gap-8 p-6 lg:p-0 -translate-y-full lg:translate-y-0 opacity-0 lg:opacity-100 invisible lg:visible pointer-events-none lg:pointer-events-auto transition-all duration-300 ease-in-out">
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6">
-          <a href="#how-it-works" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">How it Works</a>
-          <a href="#features" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Features</a>
-          <a href="#pricing" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Pricing</a>
-          <a href="#faq" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">FAQ</a>
+          {showHashLinks && (
+            <>
+              <a href="/#how-it-works" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">How it Works</a>
+              <a href="/#features" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Features</a>
+              <a href="/#pricing" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Pricing</a>
+              <a href="/#faq" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">FAQ</a>
+            </>
+          )}
+          <a href="/blog" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnBlogPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Blog</a>
         </div>
         
         <div class="flex items-center gap-3 justify-center">
