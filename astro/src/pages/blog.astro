@@ -104,7 +104,7 @@ const breadcrumbItems = [
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post) => (
           <article class="border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col h-full">
-            <a href={post.url} class="block group flex flex-col h-full">
+            <a href={post.url} class="group flex flex-col h-full">
               <h2 class="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
                 {post.frontmatter.title}
               </h2>
