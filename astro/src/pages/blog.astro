@@ -15,10 +15,74 @@ type PostModule = {
 
 const posts = Object.values(import.meta.glob<PostModule>('./blog/*.md', { eager: true }));
 const currentPath = Astro.url.pathname;
+
+// SEO data
+const pageTitle = "OpenApply Blog - Job Search Tips, Career Development & AI Tools";
+const pageDescription = "Expert insights on job search strategies, LinkedIn optimization, resume building, cover letter writing, and leveraging AI tools to land your dream job faster.";
+const canonicalUrl = new URL('/blog', Astro.site || 'https://openapply.app').href;
+const keywords = "job search tips, career advice, LinkedIn optimization, resume tips, cover letter writing, AI job search, career development, job application strategies, job hunting";
+
+// Structured Data - Blog/CollectionPage Schema
+const blogSchema = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "OpenApply Blog",
+  "description": pageDescription,
+  "url": canonicalUrl,
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenApply",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://openapply.app/favicon.ico"
+    }
+  },
+  "blogPost": posts.map(post => ({
+    "@type": "BlogPosting",
+    "headline": post.frontmatter.title,
+    "description": post.frontmatter.description || post.frontmatter.title,
+    "url": new URL(post.url || '', Astro.site || 'https://openapply.app').href,
+    "datePublished": post.frontmatter.pubDate ? new Date(post.frontmatter.pubDate).toISOString() : undefined,
+    "author": {
+      "@type": "Person",
+      "name": post.frontmatter.author || "OpenApply Team"
+    }
+  }))
+};
+
+// Breadcrumb Schema
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://openapply.app"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": canonicalUrl
+    }
+  ]
+};
 ---
 
-<Layout>
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  keywords={keywords}
+  canonicalUrl={canonicalUrl}
+  ogType="website"
+>
   <Header showHashLinks={false} currentPath={currentPath} />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(blogSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   <main class="min-h-screen bg-background">
     <div class="container mx-auto px-4 py-12 max-w-7xl">
       <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">OpenApply Blog</h1>

@@ -4,10 +4,90 @@ import Header from '../components/Header.astro';
 
 const { frontmatter } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+// SEO data
+const pageTitle = `${frontmatter.title} | OpenApply Blog`;
+const pageDescription = frontmatter.description || frontmatter.title;
+const canonicalUrl = new URL(currentPath, Astro.site || 'https://openapply.app').href;
+const ogImage = frontmatter.image?.url || 'https://openapply.app/og-image.png';
+const publishedTime = frontmatter.pubDate ? new Date(frontmatter.pubDate).toISOString() : undefined;
+const modifiedTime = frontmatter.modifiedDate ? new Date(frontmatter.modifiedDate).toISOString() : undefined;
+
+// Structured Data - Article Schema
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": frontmatter.title,
+  "description": pageDescription,
+  "image": ogImage,
+  "datePublished": publishedTime,
+  "dateModified": modifiedTime || publishedTime,
+  "author": {
+    "@type": "Person",
+    "name": frontmatter.author || "OpenApply Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenApply",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://openapply.app/favicon.ico"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalUrl
+  },
+  ...(frontmatter.tags && frontmatter.tags.length > 0 && {
+    "keywords": frontmatter.tags.join(", ")
+  })
+};
+
+// Breadcrumb Schema
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://openapply.app"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://openapply.app/blog"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": frontmatter.title,
+      "item": canonicalUrl
+    }
+  ]
+};
 ---
 
-<Layout>
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  author={frontmatter.author}
+  ogImage={ogImage}
+  ogType="article"
+  canonicalUrl={canonicalUrl}
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  articleTags={frontmatter.tags}
+  keywords={frontmatter.tags ? frontmatter.tags.join(", ") : undefined}
+>
   <Header showHashLinks={false} currentPath={currentPath} />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
   <main class="min-h-screen bg-background">
     <article class="container mx-auto px-4 py-12 max-w-4xl">
       <!-- Post header -->

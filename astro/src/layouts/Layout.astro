@@ -1,6 +1,34 @@
 ---
 import '../styles/global.css';
 import PostHog from "../components/posthog.astro";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  author?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  canonicalUrl?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+  articleTags?: string[];
+  noindex?: boolean;
+}
+
+const {
+  title = "OpenApply - AI Job Search Copilot with Resume Reviews, Paste‑a‑Link Import, and Job Tailored Cover Letters",
+  description = "Your AI job search copilot. Track applications free, paste a job link to auto‑fill, and use coins only when you want AI resume reviews or cover letters.",
+  keywords = "AI job search copilot, AI resume reviews, AI resume checker, ATS match, job application tracker, job tracker app, paste job link import, spreadsheet import job tracker, job tailored cover letters, self‑host job tracker",
+  author = "OpenApply",
+  ogImage = "https://openapply.app/og-image.png",
+  ogType = "website",
+  canonicalUrl = Astro.url.href,
+  publishedTime,
+  modifiedTime,
+  articleTags,
+  noindex = false,
+} = Astro.props;
 ---
 <!doctype html>
 <html lang="en" class="dark">
@@ -17,24 +45,45 @@ import PostHog from "../components/posthog.astro";
                 rel="stylesheet"
         />
 
-    <title>OpenApply - AI Job Search Copilot with Resume Reviews, Paste‑a‑Link Import, and Job Tailored Cover Letters</title>
-    <meta
-      name="description"
-      content="Your AI job search copilot. Track applications free, paste a job link to auto‑fill, and use coins only when you want AI resume reviews or cover letters."
-    />
-    <meta name="author" content="OpenApply" />
-    <meta name="keywords" content="AI job search copilot, AI resume reviews, AI resume checker, ATS match, job application tracker, job tracker app, paste job link import, spreadsheet import job tracker, job tailored cover letters, self‑host job tracker" />
-
-    <meta
-      property="og:title"
-      content="OpenApply - AI Job Search Copilot with Resume Reviews, Paste‑a‑Link Import, and Job Tailored Cover Letters"
-    />
-    <meta
-      property="og:description"
-      content="Your AI job search copilot. Track applications free, paste a job link to auto‑fill, and use coins only when you want AI resume reviews or cover letters."
-    />
-    <meta property="og:type" content="website" />
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta name="author" content={author} />
+    <meta name="keywords" content={keywords} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonicalUrl} />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="OpenApply" />
+    <meta property="og:locale" content="en_US" />
+
+    {ogType === 'article' && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {ogType === 'article' && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )}
+    {ogType === 'article' && author && (
+      <meta property="article:author" content={author} />
+    )}
+    {ogType === 'article' && articleTags && articleTags.map((tag) => (
+      <meta property="article:tag" content={tag} />
+    ))}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
     {import.meta.env.PUBLIC_POSTHOG_API_KEY &&
       (<PostHog
         apiKey={import.meta.env.PUBLIC_POSTHOG_API_KEY}
