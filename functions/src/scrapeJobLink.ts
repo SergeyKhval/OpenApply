@@ -4,6 +4,69 @@ import puppeteer, { type Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import { load } from "cheerio";
 
+export function cleanHtml(html: string): string {
+  const $ = load(html);
+  $(
+    "svg, script, style, img, noscript, iframe, canvas, video, audio, picture, source, track, object, embed, link, form, fieldset, input, button, select, textarea, label, option, optgroup, legend, datalist, output, meter, progress",
+  ).remove();
+  $(
+    "[class], div, span, section, header, footer, aside, nav, main, article",
+  ).each(function () {
+    const el = $(this);
+    if (
+      el.text().trim() === "" &&
+      el.find(
+        "a, p, li, h1, h2, h3, h4, h5, h6, table, tr, td, th, ul, ol",
+      ).length === 0
+    ) {
+      el.remove();
+    }
+  });
+
+  $("body *").each(function () {
+    const el = $(this);
+    const attributes = el.get(0)?.attribs;
+    if (attributes) {
+      Object.keys(attributes).forEach(attr => {
+        el.removeAttr(attr);
+      });
+    }
+  });
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    $("div, span, section, article, main, aside").each(function () {
+      const el = $(this);
+      const children = el.children();
+      const hasDirectText = el.contents().toArray().some(node =>
+        node.type === 'text' && node.data.trim().length > 0
+      );
+      if (!hasDirectText && children.length > 0) {
+        const tagName = el.get(0)?.tagName?.toLowerCase();
+        const parentTag = el.parent().get(0)?.tagName?.toLowerCase();
+        const isSemanticStructure = (
+          (parentTag === 'ul' || parentTag === 'ol') && (tagName === 'li') ||
+          (parentTag === 'table') && (tagName === 'tr' || tagName === 'tbody' || tagName === 'thead' || tagName === 'tfoot') ||
+          (parentTag === 'tr') && (tagName === 'td' || tagName === 'th') ||
+          (parentTag === 'dl') && (tagName === 'dt' || tagName === 'dd') ||
+          (parentTag === 'select') && (tagName === 'option' || tagName === 'optgroup') ||
+          (parentTag === 'fieldset') && (tagName === 'legend')
+        );
+        if (!isSemanticStructure) {
+          children.each(function() {
+            $(this).insertBefore(el);
+          });
+          el.remove();
+          changed = true;
+        }
+      }
+    });
+  }
+
+  return $.html();
+}
+
 const db = getFirestore();
 
 export const scrapeJobLink = onDocumentCreated(
@@ -142,83 +205,8 @@ export const scrapeJobLink = onDocumentCreated(
           return;
         }
 
-        // Clean up content: remove tags that do not directly contain text content
-        const $ = load(content);
-        $(
-          "svg, script, style, img, noscript, iframe, canvas, video, audio, picture, source, track, object, embed, link, form, fieldset, input, button, select, textarea, label, option, optgroup, legend, datalist, output, meter, progress",
-        ).remove();
-        // Remove elements that do not contain any visible text
-        $(
-          "[class], div, span, section, header, footer, aside, nav, main, article",
-        ).each(function () {
-          const el = $(this);
-          // Remove if element has no text (ignoring whitespace) and no <a>, <p>, <li>, <h1>-<h6>, <table>, <tr>, <td>, <th>, <ul>, <ol>
-          if (
-            el.text().trim() === "" &&
-            el.find(
-              "a, p, li, h1, h2, h3, h4, h5, h6, table, tr, td, th, ul, ol",
-            ).length === 0
-          ) {
-            el.remove();
-          }
-        });
-
-        // Remove all attributes from all remaining elements
-        $("body *").each(function () {
-          const el = $(this);
-          const attributes = el.get(0)?.attribs;
-          if (attributes) {
-            Object.keys(attributes).forEach(attr => {
-              el.removeAttr(attr);
-            });
-          }
-        });
-
-        // Flatten structure: remove containers that only wrap other elements without adding semantic value
-        let changed = true;
-        while (changed) {
-          changed = false;
-
-          // Target elements that are typically used as containers
-          $("div, span, section, article, main, aside").each(function () {
-            const el = $(this);
-            const children = el.children();
-
-            // Check if this element has no direct text content (only whitespace)
-            const hasDirectText = el.contents().toArray().some(node =>
-              node.type === 'text' && node.data.trim().length > 0
-            );
-
-            // If no direct text and has children, unwrap it (move children up one level)
-            if (!hasDirectText && children.length > 0) {
-              // Check if we're breaking semantic structure
-              const tagName = el.get(0)?.tagName?.toLowerCase();
-              const parentTag = el.parent().get(0)?.tagName?.toLowerCase();
-
-              // Preserve semantic structures
-              const isSemanticStructure = (
-                (parentTag === 'ul' || parentTag === 'ol') && (tagName === 'li') ||
-                (parentTag === 'table') && (tagName === 'tr' || tagName === 'tbody' || tagName === 'thead' || tagName === 'tfoot') ||
-                (parentTag === 'tr') && (tagName === 'td' || tagName === 'th') ||
-                (parentTag === 'dl') && (tagName === 'dt' || tagName === 'dd') ||
-                (parentTag === 'select') && (tagName === 'option' || tagName === 'optgroup') ||
-                (parentTag === 'fieldset') && (tagName === 'legend')
-              );
-
-              if (!isSemanticStructure) {
-                // Move all children before this element
-                children.each(function() {
-                  $(this).insertBefore(el);
-                });
-                // Remove the now-empty container
-                el.remove();
-                changed = true;
-              }
-            }
-          });
-        }
-
-        content = $.html();
+        // Clean up content using extracted helper
+        content = cleanHtml(content);
       } catch (extractError) {
         await setFailedStatus(
           `Failed to extract page content: ${extractError}`,

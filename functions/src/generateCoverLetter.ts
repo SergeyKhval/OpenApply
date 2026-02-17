@@ -21,7 +21,7 @@ const billingProfileRefForUser = (userId: string) =>
     .collection("billingProfile")
     .doc("profile");
 
-const createInsufficientCreditsError = (action: "generate" | "regenerate") =>
+export const createInsufficientCreditsError = (action: "generate" | "regenerate") =>
   new HttpsError(
     "failed-precondition",
     `You need at least ${REQUIRED_CREDITS} coins to ${action} a cover letter.`,
@@ -40,7 +40,7 @@ interface GenerateCoverLetterResponse {
   body: string;
 }
 
-function validateAuth(request: { auth?: { uid: string } }): string {
+export function validateAuth(request: { auth?: { uid: string } }): string {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
@@ -170,7 +170,7 @@ async function deductCreditsInTransaction(
   });
 }
 
-function handleError(
+export function handleError(
   error: unknown,
   action: "generating" | "regenerating",
 ): never {

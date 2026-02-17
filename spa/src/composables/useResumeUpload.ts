@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import { User } from "firebase/auth";
 
 const MAX_FILE_SIZE = 500 * 1024; // 500KB in bytes
-const validateFile = (
+export const validateFile = (
   file: File,
   user?: User | null,
 ): { valid: boolean; error?: string } => {

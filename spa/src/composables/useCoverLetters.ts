@@ -37,7 +37,7 @@ type RegenerateCoverLetterResult =
   | RegenerateCoverLetterSuccess
   | CoverLetterActionError;
 
-const normalizeFunctionsError = (error: unknown): CoverLetterActionError => {
+export const normalizeFunctionsError = (error: unknown): CoverLetterActionError => {
   const fallbackMessage = "An unexpected error occurred";
   if (!error || typeof error !== "object") {
     return { success: false, error: fallbackMessage };

@@ -16,6 +16,7 @@
   "exclude": [
     "node_modules",
     "**/node_modules/**",
-    "lib"
+    "lib",
+    "src/__tests__"
   ]
 }
