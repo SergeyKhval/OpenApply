@@ -111,13 +111,10 @@ Write the markdown body content only.`;
 
 function findNextTopic(): Topic | null {
   const topics: Topic[] = JSON.parse(readFileSync(TOPICS_PATH, "utf-8"));
-  for (const topic of topics) {
-    const filePath = join(BLOG_DIR, `${topic.slug}.md`);
-    if (!existsSync(filePath)) {
-      return topic;
-    }
-  }
-  return null;
+  const pending = topics.filter((t) => !existsSync(join(BLOG_DIR, `${t.slug}.md`)));
+  if (pending.length === 0) return null;
+  console.log(`${pending.length} topics remaining`);
+  return pending[Math.floor(Math.random() * pending.length)];
 }
 
 // --- Step 2: Generate blog post ---
