@@ -27,6 +27,8 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.15",
+    "@astrojs/sitemap": "^3.7.0",
     "@astrojs/vue": "^5.1.4",
     "@phosphor-icons/web": "^2.1.2",
     "@tailwindcss/vite": "^4.1.13",
