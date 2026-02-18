@@ -230,6 +230,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { trackEvent } from "@/analytics";
 
 type ColumnHeader = "companyName" | "position" | "jobDescriptionLink" | "";
 
@@ -330,6 +331,7 @@ async function importJobApplications() {
 
   try {
     await importJobApplications({ applications: preparedData });
+    trackEvent("csv_import_completed", { rowCount: preparedData.length });
   } catch (_e) {
     alert(
       "There was an error importing your job applications. Please try again.",

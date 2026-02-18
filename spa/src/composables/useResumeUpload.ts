@@ -4,6 +4,7 @@ import { ref as storageRef } from "firebase/storage";
 import { useFileDialog } from "@vueuse/core";
 import { useToast } from "@/components/ui/toast";
 import { User } from "firebase/auth";
+import { trackEvent } from "@/analytics";
 
 const MAX_FILE_SIZE = 500 * 1024; // 500KB in bytes
 export const validateFile = (
@@ -84,6 +85,7 @@ export function useResumeUpload() {
       const { upload: uploadFile } = useStorageFile(fileRef);
 
       await uploadFile(file);
+      trackEvent("resume_uploaded");
 
       isUploading.value = false;
     } catch (err) {
@@ -91,6 +93,7 @@ export function useResumeUpload() {
 
       const errorMessage =
         err instanceof Error ? err.message : "We couldn't upload your resume.";
+      trackEvent("resume_upload_failed", { error: errorMessage });
 
       toast({
         title: "Upload failed",

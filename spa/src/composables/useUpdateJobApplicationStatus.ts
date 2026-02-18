@@ -2,6 +2,7 @@ import { getLocalTimeZone, today } from "@internationalized/date";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config.ts";
 import { JobStatus } from "@/types";
+import { trackEvent } from "@/analytics";
 
 export function useUpdateJobApplicationStatus() {
   function updateJobApplicationStatus(
@@ -38,6 +39,7 @@ export function useUpdateJobApplicationStatus() {
         archivedAt: null,
       });
 
+    trackEvent("status_changed", { applicationId, status });
     return updateDoc(doc(db, "jobApplications", applicationId), updates);
   }
 

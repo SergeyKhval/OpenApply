@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/firebase/config";
+import { trackEvent } from "@/analytics";
 
 type CheckoutResponse = { url: string };
 
@@ -50,6 +51,7 @@ export function useCreditsCheckout() {
       });
 
       if (data?.url) {
+        trackEvent("checkout_started", { priceId });
         window.open(data.url, "_blank");
         return { success: true };
       }

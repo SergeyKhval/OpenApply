@@ -10,6 +10,7 @@ import { db } from "@/firebase/config";
 import { useCurrentUser } from "vuefire";
 import type { CreateJobApplicationInput, JobStatus } from "@/types";
 import { getLocalTimeZone } from "@internationalized/date";
+import { trackEvent } from "@/analytics";
 
 export function useJobApplications() {
   const user = useCurrentUser();
@@ -29,6 +30,11 @@ export function useJobApplications() {
         createdAt: serverTimestamp(),
       });
 
+      trackEvent("job_application_created", {
+        method: payload.jobDescriptionLink ? "link_parse" : "manual",
+        company: payload.companyName,
+        position: payload.position,
+      });
       return { success: true, id: docRef.id };
     } catch (err) {
       console.error("Error adding job application:", err);

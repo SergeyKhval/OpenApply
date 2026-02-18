@@ -3,6 +3,7 @@ import { routes } from "vue-router/auto-routes";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/firebase/config";
 import { usePostHog } from "@/composables/usePostHog.ts";
+import { capturePageview } from "@/analytics";
 
 let currentUser: User | null = auth.currentUser;
 let isAuthResolved = Boolean(currentUser);
@@ -76,5 +77,9 @@ if (import.meta.env.VITE_PUBLIC_POSTHOG_API_KEY)
     import.meta.env.VITE_PUBLIC_POSTHOG_API_KEY,
     import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
   );
+
+router.afterEach(() => {
+  capturePageview();
+});
 
 export default router;

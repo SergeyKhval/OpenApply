@@ -1,8 +1,9 @@
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { collection, doc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { useDocument } from "vuefire";
 import { db, functions } from "@/firebase/config.ts";
+import { trackEvent } from "@/analytics";
 
 export type JobIngestionStatus =
   | "pending"
@@ -157,6 +158,18 @@ export const useJobIngestion = () => {
     data.value = undefined;
     latestSnapshot.value = undefined;
   };
+
+  watch(latestSnapshot, (snapshot) => {
+    if (!snapshot) return;
+    if (snapshot.status === "parsed") {
+      trackEvent("job_parse_succeeded", {
+        company: snapshot.parsedData?.companyName,
+        position: snapshot.parsedData?.position,
+      });
+    } else if (snapshot.status === "parse-failed" || snapshot.status === "failed") {
+      trackEvent("job_parse_failed", { error: snapshot.errorMessage ?? undefined });
+    }
+  });
 
   return {
     start,

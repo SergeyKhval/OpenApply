@@ -12,6 +12,7 @@ import {
 import { computed, type Ref } from "vue";
 import { collection, doc } from "firebase/firestore";
 import { db } from "@/firebase/config.ts";
+import { identifyUser, resetUser, trackEvent } from "@/analytics";
 
 type BillingProfile = {
   currentBalance: number;
@@ -69,6 +70,8 @@ export function useAuth() {
         email,
         password,
       );
+      identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
+      trackEvent("login_completed");
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -88,6 +91,8 @@ export function useAuth() {
         email,
         password,
       );
+      identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
+      trackEvent("signup_completed");
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -101,6 +106,8 @@ export function useAuth() {
     try {
       const provider = new GoogleAuthProvider();
       const result: UserCredential = await signInWithPopup(auth, provider);
+      identifyUser(result.user.uid, { email: result.user.email, authMethod: "google" });
+      trackEvent("login_completed");
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -113,6 +120,7 @@ export function useAuth() {
 
     try {
       await signOut(auth);
+      resetUser();
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

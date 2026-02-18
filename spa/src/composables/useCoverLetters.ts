@@ -12,6 +12,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "@/firebase/config";
 import type { CoverLetter } from "@/types";
+import { trackEvent } from "@/analytics";
 
 type CoverLetterActionError = {
   success: false;
@@ -106,10 +107,13 @@ export function useCoverLetters() {
       });
 
       const data = result.data as { coverLetterId: string; body: string };
+      trackEvent("cover_letter_generated", { jobApplicationId, resumeId });
       return { success: true, data };
     } catch (err) {
       console.error("Error generating cover letter:", err);
-      return normalizeFunctionsError(err);
+      const normalized = normalizeFunctionsError(err);
+      trackEvent("cover_letter_generation_failed", { error: normalized.error, code: normalized.code });
+      return normalized;
     }
   };
 
@@ -157,6 +161,7 @@ export function useCoverLetters() {
       });
 
       const data = result.data as { body: string };
+      trackEvent("cover_letter_regenerated");
       return { success: true, data };
     } catch (err) {
       console.error("Error regenerating cover letter:", err);
