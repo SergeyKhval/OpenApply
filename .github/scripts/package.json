@@ -1,0 +1,11 @@
+{
+  "name": "openapply-blog-automation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "resend": "^4.0.0",
+    "tsx": "^4.19.0"
+  }
+}

@@ -1,0 +1,36 @@
+name: Blog Post Automation
+
+on:
+  schedule:
+    # Monday 3 PM UTC, Thursday 10 AM UTC → 3/4 day gap, varied times
+    - cron: '0 15 * * 1'
+    - cron: '0 10 * * 4'
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-broadcast:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: cd .github/scripts && npm install
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate post, commit, push, and broadcast
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: cd .github/scripts && npx tsx blog-automation.ts

@@ -1,0 +1,282 @@
+[
+  {
+    "slug": "how-to-write-cover-letter-software-engineer",
+    "title": "How to Write a Cover Letter for Software Engineer Positions",
+    "keywords": ["cover letter software engineer", "developer cover letter", "tech cover letter tips"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-product-manager",
+    "title": "How to Write a Cover Letter for Product Manager Roles",
+    "keywords": ["product manager cover letter", "PM cover letter example", "cover letter for product management"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-data-analyst",
+    "title": "How to Write a Cover Letter for Data Analyst Jobs",
+    "keywords": ["data analyst cover letter", "analytics cover letter", "cover letter data science"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-marketing-manager",
+    "title": "How to Write a Cover Letter for Marketing Manager Positions",
+    "keywords": ["marketing manager cover letter", "digital marketing cover letter", "marketing cover letter tips"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-ux-designer",
+    "title": "How to Write a Cover Letter for UX Designer Roles",
+    "keywords": ["UX designer cover letter", "design cover letter", "UX cover letter example"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-sales-representative",
+    "title": "How to Write a Cover Letter for Sales Representative Jobs",
+    "keywords": ["sales cover letter", "sales representative cover letter", "sales job cover letter"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-project-manager",
+    "title": "How to Write a Cover Letter for Project Manager Positions",
+    "keywords": ["project manager cover letter", "PMP cover letter", "project management cover letter"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-career-change",
+    "title": "How to Write a Cover Letter When Changing Careers",
+    "keywords": ["career change cover letter", "switching careers cover letter", "cover letter no experience"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "resume-tips-software-engineer",
+    "title": "Resume Tips for Software Engineers: What Recruiters Actually Look For",
+    "keywords": ["software engineer resume tips", "developer resume", "tech resume guide"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-recent-graduates",
+    "title": "Resume Tips for Recent Graduates With No Experience",
+    "keywords": ["new grad resume", "entry level resume tips", "resume no experience"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-product-manager",
+    "title": "How to Build a Product Manager Resume That Gets Interviews",
+    "keywords": ["product manager resume", "PM resume tips", "product management resume"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-remote-jobs",
+    "title": "Resume Tips for Landing Remote Jobs in 2025",
+    "keywords": ["remote job resume", "work from home resume tips", "remote work resume"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-ats-optimization",
+    "title": "How to Optimize Your Resume for ATS Systems",
+    "keywords": ["ATS resume tips", "applicant tracking system resume", "ATS friendly resume"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-data-science",
+    "title": "Data Science Resume Guide: Skills, Projects, and Keywords",
+    "keywords": ["data science resume", "data scientist resume tips", "machine learning resume"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "resume-tips-career-gap",
+    "title": "How to Explain a Career Gap on Your Resume",
+    "keywords": ["career gap resume", "employment gap resume", "resume gap explanation"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "software-engineer-job-search-guide",
+    "title": "The Complete Software Engineer Job Search Guide for 2025",
+    "keywords": ["software engineer job search", "developer job hunting", "tech job search strategy"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "job-search-after-layoff",
+    "title": "Job Search After a Layoff: A Step-by-Step Recovery Plan",
+    "keywords": ["job search after layoff", "laid off job search", "layoff recovery job hunt"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "how-to-track-job-applications",
+    "title": "How to Track Job Applications Without Losing Your Mind",
+    "keywords": ["track job applications", "job application tracker", "job search organization"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "how-many-jobs-should-you-apply-to",
+    "title": "How Many Jobs Should You Apply to Per Day?",
+    "keywords": ["how many jobs to apply to", "job application volume", "jobs per day apply"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "job-search-networking-strategies",
+    "title": "Job Search Networking Strategies That Actually Work",
+    "keywords": ["job search networking", "networking for jobs", "professional networking tips"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "product-manager-job-search-guide",
+    "title": "Product Manager Job Search: From Application to Offer",
+    "keywords": ["product manager job search", "PM job hunting", "product management career"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "remote-job-search-guide",
+    "title": "How to Find Remote Jobs: The Definitive Guide",
+    "keywords": ["find remote jobs", "remote job search", "work from home job search"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "job-search-mistakes-to-avoid",
+    "title": "10 Job Search Mistakes That Are Costing You Interviews",
+    "keywords": ["job search mistakes", "job hunting errors", "why not getting interviews"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "follow-up-email-after-application",
+    "title": "How to Write a Follow-Up Email After a Job Application",
+    "keywords": ["follow up email job application", "application follow up", "job application email template"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "interview-preparation-software-engineer",
+    "title": "Software Engineer Interview Preparation: A Complete Checklist",
+    "keywords": ["software engineer interview prep", "coding interview preparation", "tech interview guide"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "interview-preparation-behavioral-questions",
+    "title": "How to Answer Behavioral Interview Questions With the STAR Method",
+    "keywords": ["behavioral interview questions", "STAR method interview", "interview STAR examples"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "interview-preparation-product-manager",
+    "title": "Product Manager Interview Prep: Frameworks and Practice Questions",
+    "keywords": ["product manager interview", "PM interview prep", "product management interview questions"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "interview-preparation-salary-negotiation",
+    "title": "Salary Negotiation: How to Get the Offer You Deserve",
+    "keywords": ["salary negotiation tips", "negotiate job offer", "how to negotiate salary"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "interview-preparation-remote-interview-tips",
+    "title": "Remote Interview Tips: How to Ace Virtual Job Interviews",
+    "keywords": ["remote interview tips", "virtual interview advice", "video interview preparation"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "how-to-write-cover-letter-with-ai",
+    "title": "How to Use AI to Write Better Cover Letters (Without Sounding Robotic)",
+    "keywords": ["AI cover letter", "ChatGPT cover letter", "AI job application"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "ai-resume-review-what-to-expect",
+    "title": "AI Resume Review: What It Checks and Why It Matters",
+    "keywords": ["AI resume review", "AI resume checker", "automated resume feedback"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "job-application-spreadsheet-vs-tracker",
+    "title": "Job Application Spreadsheet vs Dedicated Tracker: Which Is Better?",
+    "keywords": ["job application spreadsheet", "job tracker app", "application tracking"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "how-to-write-cover-letter-internship",
+    "title": "How to Write a Cover Letter for an Internship",
+    "keywords": ["internship cover letter", "cover letter intern", "student cover letter"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "resume-keywords-by-industry",
+    "title": "The Most Important Resume Keywords by Industry",
+    "keywords": ["resume keywords", "ATS keywords", "resume keywords by industry"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "interview-thank-you-email",
+    "title": "How to Write a Thank You Email After an Interview",
+    "keywords": ["interview thank you email", "post interview email", "thank you note interview"],
+    "category": "interview",
+    "cta": "tracker"
+  },
+  {
+    "slug": "linkedin-profile-optimization-job-search",
+    "title": "LinkedIn Profile Optimization: A Complete Guide for Job Seekers",
+    "keywords": ["LinkedIn optimization", "LinkedIn profile tips", "LinkedIn job search"],
+    "category": "job-search",
+    "cta": "tracker"
+  },
+  {
+    "slug": "how-to-write-cover-letter-nurse",
+    "title": "How to Write a Cover Letter for Nursing Jobs",
+    "keywords": ["nursing cover letter", "nurse cover letter", "healthcare cover letter"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "how-to-write-cover-letter-accountant",
+    "title": "How to Write a Cover Letter for Accounting Positions",
+    "keywords": ["accountant cover letter", "accounting cover letter", "CPA cover letter"],
+    "category": "cover-letter",
+    "cta": "cover-letter"
+  },
+  {
+    "slug": "resume-tips-freelancer",
+    "title": "How to Write a Resume When You've Been Freelancing",
+    "keywords": ["freelancer resume", "self employed resume", "freelance to full time resume"],
+    "category": "resume",
+    "cta": "resume-match"
+  },
+  {
+    "slug": "job-search-during-recession",
+    "title": "Job Search Strategies During an Economic Downturn",
+    "keywords": ["job search recession", "job hunting tough market", "find job economic downturn"],
+    "category": "job-search",
+    "cta": "tracker"
+  }
+]
