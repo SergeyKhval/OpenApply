@@ -127,6 +127,30 @@
         </div>
       </div>
 
+      <Alert
+        v-if="resumes.length === 0 && !isResumeBannerDismissed"
+        class="flex items-center justify-between"
+      >
+        <PhUploadSimple class="size-4" />
+        <AlertDescription class="flex items-center gap-3">
+          <span
+            ><strong>See how you stack up.</strong> Upload a resume to get an AI
+            match score and tailored fixes for this role.</span
+          >
+          <Button size="sm" class="shrink-0 whitespace-nowrap" :disabled="isUploading" @click="openFileDialog()">
+            {{ isUploading ? 'Uploading…' : 'Upload Resume →' }}
+          </Button>
+        </AlertDescription>
+        <Button
+          variant="ghost"
+          size="icon"
+          class="size-7 shrink-0"
+          @click="dismissResumeBanner"
+        >
+          <PhX class="size-4" />
+        </Button>
+      </Alert>
+
       <div v-if="application" class="grid lg:grid-cols-2 gap-4">
         <div class="flex flex-col gap-4">
           <JobApplicationAttachments :application="application" />
@@ -150,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useDocument } from "vuefire";
 import {
   collection,
@@ -164,6 +188,8 @@ import {
   PhClockClockwise,
   PhFire,
   PhHandsClapping,
+  PhUploadSimple,
+  PhX,
 } from "@phosphor-icons/vue";
 import { JobApplication, JobStatus } from "@/types";
 import { db } from "@/firebase/config.ts";
@@ -173,6 +199,9 @@ import JobApplicationContacts from "@/components/JobApplicationContacts.vue";
 import JobApplicationInterviews from "@/components/JobApplicationInterviews.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useResumes } from "@/composables/useResumes";
+import { useResumeUpload } from "@/composables/useResumeUpload";
 import { restoreJobApplication } from "@/firebase/restoreJobApplication.ts";
 import { getLocalTimeZone, today } from "@internationalized/date";
 import {
@@ -193,6 +222,17 @@ const { applicationId } = defineProps<ApplicationPageProps>();
 const { data: application } = useDocument<JobApplication>(
   doc(collection(db, "jobApplications"), applicationId),
 );
+
+const { data: resumes } = useResumes();
+const { openFileDialog, isUploading } = useResumeUpload();
+const isResumeBannerDismissed = ref(
+  localStorage.getItem("dismiss-resume-banner") === "true",
+);
+
+function dismissResumeBanner() {
+  isResumeBannerDismissed.value = true;
+  localStorage.setItem("dismiss-resume-banner", "true");
+}
 
 const statusBar = computed(() => {
   if (!application.value) return [];
