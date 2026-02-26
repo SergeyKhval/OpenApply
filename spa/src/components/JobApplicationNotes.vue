@@ -59,6 +59,7 @@ import {
 import { db } from "@/firebase/config.ts";
 import { type JobApplicationNote as JobApplicationNoteType } from "@/types";
 import JobApplicationNote from "@/components/JobApplicationNote.vue";
+import { trackEvent } from "@/analytics";
 
 type JobApplicationNotesProps = {
   applicationId: string;
@@ -91,6 +92,7 @@ async function addNote() {
     createdAt: serverTimestamp(),
   });
 
+  trackEvent("note_created", { applicationId });
   newNoteText.value = "";
 }
 </script>

@@ -151,6 +151,7 @@ import { Button } from "@/components/ui/button";
 import { Contact, ContactFormContact } from "@/types";
 import ContactForm from "@/components/ContactForm.vue";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { trackEvent } from "@/analytics";
 
 type JobApplicationContactsProps = {
   applicationId: string;
@@ -184,13 +185,15 @@ function updateContact(contact: ContactFormContact) {
   });
 }
 
-function addContact(contact: ContactFormContact, userId: string) {
-  return addDoc(collection(db, "contacts"), {
+async function addContact(contact: ContactFormContact, userId: string) {
+  await addDoc(collection(db, "contacts"), {
     ...contact,
     createdAt: serverTimestamp(),
     userId,
     jobApplicationId: applicationId,
   });
+
+  trackEvent("contact_created", { applicationId });
 }
 
 function deleteContact(contactId: string) {

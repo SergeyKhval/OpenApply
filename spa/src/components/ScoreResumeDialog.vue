@@ -70,6 +70,7 @@ import { PhScales, PhWarningCircle } from "@phosphor-icons/vue";
 import { functions } from "@/firebase/config.ts";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData.ts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { trackEvent } from "@/analytics";
 
 type ScoreResumeDialogProps = { isOpen: boolean };
 
@@ -98,11 +99,23 @@ function toggleDialog(isOpen: boolean) {
 }
 
 async function reviewResume() {
-  const result = await matchResumeWithJobApplication({
-    resumeId: selectedResumeId.value,
-    jobApplicationId: selectedJobApplicationId.value,
-  });
+  const resumeId = selectedResumeId.value;
+  const jobApplicationId = selectedJobApplicationId.value;
 
-  console.log(result);
+  trackEvent("resume_match_started", { resumeId, jobApplicationId });
+
+  try {
+    const result = await matchResumeWithJobApplication({
+      resumeId,
+      jobApplicationId,
+    });
+
+    trackEvent("resume_match_completed", { resumeId, jobApplicationId });
+    console.log(result);
+  } catch (e) {
+    trackEvent("resume_match_failed", {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 </script>

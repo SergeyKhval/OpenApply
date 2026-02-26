@@ -92,6 +92,7 @@ import { Button } from "@/components/ui/button";
 import InterviewForm from "@/components/InterviewForm.vue";
 import InterviewList from "@/components/InterviewList.vue";
 import pick from "lodash/pick";
+import { trackEvent } from "@/analytics";
 
 type JobApplicationInterviewsProps = {
   applicationId: string;
@@ -142,6 +143,7 @@ async function addInterview(interviewForm: InterviewFormInterview) {
     applicationId,
   });
 
+  trackEvent("interview_created", { applicationId });
   viewMode.value = "view";
 }
 
