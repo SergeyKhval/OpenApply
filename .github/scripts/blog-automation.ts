@@ -135,7 +135,8 @@ async function generatePost(topic: Topic): Promise<string> {
     },
   });
 
-  const body = result.response.text();
+  const raw = result.response.text();
+  const body = raw.replace(/^(?:Okay|Here(?:'s| is)|Sure|Alright|Great|Let me|I've)[^\n]*:\s*\n+/, "").trim();
   const frontmatter = buildFrontmatter(topic);
   const cta = ctaBlocks[topic.cta] || ctaBlocks["tracker"];
   return `${frontmatter}\n\n${body}\n\n${cta}\n`;
