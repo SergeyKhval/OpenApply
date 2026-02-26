@@ -41,5 +41,5 @@ const { apiKey, apiHost } = Astro.props;
       (e.__SV = 1));
   })(document, window.posthog || []);
 
-  posthog.init(apiKey, { api_host: apiHost, defaults: '2025-05-24' });
+  posthog.init(apiKey, { api_host: apiHost, defaults: '2025-05-24', capture_exceptions: true });
 </script>
