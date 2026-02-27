@@ -15,7 +15,12 @@ type PostModule = {
   };
 }
 
-const posts = Object.values(import.meta.glob<PostModule>('./blog/*.md', { eager: true }));
+const posts = Object.values(import.meta.glob<PostModule>('./blog/*.md', { eager: true }))
+  .sort((a, b) => {
+    const dateA = a.frontmatter.pubDate ? new Date(a.frontmatter.pubDate).getTime() : 0;
+    const dateB = b.frontmatter.pubDate ? new Date(b.frontmatter.pubDate).getTime() : 0;
+    return dateB - dateA;
+  });
 const currentPath = Astro.url.pathname;
 
 // SEO data
