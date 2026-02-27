@@ -26,4 +26,15 @@ dist-ssr
 
 .firebaserc
 emulator-data
+firebase-export-*
 .mcp.json
+
+# Functions
+functions/.env.*
+functions/.genkit/
+
+# Scripts
+.github/scripts/package-lock.json
+
+# Misc
+*.csv
