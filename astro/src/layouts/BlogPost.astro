@@ -3,6 +3,7 @@ import Layout from './Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SocialShare from '../components/SocialShare.astro';
+import RelatedPosts from '../components/RelatedPosts.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 
 const { frontmatter } = Astro.props;
@@ -142,6 +143,9 @@ const breadcrumbItems = [
       <div class="prose prose-lg dark:prose-invert max-w-none">
         <slot />
       </div>
+
+      <!-- Related posts -->
+      <RelatedPosts currentUrl={currentPath} currentTags={frontmatter.tags || []} />
 
       <!-- Social share at the bottom -->
       <SocialShare title={frontmatter.title} url={canonicalUrl} />

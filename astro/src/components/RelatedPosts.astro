@@ -1,0 +1,81 @@
+---
+type Props = {
+  currentUrl: string;
+  currentTags: string[];
+};
+
+type PostModule = {
+  url?: string;
+  frontmatter: {
+    title: string;
+    description?: string;
+    pubDate?: string;
+    author?: string;
+    tags?: string[];
+  };
+};
+
+const { currentUrl, currentTags } = Astro.props;
+
+const allPosts = Object.values(
+  import.meta.glob<PostModule>('../pages/blog/*.md', { eager: true })
+);
+
+const related = allPosts
+  .filter((post) => post.url !== currentUrl)
+  .map((post) => {
+    const postTags = post.frontmatter.tags || [];
+    const sharedCount = postTags.filter((t) => currentTags.includes(t)).length;
+    return { ...post, sharedCount };
+  })
+  .filter((post) => post.sharedCount > 0)
+  .sort((a, b) => {
+    if (b.sharedCount !== a.sharedCount) return b.sharedCount - a.sharedCount;
+    const dateA = a.frontmatter.pubDate ? new Date(a.frontmatter.pubDate).getTime() : 0;
+    const dateB = b.frontmatter.pubDate ? new Date(b.frontmatter.pubDate).getTime() : 0;
+    return dateB - dateA;
+  })
+  .slice(0, 3);
+---
+
+{related.length > 0 && (
+  <section class="mt-16 border-t border-border pt-10">
+    <h2 class="text-2xl font-bold text-foreground mb-6">Related Posts</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {related.map((post) => (
+        <article class="border border-border rounded-lg p-5 hover:border-primary transition-colors flex flex-col h-full">
+          <a href={post.url} class="group flex flex-col h-full">
+            <h3 class="text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-2">
+              {post.frontmatter.title}
+            </h3>
+            {post.frontmatter.description && (
+              <p class="text-muted-foreground text-sm line-clamp-3 mb-4 grow">
+                {post.frontmatter.description}
+              </p>
+            )}
+            <div class="mt-auto">
+              {post.frontmatter.pubDate && (
+                <time class="text-xs text-muted-foreground mb-2 block" datetime={post.frontmatter.pubDate}>
+                  {new Date(post.frontmatter.pubDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </time>
+              )}
+              {post.frontmatter.tags && post.frontmatter.tags.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                  {post.frontmatter.tags.map((tag) => (
+                    <span class="px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </a>
+        </article>
+      ))}
+    </div>
+  </section>
+)}
