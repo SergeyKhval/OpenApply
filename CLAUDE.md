@@ -32,6 +32,16 @@ cd astro && pnpm dev    # Dev server at localhost:4321
 cd astro && pnpm build  # Production build
 ```
 
+### Testing
+```bash
+cd spa && pnpm test             # Run SPA tests (vitest run, jsdom environment)
+cd spa && pnpm test:watch       # Watch mode
+cd functions && pnpm test       # Run functions tests (vitest run)
+cd functions && pnpm test:watch # Watch mode
+pnpm test                       # Run all tests (spa + functions)
+```
+Tests use `__tests__/` directories co-located with source files. SPA tests: `spa/src/**/__tests__/*.test.ts`. Functions tests: `functions/src/__tests__/*.test.ts`.
+
 ### Root-level
 ```bash
 pnpm build              # Build all three workspaces
