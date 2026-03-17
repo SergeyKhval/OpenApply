@@ -4,6 +4,9 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { genkit } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { firestore } from "firebase-admin";
+import { validateCreditBalance } from "./lib/credits";
+import { validateResourceOwnership } from "./lib/ownership";
+import { validateResumeForGeneration, validateJobApplicationForGeneration } from "./lib/validation";
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -60,9 +63,7 @@ async function validateBillingBalance(
 
   const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
 
-  if (currentBalance < REQUIRED_CREDITS) {
-    throw createInsufficientCreditsError(action);
-  }
+  validateCreditBalance(currentBalance, REQUIRED_CREDITS, `${action} a cover letter`);
 }
 
 async function fetchAndValidateJobApplication(
@@ -79,12 +80,12 @@ async function fetchAndValidateJobApplication(
   }
 
   const jobApplication = jobApplicationDoc.data();
-  if (jobApplication?.userId !== userId) {
-    throw new HttpsError(
-      "permission-denied",
-      "User does not have access to this job application",
-    );
-  }
+  validateResourceOwnership(jobApplication as { userId: string }, userId);
+  validateJobApplicationForGeneration(jobApplication as {
+    companyName?: string;
+    position?: string;
+    jobDescription?: string;
+  });
 
   return jobApplication as firestore.DocumentData;
 }
@@ -97,19 +98,8 @@ async function fetchAndValidateResume(resumeId: string, userId: string) {
   }
 
   const resume = resumeDoc.data();
-  if (resume?.userId !== userId) {
-    throw new HttpsError(
-      "permission-denied",
-      "User does not have access to this resume",
-    );
-  }
-
-  if (!resume.text) {
-    throw new HttpsError(
-      "failed-precondition",
-      "Resume has not been parsed yet",
-    );
-  }
+  validateResourceOwnership(resume as { userId: string }, userId);
+  validateResumeForGeneration(resume as { text?: string });
 
   return resume as firestore.DocumentData;
 }
@@ -123,7 +113,9 @@ async function buildCoverLetterPrompt(
   const coverLetterTemplate =
     promptTemplateDoc.exists && promptTemplateDoc.data();
 
-  if (!coverLetterTemplate) return "";
+  if (!coverLetterTemplate) {
+    throw new HttpsError("failed-precondition", "Cover letter prompt template not found");
+  }
 
   return coverLetterTemplate.template
     .replace("{{ companyName }}", jobApplication.companyName)
@@ -157,9 +149,7 @@ async function deductCreditsInTransaction(
 
     const currentBalance = billingSnap.data()?.currentBalance ?? 0;
 
-    if (currentBalance < REQUIRED_CREDITS) {
-      throw createInsufficientCreditsError(action);
-    }
+    validateCreditBalance(currentBalance, REQUIRED_CREDITS, `${action} a cover letter`);
 
     transactionCallback(transaction);
 

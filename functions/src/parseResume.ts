@@ -2,18 +2,21 @@ import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { getStorage } from "firebase-admin/storage";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { PDFParse } from "pdf-parse";
+import { parseStoragePath } from "./lib/parsing";
 
 const db = getFirestore();
 
 export const parseResume = onObjectFinalized(async (object) => {
   const filePath = object.data.name;
 
-  if (!filePath.startsWith("resumes/")) {
+  let parsed: { userId: string; fileName: string };
+  try {
+    parsed = parseStoragePath(filePath);
+  } catch {
     console.log("File is not in resumes/ directory, skipping parse.");
     return;
   }
-
-  const [, userId, fileName] = filePath.split("/");
+  const { userId, fileName } = parsed;
   const file = getStorage().bucket().file(object.data.name);
 
   try {
@@ -25,7 +28,7 @@ export const parseResume = onObjectFinalized(async (object) => {
     await db.collection("userResumes").add({
       userId,
       // filename comes in format: <timestamp>-<originalFileName>
-      fileName: fileName.split("-").slice(1).join("-"),
+      fileName,
       fileSize: object.data.size,
       text,
       status: "parsed",

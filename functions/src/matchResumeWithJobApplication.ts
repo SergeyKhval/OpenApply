@@ -3,6 +3,9 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { defineString } from "firebase-functions/params";
+import { validateCreditBalance } from "./lib/credits";
+import { validateResourceOwnership } from "./lib/ownership";
+import { validateResumeForGeneration } from "./lib/validation";
 
 defineString("GEMINI_API_KEY");
 
@@ -106,9 +109,7 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
 
     const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
 
-    if (currentBalance < REQUIRED_CREDITS) {
-      throw createInsufficientCreditsError();
-    }
+    validateCreditBalance(currentBalance, REQUIRED_CREDITS, "generate an AI resume review");
 
     // Fetch data
     const [resumeMatchPromptTemplate, resume, jobApplication] =
@@ -122,32 +123,23 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
     const resumeData = resume.data();
     const jobApplicationData = jobApplication.data();
 
-    // Validate ownership
-    if (resumeData?.userId !== userId) {
-      throw new HttpsError(
-        "permission-denied",
-        "User does not have access to this resume",
-      );
+    // Validate existence first, then ownership, then data quality
+    if (!promptTemplateData) {
+      throw new HttpsError("failed-precondition", "Resume matcher prompt template not found");
+    }
+    if (!resumeData) {
+      throw new HttpsError("not-found", "Resume not found");
+    }
+    if (!jobApplicationData) {
+      throw new HttpsError("not-found", "Job application not found");
     }
 
-    if (jobApplicationData?.userId !== userId) {
-      throw new HttpsError(
-        "permission-denied",
-        "User does not have access to this job application",
-      );
-    }
+    validateResourceOwnership(resumeData as { userId: string }, userId);
+    validateResourceOwnership(jobApplicationData as { userId: string }, userId);
 
-    if (
-      !promptTemplateData ||
-      !resumeData ||
-      !jobApplicationData ||
-      !resumeData.text ||
-      !jobApplicationData.jobDescription
-    ) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Invalid data for resume or job application",
-      );
+    validateResumeForGeneration(resumeData as { text?: string });
+    if (!jobApplicationData.jobDescription) {
+      throw new HttpsError("failed-precondition", "Job application is missing job description");
     }
 
     const prompt = promptTemplateData.template
@@ -177,9 +169,7 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
 
       const currentBalance = billingSnap.data()?.currentBalance ?? 0;
 
-      if (currentBalance < REQUIRED_CREDITS) {
-        throw createInsufficientCreditsError();
-      }
+      validateCreditBalance(currentBalance, REQUIRED_CREDITS, "generate an AI resume review");
 
       transaction.create(matchRef, {
         userId,

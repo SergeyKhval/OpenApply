@@ -201,6 +201,23 @@ describe("stripeWebhook", () => {
     expect(mockTransactionUpdate).not.toHaveBeenCalled();
   });
 
+  it("rejects when session has no customer ID", async () => {
+    mockReq.headers["stripe-signature"] = "valid-sig";
+    mockConstructEvent.mockReturnValue({
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_123",
+          customer: null,
+        },
+      },
+    });
+
+    await callWebhook();
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.send).toHaveBeenCalledWith("No customer ID");
+  });
+
   it("returns 200 for non-checkout events", async () => {
     mockReq.headers["stripe-signature"] = "valid-sig";
     mockConstructEvent.mockReturnValue({
