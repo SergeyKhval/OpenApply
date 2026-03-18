@@ -7,6 +7,9 @@ export type DigestApplication = {
   status: string;
   updatedAt: Date;
   createdAt: Date;
+  appliedAt?: Date;
+  interviewedAt?: Date;
+  offeredAt?: Date;
 };
 
 export type DigestInterview = {
@@ -40,6 +43,27 @@ export type DigestResult = {
 const FORWARD_STATUSES = ["interviewing", "offered", "hired"];
 const SKIP_ACTIONS_STATUSES = ["hired", "rejected", "archived"];
 
+const WINS_WINDOW_DAYS = 7;
+const OFFERED_DECISION_THRESHOLD_DAYS = 3;
+const INTERVIEWING_ATTENTION_THRESHOLD_DAYS = 5;
+const INTERVIEWING_ARCHIVE_THRESHOLD_DAYS = 14;
+const APPLIED_FOLLOWUP_THRESHOLD_DAYS = 10;
+const APPLIED_ARCHIVE_THRESHOLD_DAYS = 30;
+const DRAFT_STALE_THRESHOLD_DAYS = 7;
+
+function getStatusDate(app: DigestApplication): Date {
+  switch (app.status) {
+    case "offered":
+      return app.offeredAt ?? app.updatedAt;
+    case "interviewing":
+      return app.interviewedAt ?? app.updatedAt;
+    case "applied":
+      return app.appliedAt ?? app.updatedAt;
+    default:
+      return app.updatedAt;
+  }
+}
+
 export function categorizeApplications(
   applications: DigestApplication[],
   interviews: DigestInterview[],
@@ -47,10 +71,14 @@ export function categorizeApplications(
 ): DigestResult {
   const actions: ActionItem[] = [];
   const wins: WinItem[] = [];
-  const sevenDaysAgo = subDays(now, 7);
+  const winsWindowStart = subDays(now, WINS_WINDOW_DAYS);
 
   for (const app of applications) {
-    const daysSinceUpdate = differenceInDays(now, app.updatedAt);
+    // Use status-specific dates when available, fall back to updatedAt.
+    // Status dates reflect when the status actually changed, while updatedAt
+    // changes on any edit (description, notes, etc.) which would reset the clock.
+    const statusDate = getStatusDate(app);
+    const daysSinceStatusChange = differenceInDays(now, statusDate);
     const daysSinceCreation = differenceInDays(now, app.createdAt);
     const appSummary = {
       applicationId: app.id,
@@ -59,17 +87,17 @@ export function categorizeApplications(
     };
 
     // --- Wins (evaluated for all statuses including hired) ---
-    if (app.status !== "draft" && app.createdAt >= sevenDaysAgo) {
+    if (app.status !== "draft" && app.createdAt >= winsWindowStart) {
       wins.push({ ...appSummary, type: "new-application" });
     }
     // offered is special-cased before the FORWARD_STATUSES check so that a
     // recent offer records "offer-received" rather than the generic "moved-forward".
-    if (app.status === "offered" && app.updatedAt >= sevenDaysAgo) {
+    if (app.status === "offered" && statusDate >= winsWindowStart) {
       wins.push({ ...appSummary, type: "offer-received" });
     } else if (
       FORWARD_STATUSES.includes(app.status) &&
-      app.updatedAt >= sevenDaysAgo &&
-      app.createdAt < sevenDaysAgo
+      statusDate >= winsWindowStart &&
+      app.createdAt < winsWindowStart
     ) {
       wins.push({ ...appSummary, type: "moved-forward" });
     }
@@ -77,24 +105,24 @@ export function categorizeApplications(
     // --- Actions (skip terminal statuses) ---
     if (SKIP_ACTIONS_STATUSES.includes(app.status)) continue;
 
-    if (app.status === "offered" && daysSinceUpdate >= 3) {
-      actions.push({ ...appSummary, category: "decision-needed", daysSinceActivity: daysSinceUpdate });
+    if (app.status === "offered" && daysSinceStatusChange >= OFFERED_DECISION_THRESHOLD_DAYS) {
+      actions.push({ ...appSummary, category: "decision-needed", daysSinceActivity: daysSinceStatusChange });
     } else if (app.status === "interviewing") {
       const appInterviews = interviews.filter((i) => i.applicationId === app.id);
       const hasFutureInterview = appInterviews.some((i) => i.conductedAt > now);
 
-      if (daysSinceUpdate >= 14) {
-        actions.push({ ...appSummary, category: "consider-archiving", daysSinceActivity: daysSinceUpdate });
-      } else if (daysSinceUpdate >= 5 && !hasFutureInterview) {
-        actions.push({ ...appSummary, category: "needs-attention", daysSinceActivity: daysSinceUpdate });
+      if (daysSinceStatusChange >= INTERVIEWING_ARCHIVE_THRESHOLD_DAYS) {
+        actions.push({ ...appSummary, category: "consider-archiving", daysSinceActivity: daysSinceStatusChange });
+      } else if (daysSinceStatusChange >= INTERVIEWING_ATTENTION_THRESHOLD_DAYS && !hasFutureInterview) {
+        actions.push({ ...appSummary, category: "needs-attention", daysSinceActivity: daysSinceStatusChange });
       }
     } else if (app.status === "applied") {
-      if (daysSinceUpdate >= 30) {
-        actions.push({ ...appSummary, category: "consider-archiving", daysSinceActivity: daysSinceUpdate });
-      } else if (daysSinceUpdate >= 10) {
-        actions.push({ ...appSummary, category: "follow-up", daysSinceActivity: daysSinceUpdate });
+      if (daysSinceStatusChange >= APPLIED_ARCHIVE_THRESHOLD_DAYS) {
+        actions.push({ ...appSummary, category: "consider-archiving", daysSinceActivity: daysSinceStatusChange });
+      } else if (daysSinceStatusChange >= APPLIED_FOLLOWUP_THRESHOLD_DAYS) {
+        actions.push({ ...appSummary, category: "follow-up", daysSinceActivity: daysSinceStatusChange });
       }
-    } else if (app.status === "draft" && daysSinceCreation >= 7) {
+    } else if (app.status === "draft" && daysSinceCreation >= DRAFT_STALE_THRESHOLD_DAYS) {
       actions.push({ ...appSummary, category: "stale-draft", daysSinceActivity: daysSinceCreation });
     }
   }

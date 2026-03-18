@@ -26,7 +26,7 @@ function makeApp(overrides: Partial<DigestApplication> & { status: string }): Di
 
 describe("categorizeApplications — threshold categorization", () => {
   it("flags offered applications after 3 days as decision-needed", () => {
-    const app = makeApp({ status: "offered", updatedAt: daysAgo(4) });
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(4) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("decision-needed");
@@ -34,14 +34,14 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("does not flag offered applications within 3 days", () => {
-    const app = makeApp({ status: "offered", updatedAt: daysAgo(2) });
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(2) });
     const result = categorizeApplications([app], [], NOW);
     const decisionItems = result.actions.filter((a) => a.category === "decision-needed");
     expect(decisionItems).toHaveLength(0);
   });
 
   it("flags interviewing applications after 5 days with no upcoming interview as needs-attention", () => {
-    const app = makeApp({ status: "interviewing", updatedAt: daysAgo(6) });
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(6) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("needs-attention");
@@ -49,7 +49,7 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("does not flag interviewing if a future interview is scheduled", () => {
-    const app = makeApp({ id: "app-2", status: "interviewing", updatedAt: daysAgo(6) });
+    const app = makeApp({ id: "app-2", status: "interviewing", interviewedAt: daysAgo(6) });
     const interview: DigestInterview = {
       applicationId: "app-2",
       conductedAt: daysFromNow(2),
@@ -60,7 +60,7 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("flags interviewing applications after 14 days as consider-archiving", () => {
-    const app = makeApp({ status: "interviewing", updatedAt: daysAgo(15) });
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(15) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("consider-archiving");
@@ -68,7 +68,7 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("flags applied applications after 10 days as follow-up", () => {
-    const app = makeApp({ status: "applied", updatedAt: daysAgo(11) });
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(11) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("follow-up");
@@ -76,7 +76,7 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("flags applied applications after 30 days as consider-archiving", () => {
-    const app = makeApp({ status: "applied", updatedAt: daysAgo(31) });
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(31) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("consider-archiving");
@@ -84,7 +84,6 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("flags draft applications after 7 days as stale-draft (uses createdAt)", () => {
-    // updatedAt is recent, but createdAt is old — should use createdAt
     const app = makeApp({ status: "draft", updatedAt: daysAgo(1), createdAt: daysAgo(8) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
@@ -101,7 +100,7 @@ describe("categorizeApplications — threshold categorization", () => {
   });
 
   it("returns isEmpty true when no actions and no wins", () => {
-    const app = makeApp({ status: "applied", updatedAt: daysAgo(2) });
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(2) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.isEmpty).toBe(true);
     expect(result.wins).toHaveLength(0);
@@ -111,7 +110,7 @@ describe("categorizeApplications — threshold categorization", () => {
 
 describe("categorizeApplications — exact threshold boundaries", () => {
   it("flags offered at exactly 3 days as decision-needed", () => {
-    const app = makeApp({ status: "offered", updatedAt: daysAgo(3) });
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(3) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("decision-needed");
@@ -119,7 +118,7 @@ describe("categorizeApplications — exact threshold boundaries", () => {
   });
 
   it("flags interviewing at exactly 5 days with no future interview as needs-attention", () => {
-    const app = makeApp({ status: "interviewing", updatedAt: daysAgo(5) });
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(5) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("needs-attention");
@@ -127,7 +126,7 @@ describe("categorizeApplications — exact threshold boundaries", () => {
   });
 
   it("flags interviewing at exactly 14 days as consider-archiving", () => {
-    const app = makeApp({ status: "interviewing", updatedAt: daysAgo(14) });
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(14) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("consider-archiving");
@@ -135,7 +134,7 @@ describe("categorizeApplications — exact threshold boundaries", () => {
   });
 
   it("flags applied at exactly 10 days as follow-up", () => {
-    const app = makeApp({ status: "applied", updatedAt: daysAgo(10) });
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(10) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("follow-up");
@@ -143,7 +142,7 @@ describe("categorizeApplications — exact threshold boundaries", () => {
   });
 
   it("flags applied at exactly 30 days as consider-archiving", () => {
-    const app = makeApp({ status: "applied", updatedAt: daysAgo(30) });
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(30) });
     const result = categorizeApplications([app], [], NOW);
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].category).toBe("consider-archiving");
@@ -159,9 +158,29 @@ describe("categorizeApplications — exact threshold boundaries", () => {
   });
 });
 
+describe("categorizeApplications — status date fallback", () => {
+  it("falls back to updatedAt when status-specific date is missing", () => {
+    // No appliedAt set — should use updatedAt as fallback
+    const app = makeApp({ status: "applied", updatedAt: daysAgo(12) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(12);
+  });
+
+  it("uses status-specific date even when updatedAt is recent", () => {
+    // appliedAt is old but updatedAt is recent (e.g. user edited description)
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(15), updatedAt: daysAgo(1) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(15);
+  });
+});
+
 describe("categorizeApplications — wins detection", () => {
   it("detects new applications submitted this week", () => {
-    const app = makeApp({ status: "applied", createdAt: daysAgo(3), updatedAt: daysAgo(3) });
+    const app = makeApp({ status: "applied", createdAt: daysAgo(3), appliedAt: daysAgo(3) });
     const result = categorizeApplications([app], [], NOW);
     const newAppWins = result.wins.filter((w) => w.type === "new-application");
     expect(newAppWins).toHaveLength(1);
@@ -176,7 +195,7 @@ describe("categorizeApplications — wins detection", () => {
   });
 
   it("detects offers received this week", () => {
-    const app = makeApp({ status: "offered", updatedAt: daysAgo(2), createdAt: daysAgo(40) });
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(2), createdAt: daysAgo(40) });
     const result = categorizeApplications([app], [], NOW);
     const offerWins = result.wins.filter((w) => w.type === "offer-received");
     expect(offerWins).toHaveLength(1);
@@ -184,10 +203,9 @@ describe("categorizeApplications — wins detection", () => {
   });
 
   it("detects applications that moved forward this week", () => {
-    // createdAt is older than 7 days, updatedAt is recent, status is interviewing
     const app = makeApp({
       status: "interviewing",
-      updatedAt: daysAgo(3),
+      interviewedAt: daysAgo(3),
       createdAt: daysAgo(20),
     });
     const result = categorizeApplications([app], [], NOW);
@@ -203,11 +221,21 @@ describe("categorizeApplications — wins detection", () => {
       createdAt: daysAgo(60),
     });
     const result = categorizeApplications([app], [], NOW);
-    // Should appear as a win
     const movedForward = result.wins.filter((w) => w.type === "moved-forward");
     expect(movedForward).toHaveLength(1);
     expect(movedForward[0].companyName).toBe("Acme Corp");
-    // Should NOT generate any action items
     expect(result.actions).toHaveLength(0);
+  });
+
+  it("does not detect offer as win when only updatedAt is recent but offeredAt is old", () => {
+    const app = makeApp({
+      status: "offered",
+      offeredAt: daysAgo(10),
+      updatedAt: daysAgo(1),
+      createdAt: daysAgo(30),
+    });
+    const result = categorizeApplications([app], [], NOW);
+    const offerWins = result.wins.filter((w) => w.type === "offer-received");
+    expect(offerWins).toHaveLength(0);
   });
 });

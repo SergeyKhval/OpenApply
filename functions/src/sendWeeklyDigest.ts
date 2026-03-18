@@ -20,6 +20,18 @@ const APP_URL = "https://openapply.app/app/dashboard/applications";
 const FROM_EMAIL = "OpenApply <digest@openapply.app>";
 const REPLY_TO = "support@openapply.app";
 
+// Status-specific dates (appliedAt, interviewedAt, offeredAt) are stored as
+// JS Date objects from the SPA, but Firestore may wrap them as Timestamps.
+function toDateOrUndefined(
+  value: { toDate?: () => Date } | Date | undefined,
+): Date | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === "object" && "toDate" in value && typeof value.toDate === "function")
+    return value.toDate();
+  return undefined;
+}
+
 export const sendWeeklyDigest = onSchedule("0 9 * * 1", async () => {
   if (!RESEND_API_KEY.value()) {
     console.warn("RESEND_API_KEY is not set. Skipping weekly digest.");
@@ -51,6 +63,9 @@ export const sendWeeklyDigest = onSchedule("0 9 * * 1", async () => {
       status: data.status,
       updatedAt: data.updatedAt?.toDate() || data.createdAt?.toDate() || now,
       createdAt: data.createdAt?.toDate() || now,
+      appliedAt: toDateOrUndefined(data.appliedAt),
+      interviewedAt: toDateOrUndefined(data.interviewedAt),
+      offeredAt: toDateOrUndefined(data.offeredAt),
     });
     appsByUser.set(userId, apps);
   }
