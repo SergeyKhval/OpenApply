@@ -40,5 +40,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Write functions environment file
+        run: echo "$FIREBASE_ENV" > functions/.env.applytrack-a4197
+        env:
+          FIREBASE_ENV: ${{ secrets.FIREBASE_ENV }}
+
       - name: Deploy to Firebase
         run: firebase deploy --only functions,firestore:rules,firestore:indexes --project applytrack-a4197
