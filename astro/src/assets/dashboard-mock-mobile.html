@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390">
+<title>OpenApply Dashboard Mock - Mobile</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #09070e;
+    --card-bg: #13101a;
+    --card-border: rgba(139, 92, 246, 0.15);
+    --text: #e8e4ef;
+    --text-muted: #8b839a;
+    --primary: #a78bfa;
+    --primary-bg: rgba(139, 92, 246, 0.12);
+    --accent-green: #34d399;
+    --accent-blue: #60a5fa;
+    --accent-yellow: #fbbf24;
+    --accent-orange: #fb923c;
+    --accent-pink: #f472b6;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 390px;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .topbar h1 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .filter-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .filter-btn:not(.active) {
+    border-color: var(--card-border);
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .company-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .card-role {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .card-meta a {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .card-meta svg { width: 11px; height: 11px; }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--text-muted);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--text-muted);
+    align-self: flex-start;
+    margin-top: auto;
+  }
+  .status-badge svg { width: 10px; height: 10px; }
+
+  .status-applied { color: var(--accent-blue); border-color: rgba(96, 165, 250, 0.2); }
+  .status-interviewing { color: var(--accent-yellow); border-color: rgba(251, 191, 36, 0.2); }
+  .status-offered { color: var(--accent-orange); border-color: rgba(251, 146, 60, 0.2); }
+  .status-hired { color: var(--accent-green); border-color: rgba(52, 211, 153, 0.2); }
+</style>
+</head>
+<body>
+<main class="main">
+  <div class="topbar">
+    <h1>Applications</h1>
+    <div class="add-btn">
+      Add application
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active">All</button>
+    <button class="filter-btn">Draft</button>
+    <button class="filter-btn">Applied</button>
+    <button class="filter-btn">Interviewing</button>
+    <button class="filter-btn">Offered</button>
+    <button class="filter-btn">Hired</button>
+  </div>
+
+  <div class="cards">
+    <!-- Stripe -->
+    <div class="card">
+      <div class="card-header">
+        <div class="company-logo" style="background:linear-gradient(135deg,#635bff,#a259ff)">S</div>
+        <div>
+          <div class="card-title">Stripe</div>
+          <div class="card-role">Senior Frontend Engineer</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+        <span>Applied: 12/3/2026</span>
+      </div>
+      <div class="card-tags">
+        <span class="tag">React</span>
+        <span class="tag">TypeScript</span>
+        <span class="tag">GraphQL</span>
+      </div>
+      <div class="status-badge status-interviewing">Interviewing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+    </div>
+
+    <!-- Shopify -->
+    <div class="card">
+      <div class="card-header">
+        <div class="company-logo" style="background:linear-gradient(135deg,#5e8e3e,#96bf65)">S</div>
+        <div>
+          <div class="card-title">Shopify</div>
+          <div class="card-role">Staff Developer, Checkout</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+        <span>Applied: 10/3/2026</span>
+      </div>
+      <div class="card-tags">
+        <span class="tag">Vue.js</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Ruby</span>
+      </div>
+      <div class="status-badge status-offered">Offered <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+    </div>
+
+    <!-- Notion -->
+    <div class="card">
+      <div class="card-header">
+        <div class="company-logo" style="background:linear-gradient(135deg,#333,#555)">N</div>
+        <div>
+          <div class="card-title">Notion</div>
+          <div class="card-role">Senior Software Engineer</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+        <span>Applied: 5/3/2026</span>
+      </div>
+      <div class="card-tags">
+        <span class="tag">TypeScript</span>
+        <span class="tag">React</span>
+      </div>
+      <div class="status-badge status-hired">Hired <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+    </div>
+
+    <!-- Figma (partially visible) -->
+    <div class="card" style="opacity: 0.7; clip-path: inset(0 0 40% 0);">
+      <div class="card-header">
+        <div class="company-logo" style="background:linear-gradient(135deg,#f24e1e,#ff7262)">F</div>
+        <div>
+          <div class="card-title">Figma</div>
+          <div class="card-role">Product Engineer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

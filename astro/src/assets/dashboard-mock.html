@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>OpenApply Dashboard Mock</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #09070e;
+    --card-bg: #13101a;
+    --card-border: rgba(139, 92, 246, 0.15);
+    --card-border-hover: rgba(139, 92, 246, 0.3);
+    --text: #e8e4ef;
+    --text-muted: #8b839a;
+    --primary: #a78bfa;
+    --primary-bg: rgba(139, 92, 246, 0.12);
+    --accent-green: #34d399;
+    --accent-blue: #60a5fa;
+    --accent-yellow: #fbbf24;
+    --accent-purple: #a78bfa;
+    --accent-pink: #f472b6;
+    --accent-orange: #fb923c;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 1920px;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    padding: 24px 16px;
+    border-right: 1px solid rgba(139, 92, 246, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 0 12px 20px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .sidebar-item.active {
+    background: var(--primary-bg);
+    color: var(--primary);
+  }
+  .sidebar-item svg { width: 18px; height: 18px; opacity: 0.7; }
+  .sidebar-item.active svg { opacity: 1; }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    padding: 28px 32px;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .topbar h1 {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+    width: 340px;
+    margin-left: 24px;
+  }
+  .search-box svg { width: 16px; height: 16px; opacity: 0.5; }
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--card-border-hover);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Status filters */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .filter-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .filter-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .filter-btn:not(.active) {
+    border-color: var(--card-border);
+  }
+
+  /* Cards grid */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .company-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .card-role {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .card-meta a {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .card-meta svg { width: 12px; height: 12px; }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--text-muted);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--text-muted);
+    align-self: flex-start;
+    margin-top: auto;
+  }
+  .status-badge svg { width: 12px; height: 12px; }
+
+  .status-applied { color: var(--accent-blue); border-color: rgba(96, 165, 250, 0.2); }
+  .status-interviewing { color: var(--accent-yellow); border-color: rgba(251, 191, 36, 0.2); }
+  .status-offered { color: var(--accent-orange); border-color: rgba(251, 146, 60, 0.2); }
+  .status-hired { color: var(--accent-green); border-color: rgba(52, 211, 153, 0.2); }
+  .status-rejected { color: var(--accent-pink); border-color: rgba(244, 114, 182, 0.2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">OpenApply</div>
+    <a class="sidebar-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Applications
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+      Resumes
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+      Cover letters
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+      Archive
+    </a>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;">
+        <h1>Applications</h1>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          Search by company name or position...
+        </div>
+      </div>
+      <div class="add-btn">
+        Add job application
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Draft</button>
+      <button class="filter-btn">Applied</button>
+      <button class="filter-btn">Interviewing</button>
+      <button class="filter-btn">Offered</button>
+      <button class="filter-btn">Hired</button>
+      <button class="filter-btn">Rejected</button>
+    </div>
+
+    <div class="cards">
+      <!-- Stripe -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#635bff,#a259ff)">S</div>
+          <div>
+            <div class="card-title">Stripe</div>
+            <div class="card-role">Senior Frontend Engineer</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 12/3/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">React</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">GraphQL</span>
+        </div>
+        <div class="status-badge status-interviewing">Interviewing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Shopify -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#5e8e3e,#96bf65)">S</div>
+          <div>
+            <div class="card-title">Shopify</div>
+            <div class="card-role">Staff Developer, Checkout</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 10/3/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Vue.js</span>
+          <span class="tag">Node.js</span>
+          <span class="tag">Ruby</span>
+        </div>
+        <div class="status-badge status-offered">Offered <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Figma -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#f24e1e,#ff7262)">F</div>
+          <div>
+            <div class="card-title">Figma</div>
+            <div class="card-role">Product Engineer</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 8/3/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">React</span>
+          <span class="tag">C++</span>
+          <span class="tag">WebGL</span>
+        </div>
+        <div class="status-badge status-applied">Applied <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Notion -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#333,#555)">N</div>
+          <div>
+            <div class="card-title">Notion</div>
+            <div class="card-role">Senior Software Engineer</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 5/3/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">TypeScript</span>
+          <span class="tag">React</span>
+        </div>
+        <div class="status-badge status-hired">Hired <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Vercel -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#111,#333)">V</div>
+          <div>
+            <div class="card-title">Vercel</div>
+            <div class="card-role">Software Engineer, DX</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 1/3/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Next.js</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Go</span>
+        </div>
+        <div class="status-badge status-interviewing">Interviewing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Linear -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#5e6ad2,#8b94e8)">L</div>
+          <div>
+            <div class="card-title">Linear</div>
+            <div class="card-role">Frontend Engineer</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 25/2/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">React</span>
+          <span class="tag">Rust</span>
+        </div>
+        <div class="status-badge status-applied">Applied <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- Datadog -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#632ca6,#9b59b6)">D</div>
+          <div>
+            <div class="card-title">Datadog</div>
+            <div class="card-role">Senior Frontend Engineer</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 20/2/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Vue.js</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Python</span>
+        </div>
+        <div class="status-badge status-rejected">Rejected <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <!-- GitLab -->
+      <div class="card">
+        <div class="card-header">
+          <div class="company-logo" style="background:linear-gradient(135deg,#e24329,#fc6d26)">G</div>
+          <div>
+            <div class="card-title">GitLab</div>
+            <div class="card-role">Staff Engineer, Editor</div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> View Job Description</a>
+          <span>Applied: 18/2/2026</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Vue.js</span>
+          <span class="tag">Ruby on Rails</span>
+        </div>
+        <div class="status-badge status-interviewing">Interviewing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
