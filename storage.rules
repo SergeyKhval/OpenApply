@@ -1,3 +1,5 @@
+// NOTE: Storage rules are NOT auto-deployed by CI.
+// After editing, deploy manually: firebase deploy --only storage
 rules_version = '2';
 
 service firebase.storage {

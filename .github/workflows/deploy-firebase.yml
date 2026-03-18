@@ -41,4 +41,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy to Firebase
-        run: firebase deploy --only functions,firestore:rules,firestore:indexes,storage --project applytrack-a4197
+        run: firebase deploy --only functions,firestore:rules,firestore:indexes --project applytrack-a4197

@@ -115,4 +115,4 @@ Core types in `spa/src/types/index.ts`: `JobApplication` (with `JobStatus`: draf
 ## Deployment
 
 - **Vercel**: Hosts combined SPA + landing page. SPA at `/app/`, landing at `/`. PostHog reverse proxy at `/relay-VLVw/`.
-- **Firebase**: Functions deployed separately via `pnpm deploy:functions`. Predeploy runs lint + build.
+- **Firebase**: Functions, Firestore rules, and Firestore indexes auto-deploy on push to master via GitHub Actions. Storage rules are NOT auto-deployed — after editing `storage.rules`, run `firebase deploy --only storage` manually.
