@@ -50,6 +50,7 @@ vi.mock("firebase-functions/v2/scheduler", () => ({
   onSchedule: (_config: unknown, fn: () => Promise<void>) => fn,
 }));
 
+import { subDays } from "date-fns";
 import { sendWeeklyDigest } from "../sendWeeklyDigest";
 
 // Helper: build a Firestore-like doc snapshot
@@ -60,8 +61,8 @@ function makeAppDoc(
   daysOld: number,
   now: Date,
 ) {
-  const updatedAt = new Date(now.getTime() - daysOld * 24 * 60 * 60 * 1000);
-  const createdAt = new Date(now.getTime() - daysOld * 24 * 60 * 60 * 1000);
+  const updatedAt = subDays(now, daysOld);
+  const createdAt = subDays(now, daysOld);
   return {
     id,
     data: () => ({

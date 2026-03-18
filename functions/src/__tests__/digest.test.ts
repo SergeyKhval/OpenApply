@@ -1,15 +1,16 @@
 import { describe, it, expect } from "vitest";
+import { subDays, addDays } from "date-fns";
 import { categorizeApplications } from "../lib/digest";
 import type { DigestApplication, DigestInterview } from "../lib/digest";
 
 const NOW = new Date("2024-06-15T12:00:00Z");
 
 function daysAgo(days: number): Date {
-  return new Date(NOW.getTime() - days * 24 * 60 * 60 * 1000);
+  return subDays(NOW, days);
 }
 
 function daysFromNow(days: number): Date {
-  return new Date(NOW.getTime() + days * 24 * 60 * 60 * 1000);
+  return addDays(NOW, days);
 }
 
 function makeApp(overrides: Partial<DigestApplication> & { status: string }): DigestApplication {
