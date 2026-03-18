@@ -24,13 +24,6 @@ const billingProfileRefForUser = (userId: string) =>
     .collection("billingProfile")
     .doc("profile");
 
-const createInsufficientCreditsError = () =>
-  new HttpsError(
-    "failed-precondition",
-    `You need at least ${REQUIRED_CREDITS} coins to generate an AI resume review.`,
-    { code: "insufficient-credits" },
-  );
-
 // Define the schema for the resume and job description match result
 const ResumeJDMatchSchema = z.object({
   match_summary: z.object({
