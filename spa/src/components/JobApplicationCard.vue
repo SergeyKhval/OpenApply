@@ -4,7 +4,10 @@
       <div class="flex items-center gap-2 min-w-0">
         <Avatar class="rounded size-12 flex-shrink-0">
           <AvatarImage :src="application.companyLogoUrl || ''" />
-          <AvatarFallback class="rounded uppercase">
+          <AvatarFallback
+            class="rounded uppercase text-white font-semibold"
+            :style="{ background: companyGradient }"
+          >
             {{ application.companyName.substring(0, 2) }}
           </AvatarFallback>
         </Avatar>
@@ -155,6 +158,7 @@ import {
 } from "@phosphor-icons/vue";
 import { restoreJobApplication } from "@/firebase/restoreJobApplication.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getCompanyGradient } from "@/lib/companyGradient";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,6 +187,10 @@ type JobApplicationCardProps = {
 const { application } = defineProps<JobApplicationCardProps>();
 
 const { updateJobApplicationStatus } = useUpdateJobApplicationStatus();
+
+const companyGradient = computed(() =>
+  getCompanyGradient(application.companyName),
+);
 
 const showAllTechnologies = ref(false);
 
