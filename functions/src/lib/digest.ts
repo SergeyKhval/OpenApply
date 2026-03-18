@@ -61,14 +61,14 @@ const DRAFT_STALE_THRESHOLD_DAYS = 7;
 
 function getStatusDate(app: DigestApplication): Date {
   switch (app.status) {
-    case "offered":
-      return app.offeredAt ?? app.updatedAt;
-    case "interviewing":
-      return app.interviewedAt ?? app.updatedAt;
-    case "applied":
-      return app.appliedAt ?? app.updatedAt;
-    default:
-      return app.updatedAt;
+  case "offered":
+    return app.offeredAt ?? app.updatedAt;
+  case "interviewing":
+    return app.interviewedAt ?? app.updatedAt;
+  case "applied":
+    return app.appliedAt ?? app.updatedAt;
+  default:
+    return app.updatedAt;
   }
 }
 

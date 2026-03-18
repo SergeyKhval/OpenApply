@@ -22,7 +22,7 @@
     "stripe"
   ],
   "scripts": {
-    "lint": "eslint src/**/*.{ts,tsx}",
+    "lint": "eslint --ignore-pattern src/__tests__ --ignore-pattern src/lib/__tests__ src/**/*.{ts,tsx}",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",

@@ -28,8 +28,9 @@ function toDateOrUndefined(
 ): Date | undefined {
   if (!value) return undefined;
   if (value instanceof Date) return value;
-  if (typeof value === "object" && "toDate" in value && typeof value.toDate === "function")
+  if (typeof value === "object" && "toDate" in value && typeof value.toDate === "function") {
     return value.toDate();
+  }
   return undefined;
 }
 

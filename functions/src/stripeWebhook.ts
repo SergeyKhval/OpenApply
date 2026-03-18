@@ -1,5 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
-import {  defineString } from "firebase-functions/params";
+import { defineString } from "firebase-functions/params";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { CREDIT_PACKS_MAP as CREDIT_PACKS } from "./constants/creditPacks";

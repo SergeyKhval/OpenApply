@@ -40,18 +40,18 @@ export function cleanHtml(html: string): string {
       const el = $(this);
       const children = el.children();
       const hasDirectText = el.contents().toArray().some(node =>
-        node.type === 'text' && node.data.trim().length > 0
+        node.type === "text" && node.data.trim().length > 0
       );
       if (!hasDirectText && children.length > 0) {
         const tagName = el.get(0)?.tagName?.toLowerCase();
         const parentTag = el.parent().get(0)?.tagName?.toLowerCase();
         const isSemanticStructure = (
-          (parentTag === 'ul' || parentTag === 'ol') && (tagName === 'li') ||
-          (parentTag === 'table') && (tagName === 'tr' || tagName === 'tbody' || tagName === 'thead' || tagName === 'tfoot') ||
-          (parentTag === 'tr') && (tagName === 'td' || tagName === 'th') ||
-          (parentTag === 'dl') && (tagName === 'dt' || tagName === 'dd') ||
-          (parentTag === 'select') && (tagName === 'option' || tagName === 'optgroup') ||
-          (parentTag === 'fieldset') && (tagName === 'legend')
+          (parentTag === "ul" || parentTag === "ol") && (tagName === "li") ||
+          (parentTag === "table") && (tagName === "tr" || tagName === "tbody" || tagName === "thead" || tagName === "tfoot") ||
+          (parentTag === "tr") && (tagName === "td" || tagName === "th") ||
+          (parentTag === "dl") && (tagName === "dt" || tagName === "dd") ||
+          (parentTag === "select") && (tagName === "option" || tagName === "optgroup") ||
+          (parentTag === "fieldset") && (tagName === "legend")
         );
         if (!isSemanticStructure) {
           children.each(function() {
