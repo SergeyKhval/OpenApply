@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-
 ---
 
 <Layout>
@@ -26,34 +25,30 @@ import Footer from '../components/Footer.astro';
           ></div>
           <div class="container mx-auto px-4 py-20 relative z-10">
             <div class="flex flex-col gap-8 items-center">
-              <div
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium shadow-sm"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="lucide lucide-circle-check w-4 h-4"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="m9 12 2 2 4-4"></path></svg
-                ><span>Free to track. Pay only when AI helps.</span>
-              </div>
               <h1
                 class="bg-linear-to-r from-primary via-foreground to-primary bg-clip-text text-transparent text-5xl lg:text-6xl font-bold leading-tight tracking-tight drop-shadow-sm text-center"
               >
-                Your AI copilot for the job search journey
+                47 open tabs, 3 spreadsheets, and no idea where you applied?
               </h1>
               <p class="text-xl text-muted-foreground max-w-2xl text-center">
-                Track applications, paste job links to auto‑fill the details, and get targeted AI resume reviews. Generate a cover letter when you need one.
+                OpenApply replaces all of that. Paste a job link and the company, role, and details are filled in seconds. Get AI resume reviews matched to each role. Everything in one place.
               </p>
+              <div class="w-full max-w-5xl">
+                <div class="relative rounded-xl border border-border/40 shadow-2xl shadow-primary/20 overflow-hidden">
+                  <picture>
+                    <source media="(min-width: 768px)" srcset="/images/dashboard-hero.png" width="1700" height="450" />
+                    <img
+                      src="/images/dashboard-mobile.png"
+                      alt="OpenApply dashboard showing job applications with status tracking"
+                      class="w-full h-auto"
+                      loading="eager"
+                      width="390"
+                      height="700"
+                    />
+                  </picture>
+                  <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background to-transparent"></div>
+                </div>
+              </div>
               <div class="flex flex-col items-center gap-3">
                 <div class="flex items-center gap-4">
                   <a
@@ -95,7 +90,7 @@ import Footer from '../components/Footer.astro';
                 How It Works
               </h2>
               <p class="text-xl text-muted-foreground">
-                Three simple steps to organize your job search.
+                Get set up in under five minutes.
               </p>
             </div>
             <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -123,7 +118,7 @@ import Footer from '../components/Footer.astro';
                 </div>
                 <h3 class="text-xl font-semibold">Get an AI resume review</h3>
                 <p class="text-muted-foreground">
-                  Match your resume to the job with prioritized fixes. Generate a cover letter if you want one.
+                  Check how your resume stacks up against the job. Generate a cover letter if you want one.
                 </p>
               </div>
             </div>
@@ -135,11 +130,8 @@ import Footer from '../components/Footer.astro';
           <div class="container mx-auto relative px-4">
             <div class="text-center max-w-3xl mx-auto mb-16">
               <h2 class="text-4xl font-bold mb-4">
-                Real Features. No Fluff.
+                What you get
               </h2>
-              <p class="text-xl text-muted-foreground">
-                What OpenApply actually does well.
-              </p>
             </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div
@@ -168,7 +160,7 @@ import Footer from '../components/Footer.astro';
                   </div>
                   <h3 class="text-xl font-semibold">AI resume reviews</h3>
                   <p class="text-muted-foreground">
-                    Match your resume to the job and get actionable suggestions.
+                    See how well your resume fits the job and what to fix before applying.
                   </p>
                 </div>
               </div>
@@ -202,7 +194,7 @@ import Footer from '../components/Footer.astro';
                   </div>
                   <h3 class="text-xl font-semibold">Organized dashboard</h3>
                   <p class="text-muted-foreground">
-                    Statuses, notes, due dates, and tags - tidy beats fancy.
+                    Statuses, notes, due dates, and tags for every application.
                   </p>
                 </div>
               </div>
@@ -235,7 +227,7 @@ import Footer from '../components/Footer.astro';
                   </div>
                   <h3 class="text-xl font-semibold">Quick cover letters</h3>
                   <p class="text-muted-foreground">
-                    AI that actually reads the job post and your resume.
+                    Generated from the job post and your resume, not a generic template.
                   </p>
                 </div>
               </div>
@@ -266,9 +258,9 @@ import Footer from '../components/Footer.astro';
                       <path d="M16 17H8"></path>
                     </svg>
                   </div>
-                  <h3 class="text-xl font-semibold">Resume & documents in one place</h3>
+                  <h3 class="text-xl font-semibold">Resume storage</h3>
                   <p class="text-muted-foreground">
-                    Keep your documents where you work.
+                    Upload your resumes and link them to applications.
                   </p>
                 </div>
               </div>
@@ -320,18 +312,16 @@ import Footer from '../components/Footer.astro';
                       stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      class="lucide lucide-coins w-6 h-6 text-primary-foreground"
+                      class="lucide lucide-link w-6 h-6 text-primary-foreground"
                       aria-hidden="true"
                     >
-                      <circle cx="8" cy="8" r="6"></circle>
-                      <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
-                      <path d="M7 6h1v4"></path>
-                      <path d="m16.71 13.88.7.71-2.82 2.82"></path>
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
                   </div>
-                  <h3 class="text-xl font-semibold">Pay-as-you-go coins</h3>
+                  <h3 class="text-xl font-semibold">Paste-a-link import</h3>
                   <p class="text-muted-foreground">
-                    Tracking is free. Coins only when you use AI.
+                    Paste a job URL and the company, role, and details are filled in automatically.
                   </p>
                 </div>
               </div>
@@ -351,83 +341,38 @@ import Footer from '../components/Footer.astro';
                 Free to track. Pay as you go for AI.
               </h2>
               <p class="text-xl text-muted-foreground">
-                Track as many applications as you want - free. When you want an AI resume review or a tailored cover letter, use coins. No monthly plans. No annual guilt. Just buy coins when you need them.
+                Track as many applications as you want for free. AI resume reviews and cover letters are pay-as-you-go. No monthly plans, no subscriptions.
               </p>
             </div>
-            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <!-- Free Forever Card -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <!-- Free Card -->
               <div
                 class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
               >
-                <h3 class="text-2xl font-bold mb-6">Free Forever</h3>
+                <div class="mb-6">
+                  <h3 class="text-2xl font-bold">Free</h3>
+                  <p class="text-muted-foreground mt-1">Track your entire job search</p>
+                </div>
                 <ul class="space-y-4 flex-grow">
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
                     <span>Unlimited application tracking</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>Paste-a-link job import</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
                     <span>Notes, due dates, and tags</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Document storage (limits may apply later)</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>Resume and document storage</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Spreadsheet/file import</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>Spreadsheet/CSV import</span>
                   </li>
                 </ul>
                 <div class="mt-8">
@@ -439,164 +384,29 @@ import Footer from '../components/Footer.astro';
                   </a>
                 </div>
               </div>
-              <!-- Self-Host Card -->
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
-              >
-                <h3 class="text-2xl font-bold mb-6">Self‑Host</h3>
-                <ul class="space-y-4 flex-grow">
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Free forever on your own host</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Run locally or on your own infra</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>All core features included</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Bring your own API keys</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Setup guide in README</span>
-                  </li>
-                </ul>
-                <div class="mt-8">
-                  <a
-                    href="https://github.com/SergeyKhval/OpenApply"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
-                  >
-                    View on GitHub
-                  </a>
-                </div>
-              </div>
-              <!-- Pay-as-you-go Card -->
+              <!-- AI Features Card -->
               <div
                 class="rounded-lg text-card-foreground border border-primary/40 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
               >
-                <h3 class="text-2xl font-bold mb-6">Pay-as-you-go Coins</h3>
+                <div class="mb-6">
+                  <h3 class="text-2xl font-bold">AI Features</h3>
+                  <p class="text-muted-foreground mt-1">Pay-as-you-go. No subscription.</p>
+                </div>
                 <ul class="space-y-4 flex-grow">
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Only used for AI features</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>AI resume review from $0.12</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
-                    <span>Simple pay‑as‑you‑go billing</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>AI cover letter from $0.12</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"
-                    >
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>Pay only when you use AI</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
                     <span>No subscriptions, no lock-in</span>
                   </li>
                 </ul>
@@ -610,6 +420,9 @@ import Footer from '../components/Footer.astro';
                 </div>
               </div>
             </div>
+            <p class="text-center text-sm text-muted-foreground mt-8">
+              Want full control? <a href="https://github.com/SergeyKhval/OpenApply" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Self-host with your own API keys</a>.
+            </p>
           </div>
         </section>
 
@@ -631,7 +444,7 @@ import Footer from '../components/Footer.astro';
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
                 <h3 class="text-lg font-semibold mb-2">How do AI resume reviews work?</h3>
                 <p class="text-muted-foreground">
-                  Pick a job and a resume, and we check the match. You'll get a quick score with prioritized fixes and suggestions, ready in under a minute.
+                  Pick a job and a resume, and we check the match. You get a score with specific suggestions on what to improve, ready in under a minute.
                 </p>
               </div>
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
@@ -641,21 +454,21 @@ import Footer from '../components/Footer.astro';
                 </p>
               </div>
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Which job boards do you support?</h3>
+                <h3 class="text-lg font-semibold mb-2">How does paste-a-link work?</h3>
                 <p class="text-muted-foreground">
-                  Paste a job link from most popular boards and we'll parse the basics. If a site is weird, you can still add it manually.
+                  Paste a URL from any job board and we scrape the page to fill in the company, role, and description automatically. Works with most popular boards. If a site is tricky, you can always add details manually.
                 </p>
               </div>
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Do you have a Kanban board or charts?</h3>
+                <h3 class="text-lg font-semibold mb-2">Can it write cover letters?</h3>
                 <p class="text-muted-foreground">
-                  Not yet. We focus on a fast, clean dashboard with statuses, notes, due dates, and tags.
+                  Yes. Pick a job and a resume, and the AI generates a cover letter tailored to both. You can regenerate until you're happy with it.
                 </p>
               </div>
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Do you have a browser extension?</h3>
+                <h3 class="text-lg font-semibold mb-2">Is OpenApply open source?</h3>
                 <p class="text-muted-foreground">
-                  Not yet.
+                  Yes. The entire codebase is on GitHub. You can self-host it with your own API keys if you prefer.
                 </p>
               </div>
               <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
