@@ -1,4 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("@/firebase/config", () => ({
+  db: "mock-db",
+  functions: "mock-functions",
+}));
+
+vi.mock("vuefire", () => ({
+  useCurrentUser: () => ({ value: null }),
+}));
+
 import { normalizeFunctionsError } from "../useCoverLetters";
 
 describe("normalizeFunctionsError", () => {
