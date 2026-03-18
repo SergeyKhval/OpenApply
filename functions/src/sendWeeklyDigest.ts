@@ -1,10 +1,18 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore } from "firebase-admin/firestore";
 import { getFunctions } from "firebase-admin/functions";
+import { defineString } from "firebase-functions/params";
 
+const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
 
 export const sendWeeklyDigest = onSchedule("0 9 * * 1", async () => {
+  // Gate: self-hosted instances without email configured skip the digest entirely
+  if (!RESEND_API_KEY.value()) {
+    console.log("RESEND_API_KEY not configured. Skipping weekly digest.");
+    return;
+  }
+
   const activeAppsSnapshot = await db
     .collection("jobApplications")
     .where("status", "not-in", ["rejected", "archived"])

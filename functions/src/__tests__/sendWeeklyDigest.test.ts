@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // --- Mocks (must be hoisted before imports) ---
 
+vi.mock("firebase-functions/params", () => ({
+  defineString: () => ({ value: () => "test-key" }),
+}));
+
 const mockEnqueue = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("firebase-admin/functions", () => ({
