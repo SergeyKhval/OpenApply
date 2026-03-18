@@ -1,25 +1,42 @@
-import { DigestResult, ActionItem, WinItem } from "./digest";
+import { ActionItem, DigestStats, GreetingTier } from "./digest";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  "decision-needed": "Offers Awaiting Decision",
-  "needs-attention": "Interviews Needing Attention",
-  "follow-up": "Follow Up on Applications",
-  "stale-draft": "Stale Drafts",
-  "consider-archiving": "Consider Archiving",
+export type DigestEmailData = {
+  greeting: GreetingTier;
+  summaryLine: string;
+  stats: DigestStats;
+  actions: ActionItem[];
+  totalActionCount: number;
+  appUrl: string;
 };
 
-const CATEGORY_ORDER = [
-  "decision-needed",
-  "needs-attention",
-  "follow-up",
-  "stale-draft",
-  "consider-archiving",
-] as const;
+const GREETING_TEXT: Record<GreetingTier, string> = {
+  "great-week": "Great week! 🎉",
+  "keep-it-up": "Keep it up!",
+  "check-in": "Your weekly check-in",
+};
 
-const WIN_LABELS: Record<string, string> = {
-  "offer-received": "Offer received",
-  "moved-forward": "Moved forward",
-  "new-application": "New application",
+const NUDGE_TEMPLATES: Record<ActionItem["category"], (days: number) => string> = {
+  "decision-needed": (d) => `Offer received ${d} days ago. Respond before it expires.`,
+  "needs-attention": (d) => `No interview updates in ${d} days. Check in with the recruiter.`,
+  "follow-up": (d) => `Applied ${d} days ago, no response yet. Send a follow-up.`,
+  "consider-archiving": (d) => `No activity in ${d} days. Consider archiving this one.`,
+  "stale-draft": (d) => `Draft created ${d} days ago. Submit it or remove it.`,
+};
+
+const LINK_TEXT: Record<ActionItem["category"], string> = {
+  "decision-needed": "Respond to offer",
+  "needs-attention": "Update status",
+  "follow-up": "Follow up",
+  "consider-archiving": "Review application",
+  "stale-draft": "Edit draft",
+};
+
+const DOT_COLORS: Record<ActionItem["category"], string> = {
+  "decision-needed": "#ef4444",
+  "needs-attention": "#f59e0b",
+  "follow-up": "#3b82f6",
+  "consider-archiving": "#3b82f6",
+  "stale-draft": "#3b82f6",
 };
 
 function escapeHtml(str: string): string {
@@ -31,80 +48,65 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function groupActionsByCategory(actions: ActionItem[]): Map<string, ActionItem[]> {
-  const map = new Map<string, ActionItem[]>();
-  for (const action of actions) {
-    const existing = map.get(action.category) ?? [];
-    existing.push(action);
-    map.set(action.category, existing);
-  }
-  return map;
-}
-
-function buildWinsHtml(wins: WinItem[]): string {
-  if (wins.length === 0) return "";
-
-  const items = wins
-    .map((win) => {
-      const label = WIN_LABELS[win.type] ?? win.type;
-      return `
-        <li style="margin-bottom: 8px;">
-          <span style="color: #16a34a; font-weight: 600;">${label}:</span>
-          ${escapeHtml(win.companyName)} — ${escapeHtml(win.position)}
-        </li>`;
-    })
-    .join("");
-
+function buildStatsHtml(stats: DigestStats): string {
   return `
-    <div style="margin-bottom: 24px;">
-      <h2 style="font-size: 18px; color: #166534; margin: 0 0 12px 0;">This Week's Wins</h2>
-      <ul style="list-style: none; padding: 0; margin: 0;">
-        ${items}
-      </ul>
+    <div style="display: flex; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 28px; overflow: hidden;">
+      <div style="flex: 1; text-align: center; padding: 16px 8px;">
+        <span style="font-size: 24px; font-weight: 700; color: #0f172a; display: block;">${stats.newApps}</span>
+        <span style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; display: block;">New Apps</span>
+      </div>
+      <div style="flex: 1; text-align: center; padding: 16px 8px; border-left: 1px solid #e2e8f0;">
+        <span style="font-size: 24px; font-weight: 700; color: #0f172a; display: block;">${stats.interviews}</span>
+        <span style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; display: block;">Interviews</span>
+      </div>
+      <div style="flex: 1; text-align: center; padding: 16px 8px; border-left: 1px solid #e2e8f0;">
+        <span style="font-size: 24px; font-weight: 700; color: #0f172a; display: block;">${stats.offers}</span>
+        <span style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; display: block;">Offers</span>
+      </div>
     </div>`;
 }
 
 function buildActionsHtml(actions: ActionItem[], appUrl: string): string {
   if (actions.length === 0) return "";
 
-  const grouped = groupActionsByCategory(actions);
-  const sections: string[] = [];
+  const cards = actions
+    .map((action) => {
+      const url = `${appUrl}/${action.applicationId}`;
+      const nudge = NUDGE_TEMPLATES[action.category](action.daysSinceActivity);
+      const linkText = LINK_TEXT[action.category];
+      const dotColor = DOT_COLORS[action.category];
 
-  for (const category of CATEGORY_ORDER) {
-    const items = grouped.get(category);
-    if (!items || items.length === 0) continue;
+      return `
+      <div style="padding: 14px 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px;">
+        <p style="font-size: 15px; font-weight: 600; color: #0f172a; margin: 0;">
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor}; margin-right: 8px; vertical-align: middle;"></span>${escapeHtml(action.companyName)}
+        </p>
+        <p style="font-size: 13px; color: #64748b; margin: 2px 0 0 0;">${escapeHtml(action.position)}</p>
+        <p style="font-size: 14px; color: #475569; margin: 8px 0 0 0; line-height: 1.4;">${escapeHtml(nudge)}</p>
+        <a href="${escapeHtml(url)}" style="display: inline-block; font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 500; margin-top: 6px;">${linkText} &rarr;</a>
+      </div>`;
+    })
+    .join("");
 
-    const label = CATEGORY_LABELS[category];
-    const listItems = items
-      .map((item) => {
-        const url = `${appUrl}/${item.applicationId}`;
-        return `
-          <li style="margin-bottom: 10px;">
-            <a href="${escapeHtml(url)}" style="color: #1d4ed8; text-decoration: none; font-weight: 600;">
-              ${escapeHtml(item.companyName)} — ${escapeHtml(item.position)}
-            </a>
-            <span style="color: #6b7280; font-size: 13px;"> (${item.daysSinceActivity} days ago)</span>
-          </li>`;
-      })
-      .join("");
-
-    sections.push(`
-      <div style="margin-bottom: 24px;">
-        <h2 style="font-size: 17px; color: #1e293b; margin: 0 0 10px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
-          ${label}
-        </h2>
-        <ul style="list-style: none; padding: 0; margin: 0;">
-          ${listItems}
-        </ul>
-      </div>`);
-  }
-
-  return sections.join("");
+  return `
+    <h2 style="font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 0.03em;">Needs your attention</h2>
+    ${cards}`;
 }
 
-export function buildDigestEmailHtml(digest: DigestResult, appUrl: string): string {
-  const winsSection = buildWinsHtml(digest.wins);
-  const actionsSection = buildActionsHtml(digest.actions, appUrl);
+function buildCtaHtml(totalActionCount: number, appUrl: string): string {
+  if (totalActionCount <= 3) return "";
+
+  return `
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="${escapeHtml(appUrl)}" style="display: inline-block; padding: 10px 24px; background-color: #0f172a; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500;">View all applications &rarr;</a>
+    </div>`;
+}
+
+export function buildDigestEmailHtml(data: DigestEmailData): string {
+  const greetingText = GREETING_TEXT[data.greeting];
+  const statsSection = buildStatsHtml(data.stats);
+  const actionsSection = buildActionsHtml(data.actions, data.appUrl);
+  const ctaSection = buildCtaHtml(data.totalActionCount, data.appUrl);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -117,14 +119,18 @@ export function buildDigestEmailHtml(digest: DigestResult, appUrl: string): stri
   <div style="max-width: 600px; margin: 0 auto; padding: 32px 16px;">
     <div style="background-color: #ffffff; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-      <h1 style="font-size: 22px; color: #0f172a; margin: 0 0 24px 0;">
-        Your Weekly Job Search Update
+      <h1 style="font-size: 20px; font-weight: 600; color: #0f172a; margin: 0 0 6px 0;">
+        ${escapeHtml(greetingText)}
       </h1>
+      <p style="font-size: 15px; color: #475569; margin: 0 0 24px 0; line-height: 1.5;">
+        ${escapeHtml(data.summaryLine)}
+      </p>
 
-      ${winsSection}
+      ${statsSection}
       ${actionsSection}
+      ${ctaSection}
 
-      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 32px 0 16px 0;" />
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 28px 0 16px 0;" />
 
       <!-- TODO: add Resend-managed unsubscribe link via Audiences API -->
       <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
@@ -137,54 +143,37 @@ export function buildDigestEmailHtml(digest: DigestResult, appUrl: string): stri
 </html>`;
 }
 
-function buildWinsText(wins: WinItem[]): string {
-  if (wins.length === 0) return "";
-
-  const lines = ["This Week's Wins", "----------------"];
-  for (const win of wins) {
-    const label = WIN_LABELS[win.type] ?? win.type;
-    lines.push(`  - ${label}: ${win.companyName} — ${win.position}`);
-  }
-  lines.push("");
-  return lines.join("\n");
+function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
 }
 
-function buildActionsText(actions: ActionItem[], appUrl: string): string {
-  if (actions.length === 0) return "";
+export function buildDigestEmailText(data: DigestEmailData): string {
+  const greetingText = GREETING_TEXT[data.greeting];
 
-  const grouped = groupActionsByCategory(actions);
-  const sections: string[] = [];
-
-  for (const category of CATEGORY_ORDER) {
-    const items = grouped.get(category);
-    if (!items || items.length === 0) continue;
-
-    const label = CATEGORY_LABELS[category];
-    const lines = [label, "-".repeat(label.length)];
-
-    for (const item of items) {
-      lines.push(`  - ${item.companyName} — ${item.position} (${item.daysSinceActivity} days ago)`);
-      lines.push(`    ${appUrl}/${item.applicationId}`);
-    }
-    lines.push("");
-    sections.push(lines.join("\n"));
-  }
-
-  return sections.join("\n");
-}
-
-export function buildDigestEmailText(digest: DigestResult, appUrl: string): string {
   const parts: string[] = [
-    "Your Weekly Job Search Update",
-    "==============================",
+    greetingText,
+    "",
+    data.summaryLine,
+    "",
+    `This week: ${pluralize(data.stats.newApps, "new app", "new apps")}, ${pluralize(data.stats.interviews, "interview", "interviews")}, ${pluralize(data.stats.offers, "offer", "offers")}`,
     "",
   ];
 
-  const winsSection = buildWinsText(digest.wins);
-  if (winsSection) parts.push(winsSection);
+  if (data.actions.length > 0) {
+    parts.push("NEEDS YOUR ATTENTION", "");
+    data.actions.forEach((action, i) => {
+      const nudge = NUDGE_TEMPLATES[action.category](action.daysSinceActivity);
+      parts.push(`${i + 1}. ${action.companyName} (${action.position})`);
+      parts.push(`   ${nudge}`);
+      parts.push(`   ${data.appUrl}/${action.applicationId}`);
+      parts.push("");
+    });
+  }
 
-  const actionsSection = buildActionsText(digest.actions, appUrl);
-  if (actionsSection) parts.push(actionsSection);
+  if (data.totalActionCount > 3) {
+    parts.push(`View all applications: ${data.appUrl}`);
+    parts.push("");
+  }
 
   // TODO: add Resend-managed unsubscribe link via Audiences API
   parts.push("---");

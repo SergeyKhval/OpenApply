@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { subDays, addDays } from "date-fns";
-import { categorizeApplications } from "../lib/digest";
-import type { DigestApplication, DigestInterview } from "../lib/digest";
+import {
+  categorizeApplications,
+  computeDigestStats,
+  getGreetingTier,
+  buildSummaryLine,
+  prioritizeActions,
+} from "../lib/digest";
+import type { DigestApplication, DigestInterview, ActionItem, WinItem } from "../lib/digest";
 
 const NOW = new Date("2024-06-15T12:00:00Z");
 
@@ -237,5 +243,128 @@ describe("categorizeApplications — wins detection", () => {
     const result = categorizeApplications([app], [], NOW);
     const offerWins = result.wins.filter((w) => w.type === "offer-received");
     expect(offerWins).toHaveLength(0);
+  });
+});
+
+// --- New helper function tests ---
+
+function makeAction(category: ActionItem["category"], days: number, company = "Acme"): ActionItem {
+  return {
+    applicationId: `app-${category}-${days}`,
+    companyName: company,
+    position: "Engineer",
+    category,
+    daysSinceActivity: days,
+  };
+}
+
+function makeWin(type: WinItem["type"], company = "Acme"): WinItem {
+  return { companyName: company, position: "Engineer", type };
+}
+
+describe("computeDigestStats", () => {
+  it("counts wins by type", () => {
+    const wins = [
+      makeWin("new-application", "A"),
+      makeWin("new-application", "B"),
+      makeWin("moved-forward", "C"),
+      makeWin("offer-received", "D"),
+    ];
+    const stats = computeDigestStats(wins);
+    expect(stats).toEqual({ newApps: 2, interviews: 1, offers: 1 });
+  });
+
+  it("returns zeroes for empty wins", () => {
+    expect(computeDigestStats([])).toEqual({ newApps: 0, interviews: 0, offers: 0 });
+  });
+});
+
+describe("getGreetingTier", () => {
+  it("returns great-week when wins include an offer", () => {
+    const wins = [makeWin("offer-received"), makeWin("new-application")];
+    expect(getGreetingTier(wins)).toBe("great-week");
+  });
+
+  it("returns keep-it-up when wins exist but no offers", () => {
+    const wins = [makeWin("new-application"), makeWin("moved-forward")];
+    expect(getGreetingTier(wins)).toBe("keep-it-up");
+  });
+
+  it("returns check-in when no wins", () => {
+    expect(getGreetingTier([])).toBe("check-in");
+  });
+});
+
+describe("buildSummaryLine", () => {
+  it("returns fixed string for check-in tier", () => {
+    const stats = { newApps: 0, interviews: 0, offers: 0 };
+    expect(buildSummaryLine(stats, "check-in")).toBe(
+      "No new activity this week, but a few applications could use your attention.",
+    );
+  });
+
+  it("builds sentence with single stat", () => {
+    const stats = { newApps: 1, interviews: 0, offers: 0 };
+    const line = buildSummaryLine(stats, "keep-it-up");
+    expect(line).toContain("submitted 1 new application");
+    expect(line).toContain("Here's what needs your attention.");
+  });
+
+  it("builds sentence with two stats using 'and'", () => {
+    const stats = { newApps: 2, interviews: 1, offers: 0 };
+    const line = buildSummaryLine(stats, "keep-it-up");
+    expect(line).toContain("submitted 2 new applications and had 1 interview");
+  });
+
+  it("builds sentence with all three stats using Oxford comma", () => {
+    const stats = { newApps: 1, interviews: 2, offers: 1 };
+    const line = buildSummaryLine(stats, "great-week");
+    expect(line).toContain("received 1 offer, submitted 1 new application, and had 2 interviews");
+    expect(line).toContain("Here's a quick look at your job search this week.");
+  });
+
+  it("uses correct plural forms", () => {
+    const stats = { newApps: 3, interviews: 0, offers: 2 };
+    const line = buildSummaryLine(stats, "great-week");
+    expect(line).toContain("2 offers");
+    expect(line).toContain("3 new applications");
+  });
+});
+
+describe("prioritizeActions", () => {
+  it("returns top N actions sorted by priority then days", () => {
+    const actions = [
+      makeAction("stale-draft", 10),
+      makeAction("decision-needed", 5),
+      makeAction("follow-up", 20),
+      makeAction("needs-attention", 7),
+    ];
+    const result = prioritizeActions(actions, 3);
+    expect(result).toHaveLength(3);
+    expect(result[0].category).toBe("decision-needed");
+    expect(result[1].category).toBe("needs-attention");
+    expect(result[2].category).toBe("follow-up");
+  });
+
+  it("sorts same-category items by days descending", () => {
+    const actions = [
+      makeAction("follow-up", 10, "A"),
+      makeAction("follow-up", 25, "B"),
+      makeAction("follow-up", 15, "C"),
+    ];
+    const result = prioritizeActions(actions, 3);
+    expect(result[0].companyName).toBe("B");
+    expect(result[1].companyName).toBe("C");
+    expect(result[2].companyName).toBe("A");
+  });
+
+  it("returns all actions if fewer than maxCount", () => {
+    const actions = [makeAction("decision-needed", 5)];
+    const result = prioritizeActions(actions, 3);
+    expect(result).toHaveLength(1);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(prioritizeActions([], 3)).toEqual([]);
   });
 });

@@ -5,6 +5,10 @@ import { Resend } from "resend";
 import { defineString } from "firebase-functions/params";
 import {
   categorizeApplications,
+  computeDigestStats,
+  getGreetingTier,
+  buildSummaryLine,
+  prioritizeActions,
   DigestApplication,
   DigestInterview,
 } from "./lib/digest";
@@ -94,8 +98,22 @@ export const processUserDigest = onTaskDispatched(
       return;
     }
 
-    const html = buildDigestEmailHtml(digest, APP_URL);
-    const text = buildDigestEmailText(digest, APP_URL);
+    const stats = computeDigestStats(digest.wins);
+    const tier = getGreetingTier(digest.wins);
+    const summaryLine = buildSummaryLine(stats, tier);
+    const cappedActions = prioritizeActions(digest.actions, 3);
+
+    const emailData = {
+      greeting: tier,
+      summaryLine,
+      stats,
+      actions: cappedActions,
+      totalActionCount: digest.actions.length,
+      appUrl: APP_URL,
+    };
+
+    const html = buildDigestEmailHtml(emailData);
+    const text = buildDigestEmailText(emailData);
 
     await resend.emails.send({
       to: userRecord.email,

@@ -1,73 +1,112 @@
 import { describe, it, expect } from "vitest";
-import { buildDigestEmailHtml, buildDigestEmailText } from "../lib/digestEmail";
-import { DigestResult } from "../lib/digest";
+import { buildDigestEmailHtml, buildDigestEmailText, DigestEmailData } from "../lib/digestEmail";
 
 const APP_URL = "https://openapply.app/app/dashboard/applications";
 
-const fullDigest: DigestResult = {
-  wins: [
-    { companyName: "Acme", position: "Developer", type: "new-application" },
-    { companyName: "BigCo", position: "PM", type: "offer-received" },
-  ],
+const fullData: DigestEmailData = {
+  greeting: "great-week",
+  summaryLine: "You received 1 offer and submitted 1 new application this week. Here's a quick look at your job search this week.",
+  stats: { newApps: 1, interviews: 0, offers: 1 },
   actions: [
     { applicationId: "id-1", companyName: "OldCorp", position: "Designer", category: "decision-needed", daysSinceActivity: 4 },
     { applicationId: "id-2", companyName: "SlowInc", position: "Engineer", category: "follow-up", daysSinceActivity: 12 },
   ],
-  isEmpty: false,
+  totalActionCount: 2,
+  appUrl: APP_URL,
 };
 
-const noWinsDigest: DigestResult = {
-  wins: [],
+const checkInData: DigestEmailData = {
+  greeting: "check-in",
+  summaryLine: "No new activity this week, but a few applications could use your attention.",
+  stats: { newApps: 0, interviews: 0, offers: 0 },
   actions: [
     { applicationId: "id-3", companyName: "Corp", position: "Dev", category: "stale-draft", daysSinceActivity: 8 },
   ],
-  isEmpty: false,
+  totalActionCount: 1,
+  appUrl: APP_URL,
+};
+
+const overflowData: DigestEmailData = {
+  ...fullData,
+  totalActionCount: 5,
 };
 
 describe("buildDigestEmailHtml", () => {
-  it("includes wins section when wins exist", () => {
-    const html = buildDigestEmailHtml(fullDigest, APP_URL);
-    expect(html).toContain("Acme");
-    expect(html).toContain("Developer");
-    expect(html).toContain("BigCo");
-    expect(html).toContain("PM");
-    expect(html).toContain("New application");
-    expect(html).toContain("Offer received");
+  it("includes greeting text based on tier", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html).toContain("Great week!");
   });
 
-  it("omits wins section when no wins", () => {
-    const html = buildDigestEmailHtml(noWinsDigest, APP_URL);
-    expect(html).not.toContain("New application");
-    expect(html).not.toContain("Offer received");
-    expect(html).not.toContain("Moved forward");
+  it("includes summary line", () => {
+    const html = buildDigestEmailHtml(fullData);
+    // Summary is HTML-escaped, so check for a key fragment
+    expect(html).toContain("Here&#39;s a quick look");
+  });
+
+  it("renders stats widget with counts", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html).toContain("New Apps");
+    expect(html).toContain("Interviews");
+    expect(html).toContain("Offers");
+  });
+
+  it("renders action cards with nudge copy", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html).toContain("OldCorp");
+    expect(html).toContain("Designer");
+    expect(html).toContain("Offer received 4 days ago");
+    expect(html).toContain("Respond to offer");
+    expect(html).toContain("SlowInc");
+    expect(html).toContain("Applied 12 days ago");
+    expect(html).toContain("Follow up");
   });
 
   it("includes application links with correct IDs", () => {
-    const html = buildDigestEmailHtml(fullDigest, APP_URL);
+    const html = buildDigestEmailHtml(fullData);
     expect(html).toContain(`${APP_URL}/id-1`);
     expect(html).toContain(`${APP_URL}/id-2`);
   });
 
-  it("includes days since activity", () => {
-    const html = buildDigestEmailHtml(fullDigest, APP_URL);
-    expect(html).toContain("4 days");
-    expect(html).toContain("12 days");
+  it("renders priority dots with correct colors", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html).toContain("#ef4444"); // red for decision-needed
+    expect(html).toContain("#3b82f6"); // blue for follow-up
+  });
+
+  it("shows CTA button when totalActionCount exceeds 3", () => {
+    const html = buildDigestEmailHtml(overflowData);
+    expect(html).toContain("View all applications");
+  });
+
+  it("hides CTA button when totalActionCount is 3 or fewer", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html).not.toContain("View all applications");
+  });
+
+  it("shows check-in greeting for no-wins tier", () => {
+    const html = buildDigestEmailHtml(checkInData);
+    expect(html).toContain("Your weekly check-in");
+  });
+
+  it("shows keep-it-up greeting", () => {
+    const keepItUpData: DigestEmailData = { ...fullData, greeting: "keep-it-up" };
+    const html = buildDigestEmailHtml(keepItUpData);
+    expect(html).toContain("Keep it up!");
   });
 
   it("includes receiving notice", () => {
-    const html = buildDigestEmailHtml(fullDigest, APP_URL);
+    const html = buildDigestEmailHtml(fullData);
     expect(html).toContain("active job search on OpenApply");
   });
 
-  it("groups actions by category", () => {
-    const html = buildDigestEmailHtml(fullDigest, APP_URL);
-    expect(html).toContain("Offers Awaiting Decision");
-    expect(html).toContain("Follow Up on Applications");
+  it("renders needs your attention header", () => {
+    const html = buildDigestEmailHtml(fullData);
+    expect(html.toLowerCase()).toContain("needs your attention");
   });
 
   it("HTML-escapes company names and positions", () => {
-    const xssDigest: DigestResult = {
-      wins: [{ companyName: "<script>alert(1)</script>", position: 'A&B "Corp"', type: "new-application" }],
+    const xssData: DigestEmailData = {
+      ...fullData,
       actions: [
         {
           applicationId: "xss-1",
@@ -77,81 +116,52 @@ describe("buildDigestEmailHtml", () => {
           daysSinceActivity: 10,
         },
       ],
-      isEmpty: false,
     };
-    const html = buildDigestEmailHtml(xssDigest, APP_URL);
-    expect(html).not.toContain("<script>");
+    const html = buildDigestEmailHtml(xssData);
     expect(html).not.toContain("<img src=x");
-    expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("&amp;");
-  });
-
-  it("renders category sections in correct order", () => {
-    const orderedDigest: DigestResult = {
-      wins: [],
-      actions: [
-        { applicationId: "a1", companyName: "A", position: "P", category: "consider-archiving", daysSinceActivity: 30 },
-        { applicationId: "a2", companyName: "B", position: "Q", category: "decision-needed", daysSinceActivity: 5 },
-        { applicationId: "a3", companyName: "C", position: "R", category: "follow-up", daysSinceActivity: 11 },
-      ],
-      isEmpty: false,
-    };
-    const html = buildDigestEmailHtml(orderedDigest, APP_URL);
-    const decisionIdx = html.indexOf("Offers Awaiting Decision");
-    const followUpIdx = html.indexOf("Follow Up on Applications");
-    const archiveIdx = html.indexOf("Consider Archiving");
-    expect(decisionIdx).toBeGreaterThan(-1);
-    expect(followUpIdx).toBeGreaterThan(-1);
-    expect(archiveIdx).toBeGreaterThan(-1);
-    expect(decisionIdx).toBeLessThan(followUpIdx);
-    expect(followUpIdx).toBeLessThan(archiveIdx);
   });
 });
 
 describe("buildDigestEmailText", () => {
-  it("returns plain text version with application details", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
-    expect(text).toContain("OldCorp");
-    expect(text).toContain("Designer");
+  it("includes greeting and summary", () => {
+    const text = buildDigestEmailText(fullData);
+    expect(text).toContain("Great week!");
+    expect(text).toContain(fullData.summaryLine);
+  });
+
+  it("includes stats line", () => {
+    const text = buildDigestEmailText(fullData);
+    expect(text).toContain("This week:");
+    expect(text).toContain("1 new app");
+    expect(text).toContain("1 offer");
+  });
+
+  it("includes numbered action list with nudges", () => {
+    const text = buildDigestEmailText(fullData);
+    expect(text).toContain("1. OldCorp (Designer)");
+    expect(text).toContain("Offer received 4 days ago");
     expect(text).toContain(`${APP_URL}/id-1`);
-    expect(text).toContain("SlowInc");
-    expect(text).toContain("Engineer");
-    expect(text).toContain(`${APP_URL}/id-2`);
+    expect(text).toContain("2. SlowInc (Engineer)");
   });
 
-  it("includes wins in plain text", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
-    expect(text).toContain("Acme");
-    expect(text).toContain("Developer");
-    expect(text).toContain("New application");
-    expect(text).toContain("Offer received");
+  it("includes CTA line when overflow", () => {
+    const text = buildDigestEmailText(overflowData);
+    expect(text).toContain(`View all applications: ${APP_URL}`);
   });
 
-  it("omits wins section when no wins in plain text", () => {
-    const text = buildDigestEmailText(noWinsDigest, APP_URL);
-    expect(text).not.toContain("New application");
-    expect(text).not.toContain("Offer received");
+  it("excludes CTA line when no overflow", () => {
+    const text = buildDigestEmailText(fullData);
+    expect(text).not.toContain("View all applications");
   });
 
-  it("includes days since activity in plain text", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
-    expect(text).toContain("4 days");
-    expect(text).toContain("12 days");
-  });
-
-  it("includes separator in plain text", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
+  it("includes separator", () => {
+    const text = buildDigestEmailText(fullData);
     expect(text).toContain("---");
   });
 
-  it("groups actions by category in plain text", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
-    expect(text).toContain("Offers Awaiting Decision");
-    expect(text).toContain("Follow Up on Applications");
-  });
-
-  it("does not contain HTML tags in plain text", () => {
-    const text = buildDigestEmailText(fullDigest, APP_URL);
+  it("does not contain HTML tags", () => {
+    const text = buildDigestEmailText(fullData);
     expect(text).not.toMatch(/<[a-z]/i);
   });
 });

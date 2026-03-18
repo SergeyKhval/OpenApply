@@ -40,6 +40,14 @@ export type DigestResult = {
   isEmpty: boolean;
 };
 
+export type GreetingTier = "great-week" | "keep-it-up" | "check-in";
+
+export type DigestStats = {
+  newApps: number;
+  interviews: number;
+  offers: number;
+};
+
 const FORWARD_STATUSES = ["interviewing", "offered", "hired"];
 const SKIP_ACTIONS_STATUSES = ["hired", "rejected", "archived"];
 
@@ -133,4 +141,69 @@ export function categorizeApplications(
     actions,
     isEmpty: wins.length === 0 && actions.length === 0,
   };
+}
+
+export function computeDigestStats(wins: WinItem[]): DigestStats {
+  let newApps = 0;
+  let interviews = 0;
+  let offers = 0;
+  for (const win of wins) {
+    if (win.type === "new-application") newApps++;
+    else if (win.type === "moved-forward") interviews++;
+    else if (win.type === "offer-received") offers++;
+  }
+  return { newApps, interviews, offers };
+}
+
+export function getGreetingTier(wins: WinItem[]): GreetingTier {
+  if (wins.some((w) => w.type === "offer-received")) return "great-week";
+  if (wins.length > 0) return "keep-it-up";
+  return "check-in";
+}
+
+function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
+
+export function buildSummaryLine(stats: DigestStats, tier: GreetingTier): string {
+  if (tier === "check-in") {
+    return "No new activity this week, but a few applications could use your attention.";
+  }
+
+  const parts: string[] = [];
+  if (stats.offers > 0) parts.push(`received ${pluralize(stats.offers, "offer", "offers")}`);
+  if (stats.newApps > 0) parts.push(`submitted ${pluralize(stats.newApps, "new application", "new applications")}`);
+  if (stats.interviews > 0) parts.push(`had ${pluralize(stats.interviews, "interview", "interviews")}`);
+
+  let sentence: string;
+  if (parts.length === 1) {
+    sentence = `You ${parts[0]} this week.`;
+  } else if (parts.length === 2) {
+    sentence = `You ${parts[0]} and ${parts[1]} this week.`;
+  } else {
+    sentence = `You ${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]} this week.`;
+  }
+
+  const tail = tier === "great-week"
+    ? " Here's a quick look at your job search this week."
+    : " Here's what needs your attention.";
+
+  return sentence + tail;
+}
+
+const ACTION_PRIORITY: Record<ActionItem["category"], number> = {
+  "decision-needed": 0,
+  "needs-attention": 1,
+  "follow-up": 2,
+  "consider-archiving": 3,
+  "stale-draft": 4,
+};
+
+export function prioritizeActions(actions: ActionItem[], maxCount: number): ActionItem[] {
+  const sorted = [...actions].sort((a, b) => {
+    const priorityDiff = ACTION_PRIORITY[a.category] - ACTION_PRIORITY[b.category];
+    if (priorityDiff !== 0) return priorityDiff;
+    return b.daysSinceActivity - a.daysSinceActivity;
+  });
+  return sorted.slice(0, maxCount);
 }
