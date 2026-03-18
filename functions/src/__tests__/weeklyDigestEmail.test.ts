@@ -95,7 +95,7 @@ describe("renderWeeklyDigest", () => {
 
   it("includes receiving notice", async () => {
     const html = await renderWeeklyDigest(fullData);
-    expect(html).toContain("active job search on OpenApply");
+    expect(html).toContain("Your weekly job search update");
   });
 
   it("renders needs your attention header", async () => {

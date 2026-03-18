@@ -62,9 +62,24 @@ function StatsWidget({ stats }: { stats: DigestStats }) {
   ];
 
   return (
-    <Row className="bg-[#f8fafc] rounded-lg border border-solid border-[#e2e8f0] mb-7 overflow-hidden">
+    <Row
+      style={{
+        backgroundColor: "#f8fafc",
+        borderRadius: "8px",
+        border: "1px solid #e2e8f0",
+        marginBottom: "28px",
+        overflow: "hidden",
+      }}
+    >
       {cells.map((cell, i) => (
-        <Column key={cell.label} className={`text-center py-4 px-2 ${i > 0 ? "border-l border-solid border-[#e2e8f0]" : ""}`}>
+        <Column
+          key={cell.label}
+          style={{
+            textAlign: "center",
+            padding: "16px 8px",
+            ...(i > 0 ? { borderLeft: "1px solid #e2e8f0" } : {}),
+          }}
+        >
           <Text className="text-2xl font-bold text-[#0f172a] m-0">{cell.value}</Text>
           <Text className="text-xs text-[#64748b] uppercase tracking-wide mt-0.5 m-0">{cell.label}</Text>
         </Column>
@@ -156,7 +171,7 @@ export default function WeeklyDigest({
 
               {/* TODO: add Resend-managed unsubscribe link via Audiences API */}
               <Text className="text-xs text-[#94a3b8] m-0 text-center">
-                You're receiving this because you have an active job search on OpenApply.
+                OpenApply &middot; Your weekly job search update
               </Text>
             </Section>
           </Container>
