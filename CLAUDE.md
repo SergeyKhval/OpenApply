@@ -87,6 +87,8 @@ The SPA auto-connects to emulators in dev mode unless `VITE_USE_PRODUCTION_FIREB
 
 **Firestore collections**: `jobApplications`, `jobApplicationNotes`, `contacts`, `interviews`, `userResumes`, `coverLetters`, `resumeJobMatches`, `jobs`, `users`, `promptTemplates`. All user data is scoped by `userId` field with ownership-based security rules.
 
+**Firestore indexes**: When writing or modifying Firestore queries that combine multiple fields in `where()`/`orderBy()` clauses, you MUST add the corresponding composite index to `firestore.indexes.json`. The Firestore emulator does NOT enforce index requirements, so missing indexes only break in production. Follow the existing index patterns in the file (use `COLLECTION` scope, `SPARSE_ALL` density, include `__name__` as the last field matching the sort direction of the preceding field).
+
 **Credit system**: AI features consume credits. Stripe checkout via `createStripeCheckoutSession` function, webhook handling in `stripeWebhook`. Credit packs defined in `spa/src/constants/creditPacks.ts` and `functions/src/constants/creditPacks.ts`.
 
 ### Domain Types
