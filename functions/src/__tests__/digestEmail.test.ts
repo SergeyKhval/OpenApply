@@ -54,9 +54,9 @@ describe("buildDigestEmailHtml", () => {
     expect(html).toContain("12 days");
   });
 
-  it("includes unsubscribe placeholder", () => {
+  it("includes receiving notice", () => {
     const html = buildDigestEmailHtml(fullDigest, APP_URL);
-    expect(html.toLowerCase()).toContain("unsubscribe");
+    expect(html).toContain("active job search on OpenApply");
   });
 
   it("groups actions by category", () => {
@@ -139,9 +139,9 @@ describe("buildDigestEmailText", () => {
     expect(text).toContain("12 days");
   });
 
-  it("includes unsubscribe placeholder in plain text", () => {
+  it("includes separator in plain text", () => {
     const text = buildDigestEmailText(fullDigest, APP_URL);
-    expect(text.toLowerCase()).toContain("unsubscribe");
+    expect(text).toContain("---");
   });
 
   it("groups actions by category in plain text", () => {

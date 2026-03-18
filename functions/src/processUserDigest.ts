@@ -104,9 +104,7 @@ export const processUserDigest = onTaskDispatched(
       subject: "Your Weekly Job Search Update",
       html,
       text,
-      headers: {
-        "List-Unsubscribe": `<${APP_URL}/../settings>`,
-      },
+      // TODO: implement Resend-managed unsubscribes via Audiences API
     });
 
     console.log(`Digest sent to user ${userId}`);

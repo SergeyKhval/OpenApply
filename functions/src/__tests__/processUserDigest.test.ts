@@ -106,7 +106,7 @@ describe("processUserDigest", () => {
     expect(callArgs.to).toBe("user@example.com");
     expect(callArgs.subject).toBe("Your Weekly Job Search Update");
     expect(callArgs.from).toBe("Sergey <sergey@openapply.app>");
-    expect(callArgs.headers["List-Unsubscribe"]).toContain("settings");
+    expect(callArgs.headers).toBeUndefined();
   });
 
   it("skips when user has no active applications", async () => {

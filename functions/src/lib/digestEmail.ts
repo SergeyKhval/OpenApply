@@ -126,9 +126,9 @@ export function buildDigestEmailHtml(digest: DigestResult, appUrl: string): stri
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 32px 0 16px 0;" />
 
+      <!-- TODO: add Resend-managed unsubscribe link via Audiences API -->
       <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
-        You're receiving this because you have an active job search on OpenApply.<br />
-        <a href="{{unsubscribeUrl}}" style="color: #94a3b8;">Unsubscribe</a> from weekly digest emails.
+        You're receiving this because you have an active job search on OpenApply.
       </p>
 
     </div>
@@ -186,11 +186,8 @@ export function buildDigestEmailText(digest: DigestResult, appUrl: string): stri
   const actionsSection = buildActionsText(digest.actions, appUrl);
   if (actionsSection) parts.push(actionsSection);
 
-  parts.push(
-    "---",
-    "To unsubscribe from weekly digest emails, visit your account settings.",
-    "{{unsubscribeUrl}}",
-  );
+  // TODO: add Resend-managed unsubscribe link via Audiences API
+  parts.push("---");
 
   return parts.join("\n");
 }
