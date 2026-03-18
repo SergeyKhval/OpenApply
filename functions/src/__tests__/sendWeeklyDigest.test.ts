@@ -108,7 +108,7 @@ describe("sendWeeklyDigest", () => {
     const callArgs = mockSend.mock.calls[0][0];
     expect(callArgs.to).toBe("user@example.com");
     expect(callArgs.subject).toBe("Your Weekly Job Search Update");
-    expect(callArgs.from).toBe("OpenApply <digest@openapply.app>");
+    expect(callArgs.from).toBe("Sergey <sergey@openapply.app>");
     expect(callArgs.headers["List-Unsubscribe"]).toContain("settings");
   });
 

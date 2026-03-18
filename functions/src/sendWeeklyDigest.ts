@@ -17,8 +17,8 @@ const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
 
 const APP_URL = "https://openapply.app/app/dashboard/applications";
-const FROM_EMAIL = "OpenApply <digest@openapply.app>";
-const REPLY_TO = "support@openapply.app";
+const FROM_EMAIL = "Sergey <sergey@openapply.app>";
+const REPLY_TO = "sergey@openapply.app";
 
 // Status-specific dates (appliedAt, interviewedAt, offeredAt) are stored as
 // JS Date objects from the SPA, but Firestore may wrap them as Timestamps.
