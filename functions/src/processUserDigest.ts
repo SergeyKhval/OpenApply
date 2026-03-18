@@ -12,10 +12,7 @@ import {
   DigestApplication,
   DigestInterview,
 } from "./lib/digest";
-import {
-  buildDigestEmailHtml,
-  buildDigestEmailText,
-} from "./lib/digestEmail";
+import { renderWeeklyDigest } from "./emails/WeeklyDigest.js";
 
 const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
@@ -112,8 +109,7 @@ export const processUserDigest = onTaskDispatched(
       appUrl: APP_URL,
     };
 
-    const html = buildDigestEmailHtml(emailData);
-    const text = buildDigestEmailText(emailData);
+    const html = await renderWeeklyDigest(emailData);
 
     await resend.emails.send({
       to: userRecord.email,
@@ -121,7 +117,6 @@ export const processUserDigest = onTaskDispatched(
       replyTo: REPLY_TO,
       subject: "Your Weekly Job Search Update",
       html,
-      text,
       // TODO: implement Resend-managed unsubscribes via Audiences API
     });
 
