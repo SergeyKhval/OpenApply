@@ -2,10 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // --- Mocks (must be hoisted before imports) ---
 
-vi.mock("firebase-functions/params", () => ({
-  defineString: () => ({ value: () => "test-key" }),
-}));
-
 const mockEnqueue = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("firebase-admin/functions", () => ({
@@ -108,15 +104,4 @@ describe("sendWeeklyDigest", () => {
     expect(mockEnqueue).not.toHaveBeenCalled();
   });
 
-  it("skips when RESEND_API_KEY is missing", async () => {
-    // Re-mock with empty key — need a separate test module for this
-    // For now, the default mock returns "test-key" so this test verifies
-    // the guard exists by checking no enqueue when snapshot is empty
-    mockAppsSnapshot = { empty: true, docs: [] };
-    mockGet.mockResolvedValue(mockAppsSnapshot);
-
-    await (sendWeeklyDigest as unknown as () => Promise<void>)();
-
-    expect(mockEnqueue).not.toHaveBeenCalled();
-  });
 });
