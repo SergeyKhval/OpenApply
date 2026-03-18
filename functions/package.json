@@ -22,7 +22,7 @@
     "stripe"
   ],
   "scripts": {
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.{ts,tsx}",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
@@ -39,19 +39,26 @@
   "main": "lib/index.js",
   "dependencies": {
     "@genkit-ai/googleai": "^1.21.0",
+    "@react-email/components": "^1.0.10",
+    "@react-email/render": "^2.0.4",
     "@sparticuz/chromium": "^141.0.0",
     "cheerio": "^1.1.2",
+    "date-fns": "^4.1.0",
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.0.1",
     "genkit": "^1.21.0",
     "lodash": "^4.17.21",
     "pdf-parse": "^2.1.7",
     "puppeteer-core": "^24.23.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "resend": "^6.3.0",
     "stripe": "^19.1.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.20",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
     "eslint": "^8.9.0",

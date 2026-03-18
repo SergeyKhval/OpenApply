@@ -1,0 +1,370 @@
+import { describe, it, expect } from "vitest";
+import { subDays, addDays } from "date-fns";
+import {
+  categorizeApplications,
+  computeDigestStats,
+  getGreetingTier,
+  buildSummaryLine,
+  prioritizeActions,
+} from "../lib/digest";
+import type { DigestApplication, DigestInterview, ActionItem, WinItem } from "../lib/digest";
+
+const NOW = new Date("2024-06-15T12:00:00Z");
+
+function daysAgo(days: number): Date {
+  return subDays(NOW, days);
+}
+
+function daysFromNow(days: number): Date {
+  return addDays(NOW, days);
+}
+
+function makeApp(overrides: Partial<DigestApplication> & { status: string }): DigestApplication {
+  return {
+    id: "app-1",
+    companyName: "Acme Corp",
+    position: "Engineer",
+    updatedAt: daysAgo(0),
+    createdAt: daysAgo(30),
+    ...overrides,
+  };
+}
+
+describe("categorizeApplications — threshold categorization", () => {
+  it("flags offered applications after 3 days as decision-needed", () => {
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(4) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("decision-needed");
+    expect(result.actions[0].daysSinceActivity).toBe(4);
+  });
+
+  it("does not flag offered applications within 3 days", () => {
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(2) });
+    const result = categorizeApplications([app], [], NOW);
+    const decisionItems = result.actions.filter((a) => a.category === "decision-needed");
+    expect(decisionItems).toHaveLength(0);
+  });
+
+  it("flags interviewing applications after 5 days with no upcoming interview as needs-attention", () => {
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(6) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("needs-attention");
+    expect(result.actions[0].daysSinceActivity).toBe(6);
+  });
+
+  it("does not flag interviewing if a future interview is scheduled", () => {
+    const app = makeApp({ id: "app-2", status: "interviewing", interviewedAt: daysAgo(6) });
+    const interview: DigestInterview = {
+      applicationId: "app-2",
+      conductedAt: daysFromNow(2),
+      status: "pending",
+    };
+    const result = categorizeApplications([app], [interview], NOW);
+    expect(result.actions).toHaveLength(0);
+  });
+
+  it("flags interviewing applications after 14 days as consider-archiving", () => {
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(15) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("consider-archiving");
+    expect(result.actions[0].daysSinceActivity).toBe(15);
+  });
+
+  it("flags applied applications after 10 days as follow-up", () => {
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(11) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(11);
+  });
+
+  it("flags applied applications after 30 days as consider-archiving", () => {
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(31) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("consider-archiving");
+    expect(result.actions[0].daysSinceActivity).toBe(31);
+  });
+
+  it("flags draft applications after 7 days as stale-draft (uses createdAt)", () => {
+    const app = makeApp({ status: "draft", updatedAt: daysAgo(1), createdAt: daysAgo(8) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("stale-draft");
+    expect(result.actions[0].daysSinceActivity).toBe(8);
+  });
+
+  it("ignores hired, rejected, and archived applications (no actions)", () => {
+    const hired = makeApp({ id: "h", status: "hired", updatedAt: daysAgo(20) });
+    const rejected = makeApp({ id: "r", status: "rejected", updatedAt: daysAgo(20) });
+    const archived = makeApp({ id: "a", status: "archived", updatedAt: daysAgo(20) });
+    const result = categorizeApplications([hired, rejected, archived], [], NOW);
+    expect(result.actions).toHaveLength(0);
+  });
+
+  it("returns isEmpty true when no actions and no wins", () => {
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(2) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.isEmpty).toBe(true);
+    expect(result.wins).toHaveLength(0);
+    expect(result.actions).toHaveLength(0);
+  });
+});
+
+describe("categorizeApplications — exact threshold boundaries", () => {
+  it("flags offered at exactly 3 days as decision-needed", () => {
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(3) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("decision-needed");
+    expect(result.actions[0].daysSinceActivity).toBe(3);
+  });
+
+  it("flags interviewing at exactly 5 days with no future interview as needs-attention", () => {
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(5) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("needs-attention");
+    expect(result.actions[0].daysSinceActivity).toBe(5);
+  });
+
+  it("flags interviewing at exactly 14 days as consider-archiving", () => {
+    const app = makeApp({ status: "interviewing", interviewedAt: daysAgo(14) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("consider-archiving");
+    expect(result.actions[0].daysSinceActivity).toBe(14);
+  });
+
+  it("flags applied at exactly 10 days as follow-up", () => {
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(10) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(10);
+  });
+
+  it("flags applied at exactly 30 days as consider-archiving", () => {
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(30) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("consider-archiving");
+    expect(result.actions[0].daysSinceActivity).toBe(30);
+  });
+
+  it("flags draft at exactly 7 days as stale-draft", () => {
+    const app = makeApp({ status: "draft", updatedAt: daysAgo(1), createdAt: daysAgo(7) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("stale-draft");
+    expect(result.actions[0].daysSinceActivity).toBe(7);
+  });
+});
+
+describe("categorizeApplications — status date fallback", () => {
+  it("falls back to updatedAt when status-specific date is missing", () => {
+    // No appliedAt set — should use updatedAt as fallback
+    const app = makeApp({ status: "applied", updatedAt: daysAgo(12) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(12);
+  });
+
+  it("uses status-specific date even when updatedAt is recent", () => {
+    // appliedAt is old but updatedAt is recent (e.g. user edited description)
+    const app = makeApp({ status: "applied", appliedAt: daysAgo(15), updatedAt: daysAgo(1) });
+    const result = categorizeApplications([app], [], NOW);
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].category).toBe("follow-up");
+    expect(result.actions[0].daysSinceActivity).toBe(15);
+  });
+});
+
+describe("categorizeApplications — wins detection", () => {
+  it("detects new applications submitted this week", () => {
+    const app = makeApp({ status: "applied", createdAt: daysAgo(3), appliedAt: daysAgo(3) });
+    const result = categorizeApplications([app], [], NOW);
+    const newAppWins = result.wins.filter((w) => w.type === "new-application");
+    expect(newAppWins).toHaveLength(1);
+    expect(newAppWins[0].companyName).toBe("Acme Corp");
+  });
+
+  it("does not count drafts as new applications", () => {
+    const app = makeApp({ status: "draft", createdAt: daysAgo(2), updatedAt: daysAgo(2) });
+    const result = categorizeApplications([app], [], NOW);
+    const newAppWins = result.wins.filter((w) => w.type === "new-application");
+    expect(newAppWins).toHaveLength(0);
+  });
+
+  it("detects offers received this week", () => {
+    const app = makeApp({ status: "offered", offeredAt: daysAgo(2), createdAt: daysAgo(40) });
+    const result = categorizeApplications([app], [], NOW);
+    const offerWins = result.wins.filter((w) => w.type === "offer-received");
+    expect(offerWins).toHaveLength(1);
+    expect(offerWins[0].companyName).toBe("Acme Corp");
+  });
+
+  it("detects applications that moved forward this week", () => {
+    const app = makeApp({
+      status: "interviewing",
+      interviewedAt: daysAgo(3),
+      createdAt: daysAgo(20),
+    });
+    const result = categorizeApplications([app], [], NOW);
+    const movedForward = result.wins.filter((w) => w.type === "moved-forward");
+    expect(movedForward).toHaveLength(1);
+    expect(movedForward[0].companyName).toBe("Acme Corp");
+  });
+
+  it("detects hired this week as moved-forward win without generating actions", () => {
+    const app = makeApp({
+      status: "hired",
+      updatedAt: daysAgo(2),
+      createdAt: daysAgo(60),
+    });
+    const result = categorizeApplications([app], [], NOW);
+    const movedForward = result.wins.filter((w) => w.type === "moved-forward");
+    expect(movedForward).toHaveLength(1);
+    expect(movedForward[0].companyName).toBe("Acme Corp");
+    expect(result.actions).toHaveLength(0);
+  });
+
+  it("does not detect offer as win when only updatedAt is recent but offeredAt is old", () => {
+    const app = makeApp({
+      status: "offered",
+      offeredAt: daysAgo(10),
+      updatedAt: daysAgo(1),
+      createdAt: daysAgo(30),
+    });
+    const result = categorizeApplications([app], [], NOW);
+    const offerWins = result.wins.filter((w) => w.type === "offer-received");
+    expect(offerWins).toHaveLength(0);
+  });
+});
+
+// --- New helper function tests ---
+
+function makeAction(category: ActionItem["category"], days: number, company = "Acme"): ActionItem {
+  return {
+    applicationId: `app-${category}-${days}`,
+    companyName: company,
+    position: "Engineer",
+    category,
+    daysSinceActivity: days,
+  };
+}
+
+function makeWin(type: WinItem["type"], company = "Acme"): WinItem {
+  return { companyName: company, position: "Engineer", type };
+}
+
+describe("computeDigestStats", () => {
+  it("counts wins by type", () => {
+    const wins = [
+      makeWin("new-application", "A"),
+      makeWin("new-application", "B"),
+      makeWin("moved-forward", "C"),
+      makeWin("offer-received", "D"),
+    ];
+    const stats = computeDigestStats(wins);
+    expect(stats).toEqual({ newApps: 2, interviews: 1, offers: 1 });
+  });
+
+  it("returns zeroes for empty wins", () => {
+    expect(computeDigestStats([])).toEqual({ newApps: 0, interviews: 0, offers: 0 });
+  });
+});
+
+describe("getGreetingTier", () => {
+  it("returns great-week when wins include an offer", () => {
+    const wins = [makeWin("offer-received"), makeWin("new-application")];
+    expect(getGreetingTier(wins)).toBe("great-week");
+  });
+
+  it("returns keep-it-up when wins exist but no offers", () => {
+    const wins = [makeWin("new-application"), makeWin("moved-forward")];
+    expect(getGreetingTier(wins)).toBe("keep-it-up");
+  });
+
+  it("returns check-in when no wins", () => {
+    expect(getGreetingTier([])).toBe("check-in");
+  });
+});
+
+describe("buildSummaryLine", () => {
+  it("returns fixed string for check-in tier", () => {
+    const stats = { newApps: 0, interviews: 0, offers: 0 };
+    expect(buildSummaryLine(stats, "check-in")).toBe(
+      "No new activity this week, but a few applications could use your attention.",
+    );
+  });
+
+  it("builds sentence with single stat", () => {
+    const stats = { newApps: 1, interviews: 0, offers: 0 };
+    const line = buildSummaryLine(stats, "keep-it-up");
+    expect(line).toContain("submitted 1 new application");
+    expect(line).toContain("Here's what needs your attention.");
+  });
+
+  it("builds sentence with two stats using 'and'", () => {
+    const stats = { newApps: 2, interviews: 1, offers: 0 };
+    const line = buildSummaryLine(stats, "keep-it-up");
+    expect(line).toContain("submitted 2 new applications and had 1 interview");
+  });
+
+  it("builds sentence with all three stats using Oxford comma", () => {
+    const stats = { newApps: 1, interviews: 2, offers: 1 };
+    const line = buildSummaryLine(stats, "great-week");
+    expect(line).toContain("received 1 offer, submitted 1 new application, and had 2 interviews");
+    expect(line).toContain("Here's a quick look at your job search this week.");
+  });
+
+  it("uses correct plural forms", () => {
+    const stats = { newApps: 3, interviews: 0, offers: 2 };
+    const line = buildSummaryLine(stats, "great-week");
+    expect(line).toContain("2 offers");
+    expect(line).toContain("3 new applications");
+  });
+});
+
+describe("prioritizeActions", () => {
+  it("returns top N actions sorted by priority then days", () => {
+    const actions = [
+      makeAction("stale-draft", 10),
+      makeAction("decision-needed", 5),
+      makeAction("follow-up", 20),
+      makeAction("needs-attention", 7),
+    ];
+    const result = prioritizeActions(actions, 3);
+    expect(result).toHaveLength(3);
+    expect(result[0].category).toBe("decision-needed");
+    expect(result[1].category).toBe("needs-attention");
+    expect(result[2].category).toBe("follow-up");
+  });
+
+  it("sorts same-category items by days descending", () => {
+    const actions = [
+      makeAction("follow-up", 10, "A"),
+      makeAction("follow-up", 25, "B"),
+      makeAction("follow-up", 15, "C"),
+    ];
+    const result = prioritizeActions(actions, 3);
+    expect(result[0].companyName).toBe("B");
+    expect(result[1].companyName).toBe("C");
+    expect(result[2].companyName).toBe("A");
+  });
+
+  it("returns all actions if fewer than maxCount", () => {
+    const actions = [makeAction("decision-needed", 5)];
+    const result = prioritizeActions(actions, 3);
+    expect(result).toHaveLength(1);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(prioritizeActions([], 3)).toEqual([]);
+  });
+});
