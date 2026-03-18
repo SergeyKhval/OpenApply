@@ -108,6 +108,7 @@ export function categorizeApplications(
     if (app.status === "offered" && daysSinceStatusChange >= OFFERED_DECISION_THRESHOLD_DAYS) {
       actions.push({ ...appSummary, category: "decision-needed", daysSinceActivity: daysSinceStatusChange });
     } else if (app.status === "interviewing") {
+      // TODO: pre-index interviews by applicationId with a Map to avoid O(apps * interviews)
       const appInterviews = interviews.filter((i) => i.applicationId === app.id);
       const hasFutureInterview = appInterviews.some((i) => i.conductedAt > now);
 
