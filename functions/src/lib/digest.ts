@@ -10,6 +10,8 @@ export type DigestApplication = {
 export type DigestInterview = {
   applicationId: string;
   conductedAt: Date;
+  // Included to match the Firestore interview document shape queried by the
+  // scheduled digest function; not used by categorizeApplications directly.
   status: "pending" | "passed" | "failed";
 };
 
@@ -62,6 +64,8 @@ export function categorizeApplications(
     if (app.status !== "draft" && app.createdAt >= sevenDaysAgo) {
       wins.push({ ...item, type: "new-application" });
     }
+    // offered is special-cased before the FORWARD_STATUSES check so that a
+    // recent offer records "offer-received" rather than the generic "moved-forward".
     if (app.status === "offered" && app.updatedAt >= sevenDaysAgo) {
       wins.push({ ...item, type: "offer-received" });
     } else if (
