@@ -7,6 +7,8 @@ interface Props {
 
 const { showHashLinks = true, currentPath = '' } = Astro.props;
 const isOnBlogPage = currentPath.startsWith('/blog');
+const isOnCoverLettersPage = currentPath.startsWith('/cover-letters');
+const isOnResumesPage = currentPath.startsWith('/resumes');
 ---
 
 <header class="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -36,6 +38,8 @@ const isOnBlogPage = currentPath.startsWith('/blog');
               <a href="/#faq" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">FAQ</a>
             </>
           )}
+          <a href="/cover-letters" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnCoverLettersPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Cover Letters</a>
+          <a href="/resumes" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnResumesPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Resumes</a>
           <a href="/blog" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnBlogPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Blog</a>
         </div>
         

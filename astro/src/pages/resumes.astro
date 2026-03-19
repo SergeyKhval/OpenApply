@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+
+type PostModule = {
+  url?: string;
+  frontmatter: {
+    title: string;
+    description?: string;
+    pubDate?: string;
+    role?: string;
+    tags?: string[];
+  };
+}
+
+const posts = Object.values(import.meta.glob<PostModule>('./resumes/*.md', { eager: true }))
+  .sort((a, b) => {
+    const dateA = a.frontmatter.pubDate ? new Date(a.frontmatter.pubDate).getTime() : 0;
+    const dateB = b.frontmatter.pubDate ? new Date(b.frontmatter.pubDate).getTime() : 0;
+    return dateB - dateA;
+  });
+const currentPath = Astro.url.pathname;
+
+const pageTitle = "Resume Guides by Job Title | OpenApply";
+const pageDescription = "Resume guides for every job title. Key skills, ATS keywords, and role-specific tips to land more interviews.";
+const canonicalUrl = new URL('/resumes', Astro.site || 'https://openapply.app').href;
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Resumes", url: "/resumes" }
+];
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonicalUrl={canonicalUrl}
+  ogType="website"
+>
+  <Header showHashLinks={false} currentPath={currentPath} />
+
+  <main class="min-h-screen bg-background">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">Resume Guides</h1>
+      <p class="text-lg text-muted-foreground mb-12 max-w-3xl">
+        Browse resume guides for specific job titles. Each includes key skills, ATS keywords,
+        and actionable tips for your role.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {posts.map((post) => (
+          <article class="border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col h-full">
+            <a href={post.url} class="group flex flex-col h-full">
+              <h2 class="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
+                {post.frontmatter.title}
+              </h2>
+              {post.frontmatter.description && (
+                <p class="text-muted-foreground mb-4 text-sm line-clamp-3 flex-grow">{post.frontmatter.description}</p>
+              )}
+              <div class="mt-auto">
+                {post.frontmatter.tags && post.frontmatter.tags.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {post.frontmatter.tags.map((tag) => (
+                      <span class="px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      {posts.length === 0 && (
+        <p class="text-muted-foreground text-center py-12">Resume guides coming soon!</p>
+      )}
+    </div>
+  </main>
+  <Footer />
+</Layout>
