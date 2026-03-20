@@ -31,6 +31,11 @@ vi.mock("@internationalized/date", () => ({
   getLocalTimeZone: () => "America/New_York",
 }));
 
+const mockTrackEvent = vi.fn();
+vi.mock("@/analytics", () => ({
+  trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
+}));
+
 import { useJobApplications } from "../useJobApplications";
 
 describe("useJobApplications", () => {
@@ -71,6 +76,65 @@ describe("useJobApplications", () => {
         status: "draft",
         userId: "user-123",
         createdAt: "mock-timestamp",
+      });
+    });
+
+    it("tracks job_application_created with link_parse method when job link present", async () => {
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication({
+        companyName: "Acme",
+        position: "Dev",
+        jobDescription: "",
+        jobDescriptionLink: "https://example.com/job",
+        technologies: [],
+      } as import("@/types").CreateJobApplicationInput);
+
+      expect(mockTrackEvent).toHaveBeenCalledWith("job_application_created", {
+        method: "link_parse",
+        company: "Acme",
+        position: "Dev",
+        source: undefined,
+      });
+    });
+
+    it("tracks job_application_created with manual method when no job link", async () => {
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication({
+        companyName: "Acme",
+        position: "Dev",
+        jobDescription: "",
+        technologies: [],
+      } as import("@/types").CreateJobApplicationInput);
+
+      expect(mockTrackEvent).toHaveBeenCalledWith("job_application_created", {
+        method: "manual",
+        company: "Acme",
+        position: "Dev",
+        source: undefined,
+      });
+    });
+
+    it("passes landing_page_parse source to analytics when provided", async () => {
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication(
+        {
+          companyName: "Acme",
+          position: "Dev",
+          jobDescription: "",
+          jobDescriptionLink: "https://example.com/job",
+          technologies: [],
+        } as import("@/types").CreateJobApplicationInput,
+        { source: "landing_page_parse" },
+      );
+
+      expect(mockTrackEvent).toHaveBeenCalledWith("job_application_created", {
+        method: "link_parse",
+        company: "Acme",
+        position: "Dev",
+        source: "landing_page_parse",
       });
     });
   });
