@@ -5,7 +5,7 @@
         v-model="jobUrl"
         type="url"
         required
-        placeholder="https://linkedin.com/jobs/..."
+        placeholder="https://jobs.example.com/senior-engineer..."
         class="flex-1 h-11 rounded-md border border-border/60 bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         :disabled="isSubmitting"
       />
