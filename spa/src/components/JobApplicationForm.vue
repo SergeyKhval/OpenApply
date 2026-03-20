@@ -86,7 +86,7 @@
       {{ error }}
     </div>
 
-    <DialogFooter>
+    <div :class="variant === 'dialog' ? 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end' : 'flex gap-2 justify-end'">
       <Button type="submit" :disabled="isSubmitting">
         <template v-if="isSubmitting">
           <PhSpinner class="animate-spin" />
@@ -101,7 +101,7 @@
         <PhRewind />
         Back
       </Button>
-    </DialogFooter>
+    </div>
   </form>
 </template>
 
@@ -132,7 +132,6 @@ import {
   TagsInputItemDelete,
   TagsInputItemText,
 } from "@/components/ui/tags-input";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -147,6 +146,7 @@ type JobApplicationFormProps = {
   jobDescriptionLink?: string;
   jobDescription?: string;
   parsingFailed?: boolean;
+  variant?: "dialog" | "page";
 };
 type JobApplicationFormEmits = {
   (event: "saved", id: string): void;
@@ -164,6 +164,7 @@ const {
   jobDescriptionLink = "",
   jobDescription = "",
   parsingFailed = false,
+  variant = "dialog",
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
