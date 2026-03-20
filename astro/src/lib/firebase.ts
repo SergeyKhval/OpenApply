@@ -13,13 +13,7 @@ let functions: Functions | null = null;
 export async function getApp(): Promise<FirebaseApp> {
   if (app) return app;
 
-  const { initializeApp, getApps, getApp: getExistingApp } = await import("firebase/app");
-
-  // Reuse existing app if already initialized (survives HMR)
-  if (getApps().length > 0) {
-    app = getExistingApp();
-    return app;
-  }
+  const { initializeApp } = await import("firebase/app");
 
   app = initializeApp({
     apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
