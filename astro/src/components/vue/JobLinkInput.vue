@@ -24,7 +24,7 @@
 
     <p class="text-sm text-muted-foreground mt-3 text-center">
       or
-      <a href="/app/" class="text-primary hover:underline">skip and sign up directly</a>
+      <a :href="`${spaBase}/`" class="text-primary hover:underline">skip and sign up directly</a>
     </p>
   </div>
 </template>
@@ -39,6 +39,8 @@ import {
 const jobUrl = ref("");
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
+
+const spaBase = import.meta.env.DEV ? "http://localhost:5173/app" : "/app";
 
 function trackEvent(eventName: string) {
   if (typeof window !== "undefined" && (window as any).posthog) {
@@ -82,9 +84,9 @@ async function handleSubmit() {
     // Redirect based on auth state
     if (isAuthenticated) {
       trackEvent("lp_auth_skipped");
-      window.location.href = `/app/dashboard/applications/new?job=${jobId}&from=lp`;
+      window.location.href = `${spaBase}/dashboard/applications/new?job=${jobId}&from=lp`;
     } else {
-      window.location.href = `/app/?job=${jobId}&from=lp`;
+      window.location.href = `${spaBase}/?job=${jobId}&from=lp`;
     }
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : "Something went wrong. Please try again.";
