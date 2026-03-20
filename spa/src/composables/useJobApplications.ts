@@ -17,6 +17,7 @@ export function useJobApplications() {
 
   const addJobApplication = async (
     payload: CreateJobApplicationInput,
+    options?: { source?: "landing_page_parse" },
   ): Promise<{ success: boolean; error?: string; id?: string }> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -34,6 +35,7 @@ export function useJobApplications() {
         method: payload.jobDescriptionLink ? "link_parse" : "manual",
         company: payload.companyName,
         position: payload.position,
+        source: options?.source,
       });
       return { success: true, id: docRef.id };
     } catch (err) {

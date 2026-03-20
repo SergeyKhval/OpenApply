@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background flex">
+  <div class="min-h-screen bg-background flex flex-col md:flex-row">
     <!-- Loading state (full screen, centered) -->
     <div
       v-if="!userLoaded"
@@ -144,13 +144,26 @@
         v-if="hasPendingJob"
         class="md:hidden flex items-center gap-3 px-4 py-3 bg-primary/10 border-b border-primary/20"
       >
-        <div
-          class="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0"
-          aria-hidden="true"
-        />
-        <p class="text-sm text-foreground">
-          Analyzing your job listing... Sign up to save results.
-        </p>
+        <template v-if="isParsing">
+          <div
+            class="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0"
+            aria-hidden="true"
+          />
+          <p class="text-sm text-foreground">
+            Analyzing your job listing... Sign up to save results.
+          </p>
+        </template>
+        <template v-else-if="isParsed">
+          <PhCheckCircle class="text-primary shrink-0" :size="20" />
+          <p class="text-sm text-foreground">
+            Job details ready! Sign up to save.
+          </p>
+        </template>
+        <template v-else>
+          <p class="text-sm text-foreground">
+            Sign up to save this job application.
+          </p>
+        </template>
       </div>
 
       <!-- RIGHT PANEL: auth form -->

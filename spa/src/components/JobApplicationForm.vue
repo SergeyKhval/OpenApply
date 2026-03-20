@@ -147,6 +147,7 @@ type JobApplicationFormProps = {
   jobDescription?: string;
   parsingFailed?: boolean;
   variant?: "dialog" | "page";
+  analyticsSource?: "landing_page_parse";
 };
 type JobApplicationFormEmits = {
   (event: "saved", id: string): void;
@@ -165,6 +166,7 @@ const {
   jobDescription = "",
   parsingFailed = false,
   variant = "dialog",
+  analyticsSource,
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
@@ -199,7 +201,7 @@ const handleSubmit = async () => {
   error.value = null;
 
   // @ts-expect-error formData completely complies with type from receiving function
-  const result = await addJobApplication(formData);
+  const result = await addJobApplication(formData, { source: analyticsSource });
 
   if (result.success) {
     resetForm();
