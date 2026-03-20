@@ -4,7 +4,7 @@
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
         This job page wasn't exactly cooperating. Some details couldn't be
-        extracted — fill in anything that's missing.
+        extracted, so fill in anything that's missing.
       </AlertDescription>
     </Alert>
     <div class="flex flex-col gap-2">
