@@ -15,14 +15,25 @@ export async function getApp(): Promise<FirebaseApp> {
 
   const { initializeApp } = await import("firebase/app");
 
-  app = initializeApp({
-    apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
-    authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
-  });
+  const config = isDev
+    ? {
+        apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY || "demo-api-key",
+        authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN || "demo-no-project.firebaseapp.com",
+        projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID || "demo-no-project",
+        storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET || "demo-no-project.firebasestorage.app",
+        messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "000000000000",
+        appId: import.meta.env.PUBLIC_FIREBASE_APP_ID || "1:000000000000:web:0000000000000000",
+      }
+    : {
+        apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
+        authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
+      };
+
+  app = initializeApp(config);
 
   return app;
 }
