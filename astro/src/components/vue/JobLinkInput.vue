@@ -60,7 +60,7 @@ async function handleSubmit() {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      errorMessage.value = "Could not connect to our servers. Check your internet connection and try again.";
+      errorMessage.value = "Hmm, we can't reach our servers. Check your internet and give it another shot.";
       isSubmitting.value = false;
       return;
     }
@@ -76,7 +76,7 @@ async function handleSubmit() {
     const jobId = result.data.id;
 
     if (!jobId) {
-      errorMessage.value = "The server accepted the request but didn't return a tracking ID. Try again in a moment.";
+      errorMessage.value = "Well, that's awkward. We sent the request but got nothing useful back. Try again?";
       isSubmitting.value = false;
       return;
     }
@@ -91,11 +91,11 @@ async function handleSubmit() {
   } catch (err) {
     const rawMessage = err instanceof Error ? err.message : "";
     if (rawMessage.includes("network") || rawMessage.includes("fetch")) {
-      errorMessage.value = "Network error — check your connection and try again.";
+      errorMessage.value = "Looks like the internet gremlins got in the way. Check your connection and try again.";
     } else if (rawMessage.includes("INVALID_ARGUMENT") || rawMessage.includes("invalid")) {
-      errorMessage.value = "That URL doesn't look like a job listing we can parse. Double-check the link and try again.";
+      errorMessage.value = "That URL doesn't look like a job listing we can work with. Double-check the link?";
     } else {
-      errorMessage.value = "Something broke on our end. Try again in a moment — if it keeps happening, the URL might not be supported.";
+      errorMessage.value = "Something went sideways on our end. Give it another try. If it keeps happening, this site might just not like us.";
     }
     isSubmitting.value = false;
   }
