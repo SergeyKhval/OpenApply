@@ -185,8 +185,8 @@ import type { JobSnapshot } from "@/composables/useJobIngestion";
 
 const user = useCurrentUser();
 const userLoaded = useIsCurrentUserLoaded();
-const viewMode = ref<"sign-in" | "sign-up">("sign-in");
 const { redirect, hasPendingJob, pendingJobId } = usePostAuthRedirect();
+const viewMode = ref<"sign-in" | "sign-up">(hasPendingJob.value ? "sign-up" : "sign-in");
 
 // Subscribe to job document when pending job exists
 const jobDocRef = computed(() =>
