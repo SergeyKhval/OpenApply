@@ -1,0 +1,104 @@
+<template>
+  <div class="container mx-auto max-w-2xl py-8 px-4">
+    <PageHeader title="New Job Application" />
+
+    <!-- Loading: parsing in progress -->
+    <div v-if="isParsingInProgress" class="flex flex-col items-center gap-4 py-16">
+      <PhSpinner size="64" class="animate-spin text-primary" />
+      <MessageRotator />
+    </div>
+
+    <!-- Form ready -->
+    <template v-else>
+      <Alert v-if="parsingFailed" variant="destructive" class="mb-6">
+        <PhWarningCircle />
+        <AlertDescription>
+          {{ errorMessage || "We couldn't extract details from the job listing. Please fill in the information manually." }}
+        </AlertDescription>
+      </Alert>
+
+      <JobApplicationForm
+        variant="page"
+        :company-name="parsedData?.companyName || ''"
+        :position="parsedData?.position || ''"
+        :remote-policy="computedRemotePolicy"
+        :employment-type="computedEmploymentType"
+        :technologies="parsedData?.technologies || []"
+        :company-logo-url="parsedData?.companyLogoUrl || ''"
+        :job-description-link="jobSnapshot?.jobDescriptionLink || ''"
+        :job-description="parsedData?.description || ''"
+        :job-id="jobId || ''"
+        :parsing-failed="parsingFailed"
+        @saved="onSaved"
+        @back="router.push('/dashboard/applications')"
+      />
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useDocument } from "vuefire";
+import { doc, collection } from "firebase/firestore";
+import { PhSpinner, PhWarningCircle } from "@phosphor-icons/vue";
+import { db } from "@/firebase/config";
+import JobApplicationForm from "@/components/JobApplicationForm.vue";
+import PageHeader from "@/components/PageHeader.vue";
+import MessageRotator from "@/components/MessageRotator.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { JobSnapshot } from "@/composables/useJobIngestion";
+
+const route = useRoute();
+const router = useRouter();
+
+const jobId = computed(() => {
+  const job = route.query.job;
+  return typeof job === "string" ? job : null;
+});
+
+const documentRef = computed(() =>
+  jobId.value ? doc(collection(db, "jobs"), jobId.value) : null,
+);
+
+const jobSnapshot = useDocument<JobSnapshot>(documentRef);
+
+const parsedData = computed(() => jobSnapshot.value?.parsedData ?? null);
+
+const isParsingInProgress = computed(() => {
+  if (!jobId.value) return false;
+  if (jobSnapshot.value === undefined) return true; // loading
+  if (!jobSnapshot.value) return false; // doc doesn't exist
+  return ["pending", "scrapped", "parsing"].includes(jobSnapshot.value.status);
+});
+
+const parsingFailed = computed(() => {
+  if (!jobSnapshot.value) return false; // no data yet (loading or no job param) = not a failure
+  return (
+    ["parse-failed", "failed"].includes(jobSnapshot.value.status) ||
+    !jobSnapshot.value.parsedData?.companyName ||
+    !jobSnapshot.value.parsedData?.position
+  );
+});
+
+const errorMessage = computed(() => jobSnapshot.value?.errorMessage ?? null);
+
+const computedRemotePolicy = computed<"remote" | "in-office" | "hybrid" | undefined>(() => {
+  const value = parsedData.value?.remotePolicy;
+  return value === "remote" || value === "in-office" || value === "hybrid" ? value : undefined;
+});
+
+const computedEmploymentType = computed<"full-time" | "part-time" | undefined>(() => {
+  const value = parsedData.value?.employmentType;
+  return value === "full-time" || value === "part-time" ? value : undefined;
+});
+
+async function onSaved(applicationId: string) {
+  await router.push(`/dashboard/applications/${applicationId}`);
+}
+</script>
+
+<route lang="yaml">
+meta:
+  requiresAuth: true
+</route>
