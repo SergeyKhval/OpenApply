@@ -130,10 +130,10 @@
           <!-- Failed -->
           <template v-else-if="parseFailed">
             <h2 class="text-2xl font-bold text-foreground">
-              We couldn't parse this job listing
+              This job page played hard to get
             </h2>
             <p class="text-muted-foreground">
-              Sign up and enter the details manually
+              Whoever built it really didn't want us reading it. Sign up and we'll let you fill in the details
             </p>
           </template>
         </div>

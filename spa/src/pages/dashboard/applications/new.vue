@@ -11,13 +11,13 @@
     <!-- Form ready -->
     <template v-else>
       <p class="text-muted-foreground mb-6">
-        {{ parsingFailed ? "We couldn't extract the job details automatically. Fill in the information below to start tracking this application." : "We extracted the details below. Review and save to start tracking this application." }}
+        {{ parsingFailed ? "This job page didn't make it easy for us. Fill in the details below and you're good to go." : "We extracted the details below. Review and save to start tracking this application." }}
       </p>
 
       <Alert v-if="parsingFailed" variant="destructive" class="mb-6">
         <PhWarningCircle />
         <AlertDescription>
-          {{ errorMessage || "We couldn't extract details from the job listing. Please fill in the information manually." }}
+          {{ errorMessage || "Looks like this job listing was built to keep robots out. The details couldn't be extracted automatically." }}
         </AlertDescription>
       </Alert>
 

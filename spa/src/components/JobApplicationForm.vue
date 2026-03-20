@@ -3,8 +3,8 @@
     <Alert v-if="parsingFailed" variant="default">
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
-        We couldn't automatically extract all job details from the provided
-        link. Please fill in the information manually.
+        This job page wasn't exactly cooperating. Some details couldn't be
+        extracted — fill in anything that's missing.
       </AlertDescription>
     </Alert>
     <div class="flex flex-col gap-2">
