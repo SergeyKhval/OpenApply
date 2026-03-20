@@ -2,11 +2,25 @@
   <Card class="w-full max-w-md">
     <CardHeader>
       <CardTitle>
-        <h2 class="text-2xl font-bold mb-6">Sign Up</h2>
+        <h2 class="text-2xl font-bold mb-6">{{ pendingJob ? "Sign up to save this job" : "Sign Up" }}</h2>
       </CardTitle>
     </CardHeader>
 
     <CardContent>
+      <div class="mb-4">
+        <Button
+          variant="secondary"
+          @click="handleGoogleLogin"
+          :disabled="loading"
+          class="w-full"
+        >
+          <PhGoogleLogo />
+          {{ loading ? "Signing up..." : "Sign up with Google" }}
+        </Button>
+      </div>
+
+      <div class="text-center text-sm text-muted-foreground mb-4">or</div>
+
       <form @submit.prevent="handleSignUp" class="flex flex-col gap-4">
         <div>
           <Label class="text-sm mb-1"
@@ -49,12 +63,20 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAuth } from "../composables/useAuth";
+import { PhGoogleLogo } from "@phosphor-icons/vue";
+import { useAuth } from "@/composables/useAuth";
+import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+
+type SignUpFormProps = {
+  pendingJob?: boolean;
+  source?: "landing_page_parse" | "direct";
+};
+
+const { pendingJob = false, source = "direct" } = defineProps<SignUpFormProps>();
 
 type SignUpFormEmits = {
   (event: "sign-in"): void;
@@ -62,22 +84,37 @@ type SignUpFormEmits = {
 
 const emit = defineEmits<SignUpFormEmits>();
 
-const router = useRouter();
-const { register } = useAuth();
+const { redirect } = usePostAuthRedirect();
+const { register, loginWithGoogle } = useAuth();
 
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
 const error = ref("");
 
+const handleGoogleLogin = async () => {
+  loading.value = true;
+  error.value = "";
+
+  const result = await loginWithGoogle({ source });
+
+  if (result.success) {
+    redirect();
+  } else {
+    error.value = result.error;
+  }
+
+  loading.value = false;
+};
+
 async function handleSignUp() {
   loading.value = true;
   error.value = "";
 
-  const result = await register(email.value, password.value);
+  const result = await register(email.value, password.value, { source });
 
   if (result.success) {
-    await router.push("/dashboard/applications");
+    redirect();
   } else {
     error.value = result.error;
   }

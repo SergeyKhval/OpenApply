@@ -3,12 +3,26 @@
     <CardHeader>
       <CardTitle
         ><h2 class="text-2xl font-bold mb-6">
-          Sign In
+          {{ pendingJob ? "Sign up to save this job" : "Sign In" }}
         </h2></CardTitle
       >
     </CardHeader>
 
     <CardContent>
+      <div class="mb-4">
+        <Button
+          variant="secondary"
+          @click="handleGoogleLogin"
+          :disabled="loading"
+          class="w-full"
+        >
+          <PhGoogleLogo />
+          {{ loading ? "Logging in..." : "Login with Google" }}
+        </Button>
+      </div>
+
+      <div class="text-center text-sm text-muted-foreground mb-4">or</div>
+
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <Label class="block text-sm font-medium mb-1">Email</Label>
@@ -24,18 +38,6 @@
           {{ loading ? "Logging in..." : "Login" }}
         </Button>
       </form>
-
-      <div class="mt-4">
-        <Button
-          variant="secondary"
-          @click="handleGoogleLogin"
-          :disabled="loading"
-          class="w-full"
-        >
-          <PhGoogleLogo />
-          {{ loading ? "Logging in..." : "Login with Google" }}
-        </Button>
-      </div>
 
       <div
         v-if="error"
@@ -59,13 +61,20 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { PhGoogleLogo } from "@phosphor-icons/vue";
 import { useAuth } from "@/composables/useAuth";
+import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+
+type SignInFormProps = {
+  pendingJob?: boolean;
+  source?: "landing_page_parse" | "direct";
+};
+
+const { pendingJob = false, source = "direct" } = defineProps<SignInFormProps>();
 
 type SignInFormEmits = {
   (event: "sign-up"): void;
@@ -73,7 +82,7 @@ type SignInFormEmits = {
 
 const emit = defineEmits<SignInFormEmits>();
 
-const router = useRouter();
+const { redirect } = usePostAuthRedirect();
 const { login, loginWithGoogle } = useAuth();
 
 const email = ref("");
@@ -85,10 +94,10 @@ const handleLogin = async () => {
   loading.value = true;
   error.value = "";
 
-  const result = await login(email.value, password.value);
+  const result = await login(email.value, password.value, { source });
 
   if (result.success) {
-    await router.push("/dashboard/applications");
+    redirect();
   } else {
     error.value = result.error;
   }
@@ -100,10 +109,10 @@ const handleGoogleLogin = async () => {
   loading.value = true;
   error.value = "";
 
-  const result = await loginWithGoogle();
+  const result = await loginWithGoogle({ source });
 
   if (result.success) {
-    await router.push("/dashboard/applications");
+    redirect();
   } else {
     error.value = result.error;
   }
