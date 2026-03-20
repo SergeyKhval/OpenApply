@@ -11,7 +11,7 @@
     <!-- Form ready -->
     <template v-else>
       <p class="text-muted-foreground mb-6">
-        {{ parsingFailed ? "Fill in the job details manually to start tracking this application." : "We extracted the details below. Review and save to start tracking this application." }}
+        {{ parsingFailed ? "We couldn't extract the job details automatically. Fill in the information below to start tracking this application." : "We extracted the details below. Review and save to start tracking this application." }}
       </p>
 
       <Alert v-if="parsingFailed" variant="destructive" class="mb-6">
