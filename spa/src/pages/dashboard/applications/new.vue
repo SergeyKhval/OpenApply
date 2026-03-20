@@ -33,6 +33,7 @@
         :job-description="parsedData?.description || ''"
         :job-id="jobId || ''"
         :parsing-failed="parsingFailed"
+        :analytics-source="fromLp ? 'landing_page_parse' : undefined"
         @saved="onSaved"
         @back="router.push('/dashboard/applications')"
       />
@@ -55,6 +56,8 @@ import type { JobSnapshot } from "@/composables/useJobIngestion";
 
 const route = useRoute();
 const router = useRouter();
+
+const fromLp = computed(() => route.query.from === "lp");
 
 const jobId = computed(() => {
   const job = route.query.job;
