@@ -10,6 +10,10 @@
 
     <!-- Form ready -->
     <template v-else>
+      <p class="text-muted-foreground mb-6">
+        {{ parsingFailed ? "Review the details below and fill in any missing information." : "We extracted the details below. Review and save to start tracking this application." }}
+      </p>
+
       <Alert v-if="parsingFailed" variant="destructive" class="mb-6">
         <PhWarningCircle />
         <AlertDescription>
