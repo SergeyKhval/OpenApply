@@ -60,7 +60,7 @@ async function handleSubmit() {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      errorMessage.value = "Unable to initialize. Please try again.";
+      errorMessage.value = "Could not connect to our servers. Check your internet connection and try again.";
       isSubmitting.value = false;
       return;
     }
@@ -76,7 +76,7 @@ async function handleSubmit() {
     const jobId = result.data.id;
 
     if (!jobId) {
-      errorMessage.value = "Unable to start parsing. Please try again.";
+      errorMessage.value = "The server accepted the request but didn't return a tracking ID. Try again in a moment.";
       isSubmitting.value = false;
       return;
     }
@@ -89,7 +89,14 @@ async function handleSubmit() {
       window.location.href = `${spaBase}/?job=${jobId}&from=lp`;
     }
   } catch (err) {
-    errorMessage.value = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+    const rawMessage = err instanceof Error ? err.message : "";
+    if (rawMessage.includes("network") || rawMessage.includes("fetch")) {
+      errorMessage.value = "Network error — check your connection and try again.";
+    } else if (rawMessage.includes("INVALID_ARGUMENT") || rawMessage.includes("invalid")) {
+      errorMessage.value = "That URL doesn't look like a job listing we can parse. Double-check the link and try again.";
+    } else {
+      errorMessage.value = "Something broke on our end. Try again in a moment — if it keeps happening, the URL might not be supported.";
+    }
     isSubmitting.value = false;
   }
 }
