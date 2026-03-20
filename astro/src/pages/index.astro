@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import JobLinkInput from '../components/vue/JobLinkInput.vue';
 ---
 
 <Layout>
@@ -33,48 +34,7 @@ import Footer from '../components/Footer.astro';
               <p class="text-xl text-muted-foreground max-w-2xl text-center">
                 OpenApply replaces all of that. Paste a job link and the company, role, and details are filled in seconds. Get AI resume reviews matched to each role. Everything in one place.
               </p>
-              <div class="w-full max-w-5xl">
-                <div class="relative rounded-xl border border-border/40 shadow-2xl shadow-primary/20 overflow-hidden">
-                  <picture>
-                    <source media="(min-width: 768px)" srcset="/images/dashboard-hero.png" width="1700" height="450" />
-                    <img
-                      src="/images/dashboard-mobile.png"
-                      alt="OpenApply dashboard showing job applications with status tracking"
-                      class="w-full h-auto"
-                      loading="eager"
-                      width="390"
-                      height="700"
-                    />
-                  </picture>
-                  <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background to-transparent"></div>
-                </div>
-              </div>
-              <div class="flex flex-col items-center gap-3">
-                <div class="flex items-center gap-4">
-                  <a
-                    href="/app"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 bg-linear-to-r from-primary via-foreground to-primary hover:opacity-90 transition-opacity shadow-lg shadow-primary/40"
-                  >
-                    Get Started Free<svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="lucide lucide-arrow-right ml-2 w-4 h-4"
-                    aria-hidden="true"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="m12 5 7 7-7 7"></path>
-                  </svg>
-                  </a>
-                </div>
-                <p class="text-sm text-muted-foreground">Free to track. No subscription.</p>
-              </div>
+              <JobLinkInput client:visible />
             </div>
           </div>
         </section>
