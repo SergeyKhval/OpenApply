@@ -40,7 +40,7 @@ const jobUrl = ref("");
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
 
-const spaBase = import.meta.env.DEV ? "http://localhost:5173/app" : "/app";
+const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
 
 function trackEvent(eventName: string) {
   if (typeof window !== "undefined" && (window as any).posthog) {
