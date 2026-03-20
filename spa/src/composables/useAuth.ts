@@ -62,6 +62,7 @@ export function useAuth() {
   const login = async (
     email: string,
     password: string,
+    options?: { source?: "landing_page_parse" | "direct" },
   ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 
@@ -72,7 +73,7 @@ export function useAuth() {
         password,
       );
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
-      trackEvent("login_completed");
+      trackEvent("login_completed", { source: options?.source ?? "direct" });
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -83,6 +84,7 @@ export function useAuth() {
   const register = async (
     email: string,
     password: string,
+    options?: { source?: "landing_page_parse" | "direct" },
   ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 
@@ -93,7 +95,7 @@ export function useAuth() {
         password,
       );
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
-      trackEvent("signup_completed");
+      trackEvent("signup_completed", { source: options?.source ?? "direct" });
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -101,7 +103,9 @@ export function useAuth() {
     }
   };
 
-  const loginWithGoogle = async (): Promise<AuthResult> => {
+  const loginWithGoogle = async (
+    options?: { source?: "landing_page_parse" | "direct" },
+  ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 
     try {
@@ -109,7 +113,8 @@ export function useAuth() {
       const result: UserCredential = await signInWithPopup(auth, provider);
       const isNewUser = getAdditionalUserInfo(result)?.isNewUser ?? false;
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "google" });
-      trackEvent(isNewUser ? "signup_completed" : "login_completed");
+      const source = options?.source ?? "direct";
+      trackEvent(isNewUser ? "signup_completed" : "login_completed", { source });
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
