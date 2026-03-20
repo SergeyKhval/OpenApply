@@ -5,13 +5,16 @@ function isLoaded(): boolean {
 }
 
 type EventMap = {
-  signup_completed: void;
-  login_completed: void;
+  signup_completed: { source?: "landing_page_parse" | "direct" };
+  login_completed: { source?: "landing_page_parse" | "direct" };
   job_application_created: {
     method: "link_parse" | "manual";
     company?: string;
     position?: string;
+    source?: "landing_page_parse";
   };
+  lp_job_parse_started: void;
+  lp_auth_skipped: void;
   job_parse_succeeded: { company?: string; position?: string };
   job_parse_failed: { error?: string };
   cover_letter_generated: { jobApplicationId: string; resumeId: string };
