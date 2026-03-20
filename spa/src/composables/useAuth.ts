@@ -2,6 +2,7 @@ import { useCurrentUser, useDocument, useFirebaseAuth } from "vuefire";
 import {
   type Auth,
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -106,8 +107,9 @@ export function useAuth() {
     try {
       const provider = new GoogleAuthProvider();
       const result: UserCredential = await signInWithPopup(auth, provider);
+      const isNewUser = getAdditionalUserInfo(result)?.isNewUser ?? false;
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "google" });
-      trackEvent("login_completed");
+      trackEvent(isNewUser ? "signup_completed" : "login_completed");
       return { success: true, user: result.user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
