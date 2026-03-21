@@ -3,8 +3,8 @@
     <Alert v-if="parsingFailed" variant="default">
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
-        We couldn't automatically extract all job details from the provided
-        link. Please fill in the information manually.
+        This job page wasn't exactly cooperating. Some details couldn't be
+        extracted, so fill in anything that's missing.
       </AlertDescription>
     </Alert>
     <div class="flex flex-col gap-2">
@@ -86,7 +86,7 @@
       {{ error }}
     </div>
 
-    <DialogFooter>
+    <div :class="variant === 'dialog' ? 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end' : 'flex gap-2 justify-end'">
       <Button type="submit" :disabled="isSubmitting">
         <template v-if="isSubmitting">
           <PhSpinner class="animate-spin" />
@@ -101,7 +101,7 @@
         <PhRewind />
         Back
       </Button>
-    </DialogFooter>
+    </div>
   </form>
 </template>
 
@@ -132,7 +132,6 @@ import {
   TagsInputItemDelete,
   TagsInputItemText,
 } from "@/components/ui/tags-input";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -147,6 +146,8 @@ type JobApplicationFormProps = {
   jobDescriptionLink?: string;
   jobDescription?: string;
   parsingFailed?: boolean;
+  variant?: "dialog" | "page";
+  analyticsSource?: "landing_page_parse";
 };
 type JobApplicationFormEmits = {
   (event: "saved", id: string): void;
@@ -164,6 +165,8 @@ const {
   jobDescriptionLink = "",
   jobDescription = "",
   parsingFailed = false,
+  variant = "dialog",
+  analyticsSource,
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
@@ -198,7 +201,7 @@ const handleSubmit = async () => {
   error.value = null;
 
   // @ts-expect-error formData completely complies with type from receiving function
-  const result = await addJobApplication(formData);
+  const result = await addJobApplication(formData, { source: analyticsSource });
 
   if (result.success) {
     resetForm();
