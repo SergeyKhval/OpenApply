@@ -52,6 +52,7 @@ import JobApplicationForm from "@/components/JobApplicationForm.vue";
 import PageHeader from "@/components/PageHeader.vue";
 import MessageRotator from "@/components/MessageRotator.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { isValidJobId, isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
 
 const route = useRoute();
@@ -61,7 +62,7 @@ const fromLp = computed(() => route.query.from === "lp");
 
 const jobId = computed(() => {
   const job = route.query.job;
-  return typeof job === "string" ? job : null;
+  return isValidJobId(job) ? job : null;
 });
 
 const documentRef = computed(() =>
@@ -72,21 +73,9 @@ const jobSnapshot = useDocument<JobSnapshot>(documentRef);
 
 const parsedData = computed(() => jobSnapshot.value?.parsedData ?? null);
 
-const isParsingInProgress = computed(() => {
-  if (!jobId.value) return false;
-  if (jobSnapshot.value === undefined) return true; // loading
-  if (!jobSnapshot.value) return false; // doc doesn't exist
-  return ["pending", "scrapped", "parsing"].includes(jobSnapshot.value.status);
-});
+const isParsingInProgress = computed(() => isJobParsing(jobSnapshot.value, jobId.value));
 
-const parsingFailed = computed(() => {
-  if (!jobSnapshot.value) return false; // no data yet (loading or no job param) = not a failure
-  return (
-    ["parse-failed", "failed"].includes(jobSnapshot.value.status) ||
-    !jobSnapshot.value.parsedData?.companyName ||
-    !jobSnapshot.value.parsedData?.position
-  );
-});
+const parsingFailed = computed(() => isJobParseFailed(jobSnapshot.value));
 
 const errorMessage = computed(() => jobSnapshot.value?.errorMessage ?? null);
 

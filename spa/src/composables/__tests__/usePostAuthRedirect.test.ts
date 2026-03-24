@@ -17,17 +17,17 @@ describe("usePostAuthRedirect", () => {
   });
 
   it("redirects to job review page when job query param is present", () => {
-    mockQuery.value = { job: "abc123" };
+    mockQuery.value = { job: "HA5pNcg3AjtPuDRWtqds" };
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=abc123");
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=HA5pNcg3AjtPuDRWtqds");
   });
 
   it("includes from=lp when LP source param is present", () => {
-    mockQuery.value = { job: "abc123", from: "lp" };
+    mockQuery.value = { job: "HA5pNcg3AjtPuDRWtqds", from: "lp" };
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=abc123&from=lp");
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=HA5pNcg3AjtPuDRWtqds&from=lp");
   });
 
   it("redirects to dashboard when no job query param", () => {
@@ -38,7 +38,7 @@ describe("usePostAuthRedirect", () => {
   });
 
   it("returns hasPendingJob true when job param exists", () => {
-    mockQuery.value = { job: "abc123" };
+    mockQuery.value = { job: "HA5pNcg3AjtPuDRWtqds" };
     const { hasPendingJob } = usePostAuthRedirect();
     expect(hasPendingJob.value).toBe(true);
   });

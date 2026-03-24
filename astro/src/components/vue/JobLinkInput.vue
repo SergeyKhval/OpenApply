@@ -81,12 +81,14 @@ async function handleSubmit() {
       return;
     }
 
+    const encodedJobId = encodeURIComponent(jobId);
+
     // Redirect based on auth state
     if (isAuthenticated) {
       trackEvent("lp_auth_skipped");
-      window.location.href = `${spaBase}/dashboard/applications/new?job=${jobId}&from=lp`;
+      window.location.href = `${spaBase}/dashboard/applications/new?job=${encodedJobId}&from=lp`;
     } else {
-      window.location.href = `${spaBase}/?job=${jobId}&from=lp`;
+      window.location.href = `${spaBase}/?job=${encodedJobId}&from=lp`;
     }
   } catch (err) {
     const rawMessage = err instanceof Error ? err.message : "";

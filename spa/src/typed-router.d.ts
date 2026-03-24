@@ -20,9 +20,10 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/admin': RouteRecordInfo<'/admin', '/admin', Record<never, never>, Record<never, never>>,
-    '/dashboard': RouteRecordInfo<'/dashboard', '/dashboard', Record<never, never>, Record<never, never>, '/dashboard/applications/' | '/dashboard/applications/[applicationId]' | '/dashboard/archive' | '/dashboard/cover-letters' | '/dashboard/file-import' | '/dashboard/resumes'>,
+    '/dashboard': RouteRecordInfo<'/dashboard', '/dashboard', Record<never, never>, Record<never, never>, '/dashboard/applications/' | '/dashboard/applications/[applicationId]' | '/dashboard/applications/new' | '/dashboard/archive' | '/dashboard/cover-letters' | '/dashboard/file-import' | '/dashboard/resumes'>,
     '/dashboard/applications/': RouteRecordInfo<'/dashboard/applications/', '/dashboard/applications', Record<never, never>, Record<never, never>>,
     '/dashboard/applications/[applicationId]': RouteRecordInfo<'/dashboard/applications/[applicationId]', '/dashboard/applications/:applicationId', { applicationId: ParamValue<true> }, { applicationId: ParamValue<false> }>,
+    '/dashboard/applications/new': RouteRecordInfo<'/dashboard/applications/new', '/dashboard/applications/new', Record<never, never>, Record<never, never>>,
     '/dashboard/archive': RouteRecordInfo<'/dashboard/archive', '/dashboard/archive', Record<never, never>, Record<never, never>>,
     '/dashboard/cover-letters': RouteRecordInfo<'/dashboard/cover-letters', '/dashboard/cover-letters', Record<never, never>, Record<never, never>>,
     '/dashboard/file-import': RouteRecordInfo<'/dashboard/file-import', '/dashboard/file-import', Record<never, never>, Record<never, never>>,
@@ -49,7 +50,7 @@ declare module 'vue-router/auto-routes' {
       views: never
     }
     'src/pages/dashboard.vue': {
-      routes: '/dashboard' | '/dashboard/applications/' | '/dashboard/applications/[applicationId]' | '/dashboard/applications' | '/dashboard/archive' | '/dashboard/cover-letters' | '/dashboard/file-import' | '/dashboard/resumes'
+      routes: '/dashboard' | '/dashboard/applications/' | '/dashboard/applications/[applicationId]' | '/dashboard/applications' | '/dashboard/archive' | '/dashboard/cover-letters' | '/dashboard/file-import' | '/dashboard/applications/new' | '/dashboard/resumes'
       views: 'default'
     }
     'src/pages/dashboard/applications/index.vue': {
@@ -58,6 +59,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/dashboard/applications/[applicationId].vue': {
       routes: '/dashboard/applications/[applicationId]'
+      views: never
+    }
+    'src/pages/dashboard/applications/new.vue': {
+      routes: '/dashboard/applications/new'
       views: never
     }
     'src/pages/dashboard/archive.vue': {

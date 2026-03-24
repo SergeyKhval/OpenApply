@@ -1,5 +1,6 @@
 import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { isValidJobId } from "@/composables/useJobIngestion";
 
 export function usePostAuthRedirect() {
   const router = useRouter();
@@ -7,7 +8,7 @@ export function usePostAuthRedirect() {
 
   const pendingJobId = computed(() => {
     const job = route.query.job;
-    return typeof job === "string" ? job : null;
+    return isValidJobId(job) ? job : null;
   });
 
   const hasPendingJob = computed(() => !!pendingJobId.value);

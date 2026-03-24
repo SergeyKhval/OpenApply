@@ -194,6 +194,7 @@ import { db } from "@/firebase/config";
 import SignInForm from "@/components/SignInForm.vue";
 import SignUpForm from "@/components/SignUpForm.vue";
 import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
+import { isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
 
 const user = useCurrentUser();
@@ -207,22 +208,14 @@ const jobDocRef = computed(() =>
 );
 const jobSnapshot = useDocument<JobSnapshot>(jobDocRef);
 
-const isParsing = computed(() => {
-  if (!pendingJobId.value) return false;
-  if (jobSnapshot.value === undefined) return true;
-  if (!jobSnapshot.value) return false;
-  return ["pending", "scrapped", "parsing"].includes(jobSnapshot.value.status);
-});
+const isParsing = computed(() => isJobParsing(jobSnapshot.value, pendingJobId.value));
 
 const isParsed = computed(
   () =>
-    jobSnapshot.value?.status === "parsed" && !!jobSnapshot.value?.parsedData,
+    jobSnapshot.value?.status === "parsed" && !isJobParseFailed(jobSnapshot.value),
 );
 
-const parseFailed = computed(() => {
-  if (!jobSnapshot.value) return false;
-  return ["parse-failed", "failed"].includes(jobSnapshot.value.status);
-});
+const parseFailed = computed(() => isJobParseFailed(jobSnapshot.value));
 
 const source = computed(() =>
   hasPendingJob.value ? ("landing_page_parse" as const) : ("direct" as const),
