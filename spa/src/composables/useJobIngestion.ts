@@ -49,6 +49,27 @@ const COMPLETED_STATUSES: JobIngestionStatus[] = [
   "failed",
 ];
 
+const JOB_ID_PATTERN = /^[a-zA-Z0-9]{10,30}$/;
+
+export function isValidJobId(value: unknown): value is string {
+  return typeof value === "string" && JOB_ID_PATTERN.test(value);
+}
+
+export function isJobParsing(snapshot: JobSnapshot | null | undefined, jobId: string | null): boolean {
+  if (!jobId) return false;
+  if (snapshot === undefined) return true; // loading
+  if (!snapshot) return false; // doc doesn't exist
+  return PROCESSING_STATUSES.includes(snapshot.status);
+}
+
+export function isJobParseFailed(snapshot: JobSnapshot | null | undefined): boolean {
+  if (!snapshot) return false;
+  return (
+    ["parse-failed", "failed"].includes(snapshot.status) ||
+    (snapshot.status === "parsed" && (!snapshot.parsedData?.companyName || !snapshot.parsedData?.position))
+  );
+}
+
 export const useJobIngestion = () => {
   const callable = httpsCallable<{ url: string }, { id: string }>(
     functions,
