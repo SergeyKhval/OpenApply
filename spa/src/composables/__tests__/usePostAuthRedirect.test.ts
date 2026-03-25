@@ -8,6 +8,10 @@ vi.mock("vue-router", () => ({
   useRoute: () => ({ query: mockQuery.value }),
 }));
 
+vi.mock("@/composables/useJobIngestion", () => ({
+  isValidJobId: (val: unknown) => typeof val === "string" && /^[a-zA-Z0-9]{10,30}$/.test(val),
+}));
+
 import { usePostAuthRedirect } from "../usePostAuthRedirect";
 
 describe("usePostAuthRedirect", () => {
