@@ -106,7 +106,7 @@ export const parseJobPageWithAi = onDocumentWritten(
         console.error(`Job ${docId}: AI returned empty fields, likely blocked content`);
         await db.collection("jobs").doc(docId).update({
           status: "parse-failed",
-          errorMessage: "Could not extract job details from page content",
+          errorMessage: "Looks like this site didn't want us reading that page. You can still add the job details manually.",
           updatedAt: FieldValue.serverTimestamp(),
         });
         return;
