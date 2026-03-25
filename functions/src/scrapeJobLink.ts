@@ -70,7 +70,7 @@ export function cleanHtml(html: string): string {
 const db = getFirestore();
 
 export const scrapeJobLink = onDocumentCreated(
-  { memory: "1GiB", document: "jobs/{docId}" },
+  { memory: "2GiB", document: "jobs/{docId}" },
   async (event) => {
     const snapshot = event.data;
     let browser: Browser | null = null;
