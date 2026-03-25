@@ -101,6 +101,17 @@ export const parseJobPageWithAi = onDocumentWritten(
       // Extract the parsed job data
       const parsedJob: Job = result.output as Job;
 
+      // Detect empty parse results (e.g. Cloudflare block pages)
+      if (!parsedJob?.companyName && !parsedJob?.position && !parsedJob?.description) {
+        console.error(`Job ${docId}: AI returned empty fields, likely blocked content`);
+        await db.collection("jobs").doc(docId).update({
+          status: "parse-failed",
+          errorMessage: "Could not extract job details from page content",
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        return;
+      }
+
       // Update the document with parsed data
       await db.collection("jobs").doc(docId).update({
         status: "parsed",
