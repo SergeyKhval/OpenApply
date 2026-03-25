@@ -183,10 +183,13 @@ export const useJobIngestion = () => {
   watch(latestSnapshot, (snapshot) => {
     if (!snapshot) return;
     if (snapshot.status === "parsed") {
-      trackEvent("job_parse_succeeded", {
-        company: snapshot.parsedData?.companyName,
-        position: snapshot.parsedData?.position,
-      });
+      const hasData = snapshot.parsedData?.companyName || snapshot.parsedData?.position;
+      if (hasData) {
+        trackEvent("job_parse_succeeded", {
+          company: snapshot.parsedData?.companyName,
+          position: snapshot.parsedData?.position,
+        });
+      }
     } else if (snapshot.status === "parse-failed" || snapshot.status === "failed") {
       trackEvent("job_parse_failed", { error: snapshot.errorMessage ?? undefined });
     }
