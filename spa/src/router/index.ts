@@ -69,7 +69,7 @@ router.beforeEach(async (to) => {
     return true;
   }
 
-  return { path: "/" };
+  return { path: "/", query: { redirect: to.fullPath } };
 });
 
 if (import.meta.env.VITE_PUBLIC_POSTHOG_API_KEY)

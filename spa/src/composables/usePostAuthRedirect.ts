@@ -16,7 +16,10 @@ export function usePostAuthRedirect() {
   const fromLp = computed(() => route.query.from === "lp");
 
   function redirect() {
-    if (pendingJobId.value) {
+    const redirectPath = route.query.redirect;
+    if (typeof redirectPath === "string" && redirectPath.startsWith("/")) {
+      router.push(redirectPath);
+    } else if (pendingJobId.value) {
       const params = new URLSearchParams({ job: pendingJobId.value });
       if (fromLp.value) params.set("from", "lp");
       router.push(`/dashboard/applications/new?${params}`);

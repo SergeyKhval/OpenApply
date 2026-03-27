@@ -34,7 +34,21 @@ describe("usePostAuthRedirect", () => {
     expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=HA5pNcg3AjtPuDRWtqds&from=lp");
   });
 
-  it("redirects to dashboard when no job query param", () => {
+  it("redirects to saved redirect path when present", () => {
+    mockQuery.value = { redirect: "/dashboard/applications/abc123" };
+    const { redirect } = usePostAuthRedirect();
+    redirect();
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/abc123");
+  });
+
+  it("ignores redirect param that does not start with /", () => {
+    mockQuery.value = { redirect: "https://evil.com" };
+    const { redirect } = usePostAuthRedirect();
+    redirect();
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications");
+  });
+
+  it("redirects to dashboard when no job or redirect query param", () => {
     mockQuery.value = {};
     const { redirect } = usePostAuthRedirect();
     redirect();
