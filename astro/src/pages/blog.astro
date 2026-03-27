@@ -114,7 +114,7 @@ const breadcrumbItems = [
               {post.frontmatter.image?.url && (
                 <div class="aspect-video w-full overflow-hidden">
                   <img
-                    src={post.frontmatter.image.url}
+                    src={post.frontmatter.image.url.replace('.jpg', '-thumb.jpg')}
                     alt={post.frontmatter.image.alt || post.frontmatter.title}
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
