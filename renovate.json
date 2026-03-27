@@ -10,26 +10,46 @@
   "labels": ["dependencies"],
   "packageRules": [
     {
-      "matchUpdateTypes": ["patch"],
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "devDependencies",
+      "groupSlug": "dev-deps",
       "automerge": true,
       "automergeType": "pr"
     },
     {
-      "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "production dependencies (patch)",
+      "groupSlug": "prod-deps-patch",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor"],
+      "groupName": "production dependencies (minor)",
+      "groupSlug": "prod-deps-minor"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "production dependencies (major)",
+      "groupSlug": "prod-deps-major"
     },
     {
       "matchPackageNames": ["astro"],
-      "groupName": "Astro"
+      "groupName": "Astro",
+      "groupSlug": "astro"
     },
     {
       "matchPackagePatterns": ["^@astrojs/"],
-      "groupName": "Astro plugins"
+      "groupName": "Astro plugins",
+      "groupSlug": "astro-plugins"
     },
     {
       "matchPackagePatterns": ["^firebase"],
-      "groupName": "Firebase"
+      "groupName": "Firebase",
+      "groupSlug": "firebase"
     }
   ]
 }
