@@ -5,8 +5,8 @@ pubDate: 2025-11-05
 description: 'In this post I want to share some insights on optimizing your LinkedIn profile for job search, applying for jobs effectively, and a prompt for generating AI-powered cover letters.'
 author: 'Sergey Khval'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/optimizing-linkedin-for-job-search.jpg'
+    alt: 'Blog post image'
 tags: ["LinkedIn Profile Optimization", "Job Search", "AI Generated Cover Letter", "Cover Letter Prompt"]
 ---
 

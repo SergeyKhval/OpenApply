@@ -5,8 +5,8 @@ pubDate: 2026-03-16
 description: 'AI cover letter - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/how-to-write-cover-letter-with-ai.jpg'
+    alt: 'Blog post image'
 tags: ["Cover Letter", "Job Search", "Career Tips"]
 ---
 
