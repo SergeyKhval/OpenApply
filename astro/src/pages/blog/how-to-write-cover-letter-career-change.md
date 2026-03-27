@@ -30,7 +30,7 @@ Wrong:
 > After 8 years in teaching, I've decided to pursue a career in UX design and I'm excited to bring my communication skills to your team.
 
 Right:
-> Over the past year, I've redesigned onboarding flows for three SaaS tools as freelance projects — average task completion rate went up 34% in the first month post-launch. Before that, I spent 8 years as a teacher designing curriculum for 800 students, which turns out to be the same problem: getting people from confused to capable as fast as possible.
+> Over the past year, I've redesigned onboarding flows for three SaaS tools as freelance projects, average task completion rate went up 34% in the first month post-launch. Before that, I spent 8 years as a teacher designing curriculum for 800 students, which turns out to be the same problem: getting people from confused to capable as fast as possible.
 
 The second version doesn't apologize. It leads with concrete work, then reframes the background as directly relevant. The recruiter has already read something interesting before they hit the word "teacher."
 
@@ -39,10 +39,10 @@ The second version doesn't apologize. It leads with concrete work, then reframes
 Don't list skills. Demonstrate them with a single sentence that makes the connection undeniable.
 
 For a teacher moving into project management:
-> I've coordinated 14-person teams against hard deadlines every single semester for eight years — parent-teacher conferences, IEP reviews, state exams, district audits. The tooling is different; the coordination problem is identical.
+> I've coordinated 14-person teams against hard deadlines every single semester for eight years, parent-teacher conferences, IEP reviews, state exams, district audits. The tooling is different; the coordination problem is identical.
 
 For a finance analyst moving into product:
-> I built the revenue forecasting model our CFO used to justify a $4M infrastructure investment. That required understanding the technical constraints, the business goals, and translating between two teams that weren't talking to each other — which is most of what product managers do.
+> I built the revenue forecasting model our CFO used to justify a $4M infrastructure investment. That required understanding the technical constraints, the business goals, and translating between two teams that weren't talking to each other, which is most of what product managers do.
 
 One sentence. Specific. Makes the connection explicit so the recruiter doesn't have to do it themselves.
 
@@ -50,9 +50,9 @@ One sentence. Specific. Makes the connection explicit so the recruiter doesn't h
 
 This is where most career changers either get generic ("I've long admired your company's mission...") or skip it entirely. Neither works.
 
-You need to show you've done enough research to have an opinion. Not flattery — an actual observation.
+You need to show you've done enough research to have an opinion. Not flattery, an actual observation.
 
-> Your recent shift toward async-first workflows caught my attention — I've spent the last year documenting systems and writing processes for a team of 12, and async communication is something I care about deeply.
+> Your recent shift toward async-first workflows caught my attention, I've spent the last year documenting systems and writing processes for a team of 12, and async communication is something I care about deeply.
 
 Short. Specific. Shows you read something other than the job description.
 
@@ -78,6 +78,6 @@ Find that one thing. Lead with it. Build the rest of the letter around it.
 
 ## Write Your Cover Letter in Seconds
 
-Crafting a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/) generates personalized, job-specific cover letters from your resume and the job description — in one click. Stop staring at a blank page and start applying faster.
+Crafting a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/) generates personalized, job-specific cover letters from your resume and the job description, in one click. Stop staring at a blank page and start applying faster.
 
 [Try OpenApply free →](https://openapply.app/)

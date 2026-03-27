@@ -14,7 +14,7 @@ A strong DevOps Engineer resume isn't just a list of tools you know; it's a demo
 
 ## Key Skills for DevOps Engineer Resumes
 
-Your resume needs to showcase a blend of technical expertise and the soft skills necessary for effective collaboration.
+Your resume needs to show a blend of technical expertise and the soft skills necessary for effective collaboration.
 
 ### Technical Skills
 
@@ -35,7 +35,7 @@ Your resume needs to showcase a blend of technical expertise and the soft skills
 *   **Communication:** Clearly articulate technical concepts to both technical and non-technical audiences.
 *   **Problem-Solving:** Quickly identify and resolve issues in complex systems, often under pressure.
 *   **Automation Mindset:** Proactively identify manual processes that can be automated to improve efficiency.
-*   **Continuous Learning:** The DevOps landscape is constantly evolving; showcase your commitment to staying up-to-date with the latest technologies and best practices.
+*   **Continuous Learning:** The DevOps landscape is constantly evolving; show your commitment to staying up-to-date with the latest technologies and best practices.
 *   **Ownership:** Take responsibility for the reliability and performance of the systems you manage.
 
 ## ATS Keywords for DevOps Engineer Positions
@@ -67,8 +67,8 @@ Focus on certifications that align with the specific technologies and platforms 
 
 ## Resume Tips for DevOps Engineer Positions
 
-*   **Quantify Your Impact:** Instead of just listing responsibilities, show how your work led to measurable improvements. For example, "Reduced deployment time by 40% by implementing a new CI/CD pipeline using Jenkins and Docker." Or, "Improved application uptime by 99.9% by implementing robust monitoring and alerting with Prometheus and Grafana."
-*   **Showcase Automation Projects:** DevOps is all about automation. Highlight specific automation projects you've worked on, detailing the tools and techniques you used, and the benefits achieved. If possible, include links to relevant GitHub repositories or blog posts showcasing your work.
+*   **Quantify Your Impact:** Instead of just listing responsibilities, show how your work led to measurable improvements. For example, "Reduced deployment time by 40% by implementing a new CI/CD pipeline using Jenkins and Docker." Or, "Improved application uptime by 99.9% by implementing strong monitoring and alerting with Prometheus and Grafana."
+*   **show Automation Projects:** DevOps is all about automation. Highlight specific automation projects you've worked on, detailing the tools and techniques you used, and the benefits achieved. If possible, include links to relevant GitHub repositories or blog posts showing your work.
 *   **Tailor to the Specific Job Description:** Don't use a generic "DevOps Engineer" resume for every application. Carefully review the job description and tailor your resume to highlight the specific skills and experience they are looking for. Use the same keywords and phrases used in the job description (where appropriate).
 *   **Explain Your Cloud Experience:** Specify the cloud platforms you have experience with (AWS, Azure, GCP) and the specific services you have used within each platform. Don't just say "AWS experience"; list out specific services like EC2, S3, Lambda, etc., and describe how you used them.
 
@@ -76,6 +76,6 @@ Focus on certifications that align with the specific technologies and platforms 
 
 ## Check Your Resume Match Score
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve — skills gaps, missing keywords, and formatting issues.
+Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.
 
 [Check your resume match →](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes)
