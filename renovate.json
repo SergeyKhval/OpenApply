@@ -42,14 +42,18 @@
       "groupSlug": "astro"
     },
     {
-      "matchPackagePatterns": ["^@astrojs/"],
       "groupName": "Astro plugins",
-      "groupSlug": "astro-plugins"
+      "groupSlug": "astro-plugins",
+      "matchPackageNames": [
+        "/^@astrojs//"
+      ]
     },
     {
-      "matchPackagePatterns": ["^firebase"],
       "groupName": "Firebase",
-      "groupSlug": "firebase"
+      "groupSlug": "firebase",
+      "matchPackageNames": [
+        "/^firebase/"
+      ]
     }
   ]
 }
