@@ -104,6 +104,18 @@ const breadcrumbItems = [
       <!-- Breadcrumbs -->
       <Breadcrumbs items={breadcrumbItems} />
 
+      <!-- Hero image -->
+      {frontmatter.image?.url && frontmatter.image.url !== '' && (
+        <div class="mb-10 rounded-xl overflow-hidden aspect-video w-full">
+          <img
+            src={frontmatter.image.url}
+            alt={frontmatter.image.alt || frontmatter.title}
+            class="w-full h-full object-cover"
+            loading="eager"
+          />
+        </div>
+      )}
+
       <!-- Post header -->
       <header class="mb-12 border-b border-border pb-8">
         <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">
