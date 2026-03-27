@@ -12,6 +12,7 @@ type PostModule = {
     pubDate?: string;
     author?: string;
     tags?: string[];
+    image?: { url?: string; alt?: string };
   };
 }
 
@@ -108,8 +109,19 @@ const breadcrumbItems = [
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post) => (
-          <article class="border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col h-full">
+          <article class="border border-border rounded-lg overflow-hidden hover:border-primary transition-colors flex flex-col h-full">
             <a href={post.url} class="group flex flex-col h-full">
+              {post.frontmatter.image?.url && (
+                <div class="aspect-video w-full overflow-hidden">
+                  <img
+                    src={post.frontmatter.image.url}
+                    alt={post.frontmatter.image.alt || post.frontmatter.title}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <div class="p-6 flex flex-col flex-grow">
               <h2 class="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
                 {post.frontmatter.title}
               </h2>
@@ -140,6 +152,7 @@ const breadcrumbItems = [
                     ))}
                   </div>
                 )}
+              </div>
               </div>
             </a>
           </article>
