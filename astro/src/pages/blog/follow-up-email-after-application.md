@@ -5,8 +5,8 @@ pubDate: 2026-02-26
 description: 'follow up email job application - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/follow-up-email-after-application.jpg'
+    alt: 'Blog post image'
 tags: ["Job Search", "Career Strategy", "Productivity"]
 ---
 

@@ -5,8 +5,8 @@ pubDate: 2026-03-05
 description: 'AI resume review - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/ai-resume-review-what-to-expect.jpg'
+    alt: 'Blog post image'
 tags: ["Resume", "Job Search", "Career Tips"]
 ---
 
