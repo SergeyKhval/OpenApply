@@ -34,7 +34,7 @@ In my previous role as a Junior Developer at Acme Corp, I gained significant exp
 
 Beyond my technical skills, I am a quick learner and thrive in collaborative environments.  I am eager to contribute to InnovTech’s mission of providing cutting-edge financial solutions.  I am particularly drawn to InnovTech’s commitment to continuous integration and continuous deployment (CI/CD), as I believe in the importance of automating development processes to ensure high-quality and efficient delivery. My resume further details my experience with technologies such as Docker, Kubernetes, and AWS, which I believe would be valuable assets to your team.
 
-I am excited about the opportunity to learn more about the Full Stack Developer position and discuss how my skills and passion for building scalable and robust applications can contribute to InnovTech's success. Thank you for your time and consideration.
+I am excited about the opportunity to learn more about the Full Stack Developer position and discuss how my skills and passion for building scalable and strong applications can contribute to InnovTech's success. Thank you for your time and consideration.
 
 Sincerely,
 [Your Name]
@@ -60,7 +60,7 @@ This cover letter is effective for Full Stack Developer roles because it:
 
 ## Showing, Not Just Telling: Demonstrating Passion for Open-Source in Your Cover Letter
 
-Many Full Stack Developers are active in the open-source community, and showcasing this passion can significantly boost your application. However, it's not enough to simply state "I'm passionate about open-source." Instead, integrate specific examples and contributions into your cover letter to demonstrate your involvement.
+Many Full Stack Developers are active in the open-source community, and showing this passion can significantly boost your application. However, it's not enough to simply state "I'm passionate about open-source." Instead, integrate specific examples and contributions into your cover letter to demonstrate your involvement.
 
 For example, instead of saying "I contribute to open-source projects," try:
 
@@ -78,6 +78,6 @@ If you are a contributor, you likely have a GitHub account. Be sure to include t
 
 ## Generate Your Own Cover Letter
 
-Writing a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters) generates personalized, job-specific cover letters from your resume and the job description — in one click.
+Writing a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters) generates personalized, job-specific cover letters from your resume and the job description, in one click.
 
 [Try OpenApply free →](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters)

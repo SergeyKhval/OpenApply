@@ -56,17 +56,17 @@ ATS systems scan your resume for specific terms related to the role. Make sure t
 
 **Architectural Patterns:** Microservices, RESTful APIs, MVC (Model-View-Controller)
 
-## Portfolio/Project Showcase Expectations for This Role
+## Portfolio/Project show Expectations for This Role
 
-For software engineers, a portfolio is not optional; it's crucial. Recruiters want to see your code in action. Your resume must directly showcase your personal projects and code contributions, and the quality of your projects will significantly impact your chances.
+For software engineers, a portfolio is not optional; it's crucial. Recruiters want to see your code in action. Your resume must directly show your personal projects and code contributions, and the quality of your projects will significantly impact your chances.
 
-*   **GitHub Repository:** The most common way to showcase your code. Ensure your repositories are well-documented (with README files explaining the project, setup instructions, and usage examples) and the code is clean and well-organized.
+*   **GitHub Repository:** The most common way to show your code. Ensure your repositories are well-documented (with README files explaining the project, setup instructions, and usage examples) and the code is clean and well-organized.
 *   **Live Demos:** If possible, host your projects on a live server (e.g., using Heroku, Netlify, or AWS) so recruiters can interact with your applications directly.
 *   **Project Descriptions:** On your resume, provide concise descriptions of each project, highlighting the technologies used, the problem you solved, and the outcome (e.g., "Developed a RESTful API using Node.js and Express to manage user authentication, resulting in a 20% increase in user registration"). Quantify your achievements whenever possible.
 *   **Contribution Type:** Clearly state whether the project was an individual effort or a team collaboration. If it was a team project, describe your specific role and contributions.
 *   **Focus on Relevance:** Prioritize projects that are relevant to the type of software engineering role you're applying for. For example, if you're applying for a front-end developer position, highlight your JavaScript/React projects.
 *   **Clean Code:** Follow coding best practices and maintain a consistent coding style. A well-structured and readable codebase demonstrates professionalism and attention to detail.
-*   **Open Source Contributions:** Contributing to open-source projects can significantly boost your resume. Showcase the projects you've contributed to and highlight your contributions (e.g., bug fixes, feature implementations).
+*   **Open Source Contributions:** Contributing to open-source projects can significantly boost your resume. show the projects you've contributed to and highlight your contributions (e.g., bug fixes, feature implementations).
 *   **Avoid "Tutorial" Projects:** While completing tutorials is a good way to learn, recruiters want to see projects that demonstrate your own problem-solving abilities and creativity. Build something unique and original.
 
 ## Resume Tips for Software Engineer Positions
@@ -80,6 +80,6 @@ For software engineers, a portfolio is not optional; it's crucial. Recruiters wa
 
 ## Check Your Resume Match Score
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve — skills gaps, missing keywords, and formatting issues.
+Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.
 
 [Check your resume match →](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes)

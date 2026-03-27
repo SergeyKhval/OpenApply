@@ -29,7 +29,7 @@ Dear Hiring Manager,
 
 I am writing to express my keen interest in the Systems Administrator position at InnovaTech Solutions, as advertised on LinkedIn. Having closely followed InnovaTech's growth and commitment to innovative IT solutions, particularly your recent implementation of cloud-based infrastructure, I am confident that my skills and experience align perfectly with your team's needs.
 
-In my previous role as a Systems Administrator at DataCore Technologies, I was responsible for managing and maintaining a network of over 150 servers, both physical and virtualized within a VMware environment. I have extensive experience in troubleshooting complex system issues, implementing security protocols, and ensuring optimal uptime. For example, I led a project to migrate our legacy systems to a more efficient cloud-based platform, resulting in a 20% reduction in server maintenance costs and a significant improvement in overall system performance. This included configuring AWS services (EC2, S3, VPC) and ensuring seamless data migration.
+In my previous role as a Systems Administrator at DataCore Technologies, I was responsible for managing and maintaining a network of over 150 servers, both physical and virtualized within a VMware environment. I have extensive experience in troubleshooting complex system issues, implementing security protocols, and ensuring optimal uptime. For example, I led a project to migrate our legacy systems to a more efficient cloud-based platform, resulting in a 20% reduction in server maintenance costs and a significant improvement in overall system performance. This included configuring AWS services (EC2, S3, VPC) and ensuring smooth data migration.
 
 Furthermore, I possess a strong understanding of scripting languages such as Python and PowerShell, which I utilized to automate routine tasks and improve system efficiency. My experience includes configuring and maintaining Active Directory, DNS, DHCP, and group policy, ensuring that the network is secure, reliable, and scalable. I am also proficient in various operating systems, including Windows Server, Linux, and macOS.
 
@@ -53,7 +53,7 @@ Finally, naming the target company (InnovaTech Solutions) and highlighting aspec
 ## Why This Cover Letter Works
 
 *   **Highlights Relevant Technical Skills:** The cover letter doesn't just list skills; it contextualizes them with real-world examples (e.g., cloud migration project, security audit implementation). For a System Administrator role, this is crucial because hiring managers need to see *proof* of your technical capabilities.
-*   **Quantifies Achievements:** Whenever possible, the cover letter provides quantifiable results (e.g., "20% reduction in server maintenance costs"). This allows the hiring manager to immediately grasp the impact of your contributions. SysAdmin roles are often about efficiency and optimization, so showcasing measurable improvements is vital.
+*   **Quantifies Achievements:** Whenever possible, the cover letter provides quantifiable results (e.g., "20% reduction in server maintenance costs"). This allows the hiring manager to immediately grasp the impact of your contributions. SysAdmin roles are often about efficiency and optimization, so showing measurable improvements is vital.
 *   **Addresses Security Concerns:** The letter proactively mentions experience with cybersecurity measures like multi-factor authentication and security audits. Given the increasing importance of data protection, highlighting these skills immediately catches the hiring manager's attention.
 *   **Demonstrates Industry Awareness:** Referencing the company's focus on cloud-based infrastructure and cybersecurity shows that the applicant understands current industry trends and the company's specific priorities. This indicates that the applicant is not only technically skilled but also strategically aligned with the company's vision.
 
@@ -66,12 +66,12 @@ Employment gaps can be a source of anxiety, but they don't have to derail your a
 *   **Family Responsibilities:** If you took time off to care for family members, be honest but brief. You can say something like, "I took a leave of absence to focus on family responsibilities. During this time, I maintained my technical skills through online courses and personal projects." The key is to acknowledge the gap without dwelling on it and to emphasize your continued engagement with technology.
 *   **Briefly Address Layoffs:** If the gap resulted from a layoff (especially common in the tech industry), acknowledge it directly but positively. "I was affected by a company-wide restructuring at my previous employer. Since then, I've been actively pursuing new opportunities and honing my skills through [specific activity]." This normalizes the situation and shifts the focus back to your current proactive efforts.
 
-Remember, the cover letter is an opportunity to proactively address potential concerns and showcase your value. By framing employment gaps strategically and highlighting your accomplishments, you can make a strong impression on the hiring manager.
+Remember, the cover letter is an opportunity to proactively address potential concerns and show your value. By framing employment gaps strategically and highlighting your accomplishments, you can make a strong impression on the hiring manager.
 
 ---
 
 ## Generate Your Own Cover Letter
 
-Writing a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters) generates personalized, job-specific cover letters from your resume and the job description — in one click.
+Writing a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters) generates personalized, job-specific cover letters from your resume and the job description, in one click.
 
 [Try OpenApply free →](https://openapply.app/?utm_source=seo&utm_medium=cover-letter-example&utm_campaign=cover-letters)

@@ -34,7 +34,7 @@ A strong cloud engineer resume isn’t just a list of technologies you know; it'
 *   **Collaboration:** Ability to work effectively in a team environment, sharing knowledge and contributing to collective goals. *Cloud projects rarely succeed in isolation.*
 *   **Adaptability:** Willingness to learn new technologies and adapt to changing project requirements. *The cloud landscape is constantly evolving.*
 *   **Automation Mindset:** A proactive approach to identifying and automating repetitive tasks to improve efficiency and reduce errors. *Manual processes are a recipe for disaster in the cloud.*
-*   **Documentation:** Strong documentation skills for creating clear and comprehensive guides, procedures, and troubleshooting steps. *Well-documented systems are easier to maintain and scale.*
+*   **Documentation:** Strong documentation skills for creating clear and complete guides, procedures, and troubleshooting steps. *Well-documented systems are easier to maintain and scale.*
 
 ## ATS Keywords for Cloud Engineer Positions
 
@@ -61,7 +61,7 @@ Cloud certifications are highly valued in the Cloud Engineering field, not just 
 
 *   **AWS Certified Solutions Architect – Associate/Professional:** Demonstrates expertise in designing and deploying scalable, fault-tolerant, and cost-effective solutions on AWS. A very popular and widely recognized certification.
 *   **Microsoft Certified: Azure Solutions Architect Expert:** Validates your ability to design and implement solutions that run on Azure, including compute, storage, networking, and security.
-*   **Google Cloud Certified Professional Cloud Architect:** Certifies your skills in designing, developing, and managing robust, secure, scalable, highly available, and dynamic solutions to drive business objectives using Google Cloud technologies.
+*   **Google Cloud Certified Professional Cloud Architect:** Certifies your skills in designing, developing, and managing strong, secure, scalable, highly available, and dynamic solutions to drive business objectives using Google Cloud technologies.
 *   **Certified Kubernetes Administrator (CKA) / Certified Kubernetes Security Specialist (CKSS):** Essential for roles focused on container orchestration using Kubernetes. CKA proves you can administer a Kubernetes cluster, while CKSS focuses on securing Kubernetes environments.
 *   **Cloud Security Certifications (e.g., CCSK, CCSP):** Certifications like the Certificate of Cloud Security Knowledge (CCSK) or Certified Cloud Security Professional (CCSP) demonstrate a strong understanding of cloud security principles and best practices.
 
@@ -69,7 +69,7 @@ Mentioning the specific certifications you hold, *and* outlining the hands-on ex
 
 ## Resume Tips for Cloud Engineer Positions
 
-*   **Quantify Your Impact:** Don't just say you "improved performance." Say you "reduced latency by 15% by optimizing database queries" or "decreased cloud costs by 20% through automated resource scaling." Use numbers to showcase the results of your work.
+*   **Quantify Your Impact:** Don't just say you "improved performance." Say you "reduced latency by 15% by optimizing database queries" or "decreased cloud costs by 20% through automated resource scaling." Use numbers to show the results of your work.
 *   **Focus on Automation:** Highlight your experience with automation tools and techniques. Cloud engineering is all about automating tasks and processes, so emphasize your ability to write scripts, use configuration management tools, and build CI/CD pipelines.
 *   **Tailor to the Job Description:** Carefully review the job description and tailor your resume to match the specific skills and experience the employer is seeking. Use the same keywords and phrases that appear in the job description. Don't send the same generic resume to every application.
 
@@ -77,6 +77,6 @@ Mentioning the specific certifications you hold, *and* outlining the hands-on ex
 
 ## Check Your Resume Match Score
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve — skills gaps, missing keywords, and formatting issues.
+Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.
 
 [Check your resume match →](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes)

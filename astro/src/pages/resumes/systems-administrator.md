@@ -10,7 +10,7 @@ relatedCoverLetter: '/cover-letters/systems-administrator'
 tags: ["Resume", "Systems Administrator", "Job Search"]
 ---
 
-A strong systems administrator resume needs to prove you can keep the gears turning behind the scenes. Recruiters are looking for concrete evidence of your ability to maintain infrastructure, troubleshoot issues, and implement improvements. They want to see proficiency with specific operating systems, cloud platforms, and scripting languages. Your resume should highlight measurable achievements and showcase your understanding of network security and automation. Generic resumes get tossed. Your goal is to demonstrate, with specifics, that you can walk into *their* environment and make it better.
+A strong systems administrator resume needs to prove you can keep the gears turning behind the scenes. Recruiters are looking for concrete evidence of your ability to maintain infrastructure, troubleshoot issues, and implement improvements. They want to see proficiency with specific operating systems, cloud platforms, and scripting languages. Your resume should highlight measurable achievements and show your understanding of network security and automation. Generic resumes get tossed. Your goal is to demonstrate, with specifics, that you can walk into *their* environment and make it better.
 
 ## Key Skills for Systems Administrator Resumes
 
@@ -34,7 +34,7 @@ A strong systems administrator resume needs to prove you can keep the gears turn
 *   **Problem-Solving:** Quickly diagnose and resolve technical issues to minimize downtime. (Critical for maintaining system stability.)
 *   **Communication:** Clearly communicate technical information to both technical and non-technical audiences. (Essential for collaborating with other teams and explaining issues to users.)
 *   **Time Management:** Effectively prioritize tasks and manage time to meet deadlines in a fast-paced environment. (Systems administrators often juggle multiple projects and urgent requests.)
-*   **Attention to Detail:** Meticulously monitor systems and configurations to prevent errors and security vulnerabilities. (Small errors can have significant consequences.)
+*   **Attention to Detail:** careful monitor systems and configurations to prevent errors and security vulnerabilities. (Small errors can have significant consequences.)
 *   **Teamwork:** Collaborate effectively with other IT professionals and stakeholders to achieve common goals. (Systems administration often involves working with cross-functional teams.)
 *   **Adaptability:** Quickly learn and adapt to new technologies and changing environments. (The IT landscape is constantly evolving.)
 
@@ -75,13 +75,13 @@ List these certifications prominently in a dedicated "Certifications" section. I
 
 *   **Quantify your achievements:** Instead of saying "Improved server performance," say "Improved server performance by 20% by implementing XYZ." Use metrics to demonstrate the impact of your work.
 *   **Tailor your resume to each job:** Don't send out a generic resume. Review the job description carefully and highlight the skills and experiences that are most relevant to the specific role. Reorder sections and bullet points to emphasize the most important information.
-*   **Showcase your automation skills:** Automation is key in modern systems administration. Highlight your experience with scripting languages, configuration management tools, and other automation technologies. Give concrete examples of how you have automated tasks and improved efficiency.
-*   **Include a homelab (if you have one):** If you're newer to the field or want to showcase passion, include a short section describing your homelab setup. Mention the technologies you use, the projects you're working on, and what you're learning. This demonstrates initiative and a genuine interest in systems administration.
+*   **show your automation skills:** Automation is key in modern systems administration. Highlight your experience with scripting languages, configuration management tools, and other automation technologies. Give concrete examples of how you have automated tasks and improved efficiency.
+*   **Include a homelab (if you have one):** If you're newer to the field or want to show passion, include a short section describing your homelab setup. Mention the technologies you use, the projects you're working on, and what you're learning. This demonstrates initiative and a genuine interest in systems administration.
 
 ---
 
 ## Check Your Resume Match Score
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve — skills gaps, missing keywords, and formatting issues.
+Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.
 
 [Check your resume match →](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes)

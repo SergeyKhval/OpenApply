@@ -10,7 +10,7 @@ relatedCoverLetter: '/cover-letters/data-scientist'
 tags: ["Resume", "Data Scientist", "Job Search"]
 ---
 
-So, you're aiming for a Data Scientist role? Good choice. But you need to convince recruiters you’re the real deal. That means your resume needs to *prove* you can extract insights from data, build models that actually work, and communicate those findings to non-technical people. Recruiters (and the ATS systems they use) are looking for a blend of deep technical knowledge, practical experience, and the ability to collaborate effectively. This guide will break down how to showcase *exactly* that.
+So, you're aiming for a Data Scientist role? Good choice. But you need to convince recruiters you’re the real deal. That means your resume needs to *prove* you can extract insights from data, build models that actually work, and communicate those findings to non-technical people. Recruiters (and the ATS systems they use) are looking for a blend of deep technical knowledge, practical experience, and the ability to collaborate effectively. This guide will break down how to show *exactly* that.
 
 ## Key Skills for Data Scientist Resumes
 
@@ -53,14 +53,14 @@ ATS systems are designed to filter out resumes that don't contain specific keywo
 *   **Education:** Master's Degree in Statistics, Computer Science, Mathematics, or related field; PhD; Bachelor's Degree in a quantitative field
 *   **General Terms:** Data Analysis, Data Visualization, Machine Learning Engineer, Statistical Modeling, Big Data, Deep Learning, Natural Language Processing (NLP), Computer Vision, Data Architecture
 
-## Portfolio/Project Showcase Expectations for this Role
+## Portfolio/Project show Expectations for this Role
 
 As a Data Scientist, you're not just selling skills, you're selling *proof* that you can apply those skills effectively. A strong portfolio of projects is crucial, especially for entry-level candidates or those transitioning from related fields.
 
 Here’s what recruiters want to see:
 
 *   **GitHub Repository:** Host your projects on GitHub. This allows recruiters to review your code, understand your workflow, and assess the quality of your work. Make sure your repositories are well-documented with clear README files explaining the project's purpose, data sources, methods, and results.
-*   **Project Variety:** Showcase a diverse range of projects that demonstrate your skills in different areas of Data Science. Include projects involving:
+*   **Project Variety:** show a diverse range of projects that demonstrate your skills in different areas of Data Science. Include projects involving:
     *   **Classification:** Predicting categorical outcomes (e.g., spam detection, fraud detection).
     *   **Regression:** Predicting continuous values (e.g., house price prediction, sales forecasting).
     *   **Clustering:** Grouping similar data points together (e.g., customer segmentation, anomaly detection).
@@ -75,12 +75,12 @@ Here’s what recruiters want to see:
 
 *   **Quantify Your Accomplishments:** Don't just *say* you built a model; *quantify* its impact. "Improved fraud detection accuracy by 20%, resulting in a $500,000 reduction in fraudulent transactions." Numbers speak louder than adjectives.
 *   **Tailor to the Job Description:** Don't send out a generic resume. Carefully analyze the job description and customize your resume to highlight the skills and experience that are most relevant to the specific role.
-*   **Prioritize Projects Over Traditional Work Experience (Especially for Entry-Level):** If you're light on professional experience, dedicate more space to showcasing your personal projects and highlighting the technologies and methodologies you used. Make these easy to find and compelling to read.
+*   **Prioritize Projects Over Traditional Work Experience (Especially for Entry-Level):** If you're light on professional experience, dedicate more space to showing your personal projects and highlighting the technologies and methodologies you used. Make these easy to find and compelling to read.
 
 ---
 
 ## Check Your Resume Match Score
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve — skills gaps, missing keywords, and formatting issues.
+Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.
 
 [Check your resume match →](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes)
