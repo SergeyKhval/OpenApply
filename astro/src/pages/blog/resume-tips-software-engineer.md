@@ -5,8 +5,8 @@ pubDate: 2026-03-27
 description: 'software engineer resume tips - practical, no-BS advice on what gets your resume past ATS and in front of a human recruiter in 2026.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/resume-tips-software-engineer.jpg'
+    alt: 'Software engineer resume tips'
 tags: ["Resume", "Job Search", "Career Tips"]
 ---
 

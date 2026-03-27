@@ -5,8 +5,8 @@ pubDate: 2026-03-27
 description: 'career change cover letter - how to explain a career transition without sounding desperate, apologetic, or like a liability.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/how-to-write-cover-letter-career-change.jpg'
+    alt: 'How to write a cover letter when changing careers'
 tags: ["Cover Letter", "Job Search", "Career Tips"]
 ---
 
