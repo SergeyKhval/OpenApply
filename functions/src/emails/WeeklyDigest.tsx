@@ -88,8 +88,16 @@ function StatsWidget({ stats }: { stats: DigestStats }) {
   );
 }
 
+const UTM = "utm_source=weekly-digest&utm_medium=email&utm_campaign=weekly-review";
+
+function withUtm(url: string, content?: string): string {
+  const sep = url.includes("?") ? "&" : "?";
+  const params = content ? `${UTM}&utm_content=${content}` : UTM;
+  return `${url}${sep}${params}`;
+}
+
 function ActionCard({ action, appUrl }: { action: ActionItem; appUrl: string }) {
-  const url = `${appUrl}/${action.applicationId}`;
+  const url = withUtm(`${appUrl}/${action.applicationId}`, action.category);
   const nudge = NUDGE_TEMPLATES[action.category](action.daysSinceActivity);
   const linkText = LINK_TEXT[action.category];
   const dotColor = DOT_COLORS[action.category];
@@ -159,7 +167,7 @@ export default function WeeklyDigest({
               {totalActionCount > 3 && (
                 <Section className="text-center mt-5">
                   <Button
-                    href={appUrl}
+                    href={withUtm(appUrl, "view-all")}
                     className="inline-block py-2.5 px-6 bg-[#0f172a] text-white no-underline rounded-md text-sm font-medium"
                   >
                     View all applications &rarr;
