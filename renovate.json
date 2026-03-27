@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "schedule": ["before 6am on Monday"],
+  "timezone": "Europe/Warsaw",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "matchPackageNames": ["astro"],
+      "groupName": "Astro"
+    },
+    {
+      "matchPackagePatterns": ["^@astrojs/"],
+      "groupName": "Astro plugins"
+    },
+    {
+      "matchPackagePatterns": ["^firebase"],
+      "groupName": "Firebase"
+    }
+  ]
+}
