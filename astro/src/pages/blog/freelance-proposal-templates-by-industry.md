@@ -5,8 +5,8 @@ pubDate: 2026-03-19
 description: 'freelance proposal template - practical tips and strategies to help you win more freelance work.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/freelance-proposal-templates-by-industry.jpg'
+    alt: 'Blog post image'
 tags: ["Freelancing", "Proposals", "Win More Work"]
 ---
 

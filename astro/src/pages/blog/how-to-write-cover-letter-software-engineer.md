@@ -5,8 +5,8 @@ pubDate: 2026-02-18
 description: 'cover letter software engineer - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/how-to-write-cover-letter-software-engineer.jpg'
+    alt: 'Blog post image'
 tags: ["Cover Letter", "Job Search", "Career Tips"]
 ---
 

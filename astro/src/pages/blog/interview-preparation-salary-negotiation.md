@@ -5,8 +5,8 @@ pubDate: 2026-03-09
 description: 'salary negotiation tips - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/interview-preparation-salary-negotiation.jpg'
+    alt: 'Blog post image'
 tags: ["Interview", "Career Tips", "Job Search"]
 ---
 

@@ -5,8 +5,8 @@ pubDate: 2026-02-23
 description: 'freelancer resume - practical tips and strategies to help you stand out in your job search.'
 author: 'OpenApply Team'
 image:
-    url: ''
-    alt: ''
+    url: '/images/blog/resume-tips-freelancer.jpg'
+    alt: 'Blog post image'
 tags: ["Resume", "Job Search", "Career Tips"]
 ---
 
