@@ -21,8 +21,10 @@ const allPosts = Object.values(
   import.meta.glob<PostModule>('../pages/blog/*.md', { eager: true })
 );
 
+const normalizeUrl = (url: string) => url?.replace(/\/$/, '') ?? '';
+
 const related = allPosts
-  .filter((post) => post.url !== currentUrl)
+  .filter((post) => normalizeUrl(post.url) !== normalizeUrl(currentUrl))
   .map((post) => {
     const postTags = post.frontmatter.tags || [];
     const sharedCount = postTags.filter((t) => currentTags.includes(t)).length;
