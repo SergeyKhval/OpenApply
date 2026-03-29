@@ -44,25 +44,39 @@ const isOnResumesPage = currentPath.startsWith('/resumes');
         </div>
         
         <div class="flex items-center gap-3 justify-center">
+          <!-- Secondary links as small icons -->
           <a 
             href="https://github.com/SergeyKhval/OpenApply" 
             target="_blank" 
             rel="noopener noreferrer"
-            class="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground border border-border hover:bg-muted hover:border-muted-foreground rounded-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            class="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2"
             aria-label="View on GitHub"
           >
-            <i class="ph ph-github-logo text-lg" aria-hidden="true"></i>
-            <span class="text-sm">GitHub</span>
+            <i class="ph ph-github-logo text-xl" aria-hidden="true"></i>
           </a>
           <a 
             href="https://discord.gg/VSPCrpbbZb" 
             target="_blank" 
             rel="noopener noreferrer"
-            class="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground border border-border hover:bg-muted hover:border-muted-foreground rounded-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            class="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2"
             aria-label="Join our Discord"
           >
-            <i class="ph ph-discord-logo text-lg" aria-hidden="true"></i>
-            <span class="text-sm">Discord</span>
+            <i class="ph ph-discord-logo text-xl" aria-hidden="true"></i>
+          </a>
+          <!-- Primary auth CTAs -->
+          <a 
+            href="/app"
+            class="px-4 py-2 text-sm font-medium text-foreground border border-border rounded-md hover:bg-muted transition-all duration-200"
+            onclick="window.posthog?.capture('header_sign_in_clicked', { source: 'header' })"
+          >
+            Sign In
+          </a>
+          <a 
+            href="/app"
+            class="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all duration-200"
+            onclick="window.posthog?.capture('header_get_started_clicked', { source: 'header' })"
+          >
+            Get Started
           </a>
         </div>
       </nav>
