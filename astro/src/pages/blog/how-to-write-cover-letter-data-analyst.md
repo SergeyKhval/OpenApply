@@ -2,7 +2,7 @@
 layout: ../../layouts/BlogPost.astro
 title: 'How to Write a Cover Letter for Data Analyst Jobs'
 pubDate: 2026-03-30
-description: 'Data analyst cover letters that actually work -- what to lead with, how to prove impact with numbers, and why most analytics candidates fail before the recruiter reads paragraph two.'
+description: 'Data analyst cover letters that actually work: what to lead with, how to prove impact with numbers, and why most analytics candidates fail before the recruiter reads paragraph two.'
 author: 'OpenApply Team'
 image:
     url: '/images/blog/how-to-write-cover-letter-data-analyst.jpg'
@@ -102,4 +102,4 @@ End with something that references their specific situation or your specific int
 
 That's a conversation starter, not a farewell. It makes the recruiter want to get on a call to find out what that cleaner way is.
 
-That's the actual goal of a cover letter -- not to get the job, but to get the call.
+That's the actual goal of a cover letter. not to get the job, but to get the call.
