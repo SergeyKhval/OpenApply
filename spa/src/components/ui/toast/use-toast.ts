@@ -79,7 +79,8 @@ const state = ref<State>({
 function dispatch(action: Action) {
   switch (action.type) {
     case actionTypes.ADD_TOAST:
-      // @ts-expect-error TS2589: shadcn-vue toast type recursion — known issue
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore TS2589: shadcn-vue toast type recursion — known issue, version-dependent
       state.value.toasts = [action.toast, ...state.value.toasts].slice(0, TOAST_LIMIT)
       break
 
