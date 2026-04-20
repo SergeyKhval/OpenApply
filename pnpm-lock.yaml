@@ -51,7 +51,7 @@ importers:
         version: 1.0.12(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@react-email/render':
         specifier: ^2.0.4
-        version: 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@sparticuz/chromium':
         specifier: ^141.0.0
         version: 141.0.0
@@ -87,7 +87,7 @@ importers:
         version: 19.2.5(react@19.2.5)
       resend:
         specifier: ^6.3.0
-        version: 6.3.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
+        version: 6.3.0(@react-email/render@2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
       stripe:
         specifier: ^19.1.0
         version: 19.1.0(@types/node@25.6.0)
@@ -193,7 +193,7 @@ importers:
         version: 4.6.4(vue@3.5.32(typescript@5.9.3))
       vuefire:
         specifier: ^3.2.2
-        version: 3.2.2(firebase@12.4.0)(vue@3.5.32(typescript@5.9.3))
+        version: 3.2.3(firebase@12.4.0)(vue@3.5.32(typescript@5.9.3))
     devDependencies:
       '@types/lodash':
         specifier: ^4.17.20
@@ -2320,6 +2320,13 @@ packages:
 
   '@react-email/render@2.0.6':
     resolution: {integrity: sha512-xOzaYkH3jLZKqN5MqrTXYnmqBYUnZSVbkxdb5PGGmDcK6sKDVMliaDiSwfXajRC9JtSHTcGc2tmGLHWuCgVpog==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
+
+  '@react-email/render@2.0.7':
+    resolution: {integrity: sha512-XCsqujKURb4egU8+z7RX1/yxRx1Qo89uGhy6UXyB5Oxq1SK+48t0AD/3qeuDGgDvyS+Ti+0oDT3nn5/dcG4Ttg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
@@ -6271,11 +6278,6 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.8.2:
-    resolution: {integrity: sha512-8c3mgTe0ASwWAJK+78dpviD+A8EqhndQPUBpNUIPt6+xWlIigCwfN01lWr9MAede4uqXGTEKeQWTvzb3vjia0Q==}
-    engines: {node: '>=14'}
-    hasBin: true
-
   prettier@3.8.3:
     resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
     engines: {node: '>=14'}
@@ -7488,8 +7490,8 @@ packages:
       typescript:
         optional: true
 
-  vuefire@3.2.2:
-    resolution: {integrity: sha512-JARgY9HhLs7xrdotQ4QA1SAmFDfSvAwUmOjx9e9lRJnmrsSW7H8ddfCQTVEHhU5NPyPJ/qKBv18Y5N13L60TGg==}
+  vuefire@3.2.3:
+    resolution: {integrity: sha512-3gPPGqIXHlgDS1z7lmFIQbHuVDAuRgTtLEI4ISi6G8nUmH/nbAGX9z8OQxLRZ4tFClnOAU9OBW/mqk4aJivl5g==}
     engines: {node: '>=20'}
     peerDependencies:
       '@vue/composition-api': '*'
@@ -10349,7 +10351,14 @@ snapshots:
   '@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       html-to-text: 9.0.5
-      prettier: 3.8.2
+      prettier: 3.8.3
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+
+  '@react-email/render@2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+    dependencies:
+      html-to-text: 9.0.5
+      prettier: 3.8.3
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
@@ -15199,8 +15208,6 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.8.2: {}
-
   prettier@3.8.3: {}
 
   pretty-format@30.2.0:
@@ -15475,11 +15482,11 @@ snapshots:
 
   requires-port@1.0.0: {}
 
-  resend@6.3.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
+  resend@6.3.0(@react-email/render@2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
     dependencies:
       svix: 1.76.1
     optionalDependencies:
-      '@react-email/render': 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@react-email/render': 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
   resolve-cwd@3.0.0:
     dependencies:
@@ -16624,7 +16631,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  vuefire@3.2.2(firebase@12.4.0)(vue@3.5.32(typescript@5.9.3)):
+  vuefire@3.2.3(firebase@12.4.0)(vue@3.5.32(typescript@5.9.3)):
     dependencies:
       vue: 3.5.32(typescript@5.9.3)
       vue-demi: 0.14.10(vue@3.5.32(typescript@5.9.3))
