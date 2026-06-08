@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  MOCK sitemap for testing WanderOS redirect-import (WOS-4106 / WOS-4128).
-  Served at https://openapply.app/sitemap.xml so the current scanner discovers it
-  via its first strategy (a flat <urlset>, no nested index). Each <loc> path embeds
-  a SergeyTest org unit external id (cmpzhe6sy008k0igf3i2yjarf:N) so the scan matches
-  them to units. These URLs are intentionally non-existent pages — remove after testing.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:0</loc></url>
   <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:1</loc></url>
