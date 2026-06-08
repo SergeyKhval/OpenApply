@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MOCK sitemap for testing WanderOS redirect-import (WOS-4106 / WOS-4128).
+  Served at https://openapply.app/sitemap.xml so the current scanner discovers it
+  via its first strategy (a flat <urlset>, no nested index). Each <loc> path embeds
+  a SergeyTest org unit external id (cmpzhe6sy008k0igf3i2yjarf:N) so the scan matches
+  them to units. These URLs are intentionally non-existent pages — remove after testing.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:0</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:1</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:2</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:3</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:4</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:5</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:6</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:7</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:8</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:9</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:10</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:11</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:12</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:13</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:14</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:15</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:16</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:17</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:18</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:19</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:20</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:21</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:22</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:23</loc></url>
+  <url><loc>https://openapply.app/cmpzhe6sy008k0igf3i2yjarf:24</loc></url>
+</urlset>
