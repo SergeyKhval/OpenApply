@@ -16,7 +16,7 @@ jobs:
     name: SPA Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
@@ -30,7 +30,7 @@ jobs:
     name: SPA Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
@@ -44,7 +44,7 @@ jobs:
     name: Functions Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
@@ -58,7 +58,7 @@ jobs:
     name: Functions Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
@@ -72,7 +72,7 @@ jobs:
     name: Functions Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
