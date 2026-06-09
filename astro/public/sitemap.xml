@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TEST FIXTURE — mock sitemap for Wander redirect-import (WOS-4106) testing.
+  The /listings/* URLs embed externalUnitIds of the SergeyTest (testtrack) staging
+  org so they match units in the import modal; the remaining content pages match
+  nothing and land in unmatchedPaths. Revert this file when testing is done.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Matching pages: each embeds a real externalUnitId (suffixes :0–:9) -->
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:0</loc></url>
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:1</loc></url>
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:2</loc></url>
@@ -10,19 +17,13 @@
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:7</loc></url>
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:8</loc></url>
   <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:9</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:10</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:11</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:12</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:13</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:14</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:15</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:16</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:17</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:18</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:19</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:20</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:21</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:22</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:23</loc></url>
-  <url><loc>https://openapply.app/listings/cmpzhe6sy008k0igf3i2yjarf:24</loc></url>
+  <!-- Non-matching pages: ordinary content, no externalUnitId -->
+  <url><loc>https://openapply.app/about-us</loc></url>
+  <url><loc>https://openapply.app/contact</loc></url>
+  <url><loc>https://openapply.app/pricing</loc></url>
+  <url><loc>https://openapply.app/faq</loc></url>
+  <url><loc>https://openapply.app/privacy-policy</loc></url>
+  <url><loc>https://openapply.app/blog/welcome-to-openapply</loc></url>
+  <url><loc>https://openapply.app/team/jane-doe</loc></url>
+  <url><loc>https://openapply.app/careers/senior-engineer</loc></url>
 </urlset>
