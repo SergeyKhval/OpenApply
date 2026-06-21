@@ -66,7 +66,20 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <Label for="technologies">Tags (optional)</Label>
+      <div class="flex items-center justify-between gap-2">
+        <Label for="technologies">Tags (optional)</Label>
+        <Button
+          v-if="formData.technologies.length > 0"
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="h-auto px-2 py-1 text-xs text-muted-foreground"
+          @click="clearTechnologies"
+        >
+          <PhX :size="12" />
+          Clear all
+        </Button>
+      </div>
       <TagsInput id="technologies" v-model="formData.technologies">
         <TagsInputItem
           v-for="(item, index) in formData.technologies"
@@ -194,6 +207,10 @@ const formData = reactive(getInitialForm());
 const resetForm = () => {
   Object.assign(formData, getInitialForm());
   error.value = null;
+};
+
+const clearTechnologies = () => {
+  formData.technologies = [];
 };
 
 const handleSubmit = async () => {
