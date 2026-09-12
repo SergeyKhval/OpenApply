@@ -43,7 +43,7 @@
     "date-fns": "^4.1.0",
     "firebase": "^12.3.0",
     "lodash": "^4.17.21",
-    "lucide-vue-next": "^0.544.0",
+    "lucide-vue-next": "^0.577.0",
     "papaparse": "^5.5.3",
     "pinia": "^3.0.3",
     "posthog-js": "^1.279.3",
