@@ -78,8 +78,9 @@ def main():
         created = dt.datetime.fromtimestamp(int(user["createdAt"]) / 1000, dt.timezone.utc)
         if created < since:
             continue
-        # Landing-page job parsing signs visitors in anonymously; those aren't signups.
-        if not user.get("providerUserInfo"):
+        # Landing-page tools sign visitors in anonymously; those aren't signups.
+        # Anonymous accounts have neither an email nor a linked provider.
+        if not user.get("email") and not user.get("providerUserInfo"):
             continue
         acquisition = field_value(profiles.get(user["localId"], {}), "acquisition") or {}
         new_users.append({
