@@ -4,13 +4,45 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getCountFromServer,
+  query,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
+import type { User } from "firebase/auth";
 import { db } from "@/firebase/config";
 import { useCurrentUser } from "vuefire";
 import type { CreateJobApplicationInput, JobStatus } from "@/types";
 import { getLocalTimeZone } from "@internationalized/date";
 import { trackEvent } from "@/analytics";
+
+type ApplicationCreatedProperties = {
+  method: "link_parse" | "manual";
+  source?: "landing_page_parse";
+};
+
+// Activation metric: fires once, when the user's first application is saved.
+async function trackIfFirstApplication(
+  user: User,
+  properties: ApplicationCreatedProperties,
+) {
+  try {
+    const snapshot = await getCountFromServer(
+      query(collection(db, "jobApplications"), where("userId", "==", user.uid)),
+    );
+    if (snapshot.data().count !== 1) return;
+
+    const signedUpAt = Date.parse(user.metadata?.creationTime ?? "");
+    trackEvent("first_job_application_created", {
+      ...properties,
+      minutesSinceSignup: Number.isFinite(signedUpAt)
+        ? Math.round((Date.now() - signedUpAt) / 60_000)
+        : undefined,
+    });
+  } catch (err) {
+    console.error("Error tracking first job application:", err);
+  }
+}
 
 export function useJobApplications() {
   const user = useCurrentUser();
@@ -31,12 +63,14 @@ export function useJobApplications() {
         createdAt: serverTimestamp(),
       });
 
+      const method = payload.jobDescriptionLink ? "link_parse" : "manual";
       trackEvent("job_application_created", {
-        method: payload.jobDescriptionLink ? "link_parse" : "manual",
+        method,
         company: payload.companyName,
         position: payload.position,
         source: options?.source,
       });
+      void trackIfFirstApplication(user.value, { method, source: options?.source });
       return { success: true, id: docRef.id };
     } catch (err) {
       console.error("Error adding job application:", err);

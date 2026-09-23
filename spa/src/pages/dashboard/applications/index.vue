@@ -3,15 +3,18 @@
     <PageHeader>
       <div class="flex items-center w-full gap-6">
         <h2 class="text-2xl font-semibold whitespace-nowrap">Applications</h2>
-        <div class="grow">
-          <AppSearch v-model="search" />
-        </div>
-        <AddJobApplicationDropdown />
+        <!-- Until the first job exists, the empty state is the only action. -->
+        <template v-if="jobApplications.length">
+          <div class="grow">
+            <AppSearch v-model="search" />
+          </div>
+          <AddJobApplicationDropdown />
+        </template>
       </div>
     </PageHeader>
 
     <div class="pl-6 lg:px-6 grow flex flex-col gap-4">
-      <div class="flex flex-wrap gap-2">
+      <div v-if="jobApplications.length" class="flex flex-wrap gap-2">
         <Button
           v-for="option in statusOptions"
           :key="option.value"
@@ -40,6 +43,9 @@ import AppSearch from "@/components/AppSearch.vue";
 import { Button } from "@/components/ui/button";
 import type { JobStatus } from "@/types";
 import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vue";
+import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
+
+const { jobApplications } = useJobApplicationsData();
 
 const search = ref("");
 const statusFilter = ref<JobStatus | "all">("all");

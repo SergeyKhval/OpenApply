@@ -46,35 +46,9 @@
     </div>
   </Empty>
 
-  <Empty v-else-if="!applicationsPending" class="py-12 mr-6 lg:mr-0">
-    <EmptyIcon>
-      <PhFileDashed :size="32" />
-    </EmptyIcon>
-    <div class="space-y-2">
-      <EmptyTitle>No job applications yet</EmptyTitle>
-      <EmptyDescription>
-        To get started import your existing applications or add a new one.
-      </EmptyDescription>
-    </div>
-    <EmptyAction>
-      <RouterLink to="/dashboard/file-import" v-slot="{ navigate }" custom>
-        <Button @click="navigate">
-          <PhFileCsv />
-          Import
-        </Button>
-      </RouterLink>
-      <Button
-        @click="
-          $router.replace({
-            query: { ...$route.query, 'dialog-name': 'add-job-application' },
-          })
-        "
-      >
-        <PhPlus />
-        Add job application
-      </Button>
-    </EmptyAction>
-  </Empty>
+  <div v-else-if="!applicationsPending" class="py-6 mr-6 lg:mr-0">
+    <FirstJobApplicationPrompt />
+  </div>
 
   <div
     v-else
@@ -97,20 +71,19 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { PhFileCsv, PhFileDashed, PhPlus } from "@phosphor-icons/vue";
+import { PhFileDashed, PhPlus } from "@phosphor-icons/vue";
 import type { JobStatus } from "@/types";
 import JobApplicationCard from "@/components/JobApplicationCard.vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
-  EmptyAction,
   EmptyDescription,
   EmptyIcon,
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { SearchSymbol } from "@/constants/symbols.ts";
-import { Button } from "@/components/ui/button";
+import FirstJobApplicationPrompt from "@/components/FirstJobApplicationPrompt.vue";
 
 type StatusFilter = JobStatus | "all";
 
@@ -159,7 +132,9 @@ const filteredApplications = computed(() => {
   );
 });
 
+// Any application at all, including rejected or archived ones: only brand
+// new users get the first-run prompt.
 const hasAnyApplications = computed(
-  () => dashboardApplications.value.length > 0,
+  () => (jobApplications.value ?? []).length > 0,
 );
 </script>

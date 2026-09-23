@@ -7,6 +7,7 @@ const mockDeleteDoc = vi.fn();
 const mockDoc = vi.fn().mockReturnValue("mock-doc-ref");
 const mockCollection = vi.fn().mockReturnValue("mock-collection-ref");
 const mockServerTimestamp = vi.fn().mockReturnValue("mock-timestamp");
+const mockGetCountFromServer = vi.fn();
 
 vi.mock("firebase/firestore", () => ({
   addDoc: (...args: unknown[]) => mockAddDoc(...args),
@@ -15,13 +16,18 @@ vi.mock("firebase/firestore", () => ({
   doc: (...args: unknown[]) => mockDoc(...args),
   collection: (...args: unknown[]) => mockCollection(...args),
   serverTimestamp: () => mockServerTimestamp(),
+  getCountFromServer: (...args: unknown[]) => mockGetCountFromServer(...args),
+  query: (...args: unknown[]) => args,
+  where: (...args: unknown[]) => args,
 }));
 
 vi.mock("@/firebase/config", () => ({
   db: "mock-db",
 }));
 
-const mockUser = ref<{ uid: string } | null>({ uid: "user-123" });
+const mockUser = ref<{ uid: string; metadata?: { creationTime?: string } } | null>({
+  uid: "user-123",
+});
 
 vi.mock("vuefire", () => ({
   useCurrentUser: () => mockUser,
@@ -42,6 +48,7 @@ describe("useJobApplications", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUser.value = { uid: "user-123" };
+    mockGetCountFromServer.mockResolvedValue({ data: () => ({ count: 5 }) });
   });
 
   describe("addJobApplication", () => {
@@ -136,6 +143,60 @@ describe("useJobApplications", () => {
         position: "Dev",
         source: "landing_page_parse",
       });
+    });
+  });
+
+  describe("first_job_application_created", () => {
+    const payload = {
+      companyName: "Acme",
+      position: "Dev",
+      jobDescription: "",
+      jobDescriptionLink: "https://example.com/job",
+      technologies: [],
+    } as import("@/types").CreateJobApplicationInput;
+
+    it("fires with time since signup when this is the user's first application", async () => {
+      vi.useFakeTimers({ now: new Date("2026-09-23T10:30:00Z"), toFake: ["Date"] });
+      mockUser.value = { uid: "user-123", metadata: { creationTime: "Wed, 23 Sep 2026 10:00:00 GMT" } };
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      mockGetCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 1 }) });
+
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication(payload, { source: "landing_page_parse" });
+      await vi.waitFor(() =>
+        expect(mockTrackEvent).toHaveBeenCalledWith("first_job_application_created", {
+          method: "link_parse",
+          source: "landing_page_parse",
+          minutesSinceSignup: 30,
+        }),
+      );
+      vi.useRealTimers();
+    });
+
+    it("does not fire for later applications", async () => {
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication(payload);
+      await vi.waitFor(() => expect(mockGetCountFromServer).toHaveBeenCalled());
+
+      expect(mockTrackEvent).not.toHaveBeenCalledWith(
+        "first_job_application_created",
+        expect.anything(),
+      );
+    });
+
+    it("still succeeds when the count query fails", async () => {
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      mockGetCountFromServer.mockRejectedValueOnce(new Error("offline"));
+
+      const { addJobApplication } = useJobApplications();
+      const result = await addJobApplication(payload);
+
+      expect(result).toEqual({ success: true, id: "new-doc-id" });
+      await vi.waitFor(() => expect(consoleError).toHaveBeenCalled());
+      consoleError.mockRestore();
     });
   });
 
