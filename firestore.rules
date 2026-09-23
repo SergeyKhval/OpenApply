@@ -94,8 +94,37 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function isOptionalShortString(data, key) {
+      return !(key in data) || (data[key] is string && data[key].size() <= 200);
+    }
+
+    function isValidAcquisition(acquisition) {
+      return acquisition is map &&
+             acquisition.keys().hasOnly(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'referrer_host', 'landing_path', 'captured_at']) &&
+             acquisition.landing_path is string && acquisition.landing_path.size() <= 200 &&
+             acquisition.captured_at is string && acquisition.captured_at.size() <= 40 &&
+             isOptionalShortString(acquisition, 'utm_source') &&
+             isOptionalShortString(acquisition, 'utm_medium') &&
+             isOptionalShortString(acquisition, 'utm_campaign') &&
+             isOptionalShortString(acquisition, 'utm_content') &&
+             isOptionalShortString(acquisition, 'referrer_host');
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      // The profile is written by Cloud Functions. Clients may only record their
+      // first-touch acquisition source, once.
+      allow read: if isOwner();
+      allow create: if isOwner() &&
+                       request.resource.data.keys().hasOnly(['acquisition']) &&
+                       isValidAcquisition(request.resource.data.acquisition);
+      allow update: if isOwner() &&
+                       !('acquisition' in resource.data) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acquisition']) &&
+                       isValidAcquisition(request.resource.data.acquisition);
 
       match /billingProfile/{docId} {
         allow read: if request.auth != null && request.auth.uid == userId;

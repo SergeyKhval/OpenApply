@@ -94,6 +94,11 @@ const {
 	<body>
   <slot />
 
+  <script>
+    import { captureFirstTouchInBrowser } from "../../../shared/acquisition";
+
+    captureFirstTouchInBrowser();
+  </script>
 	</body>
 </html>
 
