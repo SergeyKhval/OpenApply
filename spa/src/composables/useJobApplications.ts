@@ -10,15 +10,15 @@ import {
   where,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
-import { db } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import { useCurrentUser } from "vuefire";
 import type { CreateJobApplicationInput, JobStatus } from "@/types";
 import { getLocalTimeZone } from "@internationalized/date";
 import { trackEvent } from "@/analytics";
 
 type ApplicationCreatedProperties = {
-  method: "link_parse" | "manual";
-  source?: "landing_page_parse";
+  method: "link_parse" | "manual" | "match_tool";
+  source?: "landing_page_parse" | "resume_match_tool";
 };
 
 // Activation metric: fires once, when the user's first application is saved.
@@ -49,9 +49,11 @@ export function useJobApplications() {
 
   const addJobApplication = async (
     payload: CreateJobApplicationInput,
-    options?: { source?: "landing_page_parse" },
+    options?: { source?: "landing_page_parse" | "resume_match_tool" },
   ): Promise<{ success: boolean; error?: string; id?: string }> => {
-    if (!user.value) {
+    // Right after sign-up, auth.currentUser is set before vuefire's user ref
+    const currentUser = user.value ?? auth.currentUser;
+    if (!currentUser) {
       return { success: false, error: "User not authenticated" };
     }
 
@@ -59,18 +61,20 @@ export function useJobApplications() {
       const docRef = await addDoc(collection(db, "jobApplications"), {
         ...payload,
         status: "draft" as JobStatus,
-        userId: user.value.uid,
+        userId: currentUser.uid,
         createdAt: serverTimestamp(),
       });
 
-      const method = payload.jobDescriptionLink ? "link_parse" : "manual";
+      const method = options?.source === "resume_match_tool"
+        ? "match_tool"
+        : payload.jobDescriptionLink ? "link_parse" : "manual";
       trackEvent("job_application_created", {
         method,
         company: payload.companyName,
         position: payload.position,
         source: options?.source,
       });
-      void trackIfFirstApplication(user.value, { method, source: options?.source });
+      void trackIfFirstApplication(currentUser, { method, source: options?.source });
       return { success: true, id: docRef.id };
     } catch (err) {
       console.error("Error adding job application:", err);
