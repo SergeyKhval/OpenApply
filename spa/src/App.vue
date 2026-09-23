@@ -24,8 +24,11 @@ import ResumePickerDialog from "@/components/ResumePickerDialog.vue";
 import CoverLetterPreview from "@/components/CoverLetterPreview.vue";
 import AddJobApplication from "@/components/AddJobApplication.vue";
 import ScoreResumeDialog from "@/components/ScoreResumeDialog.vue";
+import { usePersistAcquisition } from "@/composables/usePersistAcquisition";
 
 const route = useRoute();
+
+usePersistAcquisition();
 
 const isStripeSuccessCheckoutDialogOpen = computed(
   () => route.query["dialog-name"] === "checkout-success",

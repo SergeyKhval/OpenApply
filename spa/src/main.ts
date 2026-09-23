@@ -5,6 +5,9 @@ import "./index.css";
 import App from "./App.vue";
 import router from "./router";
 import firebaseApp from "./firebase/config";
+import { captureFirstTouchInBrowser } from "../../shared/acquisition";
+
+captureFirstTouchInBrowser();
 
 const vueApp = createApp(App);
 const pinia = createPinia();

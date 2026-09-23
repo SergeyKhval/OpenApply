@@ -16,6 +16,15 @@
         <div v-if="isProcessing" class="flex items-center flex-col">
           <PhSpinner size="64" class="animate-spin" />
           <MessageRotator />
+          <Button
+            v-if="isParseSlow"
+            type="button"
+            variant="link"
+            class="mt-2"
+            @click="abandonParse()"
+          >
+            Taking too long? Fill in the details yourself
+          </Button>
         </div>
         <template v-else>
           <form
@@ -75,7 +84,8 @@
           </form>
 
           <div v-else class="flex flex-col gap-4">
-            <Alert v-if="ingestionError" variant="destructive">
+            <!-- On parse failures the form shows a friendly notice instead of the raw error. -->
+            <Alert v-if="ingestionError && !hasParsingFailure" variant="destructive">
               <PhWarningCircle />
               <AlertDescription>
                 {{ ingestionError }}
@@ -107,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import omit from "lodash/omit";
 import {
@@ -159,9 +169,14 @@ const v$ = useVuelidate(
   { jobDescriptionLink },
 );
 
+// Set when the user gives up on a slow parse, so a late result can't pull
+// them out of the manual form.
+const isParseAbandoned = ref(false);
+
 const isProcessing = computed(
   () =>
-    ingestionStatus.value === "fetching" || ingestionStatus.value === "waiting",
+    !isParseAbandoned.value &&
+    (ingestionStatus.value === "fetching" || ingestionStatus.value === "waiting"),
 );
 
 const hasParsingFailure = computed(
@@ -188,7 +203,23 @@ const prefilledEmploymentType = computed<"full-time" | "part-time" | undefined>(
   },
 );
 
+// Parsing has no hard timeout; never leave a new user stuck on a spinner.
+const SLOW_PARSE_MS = 15_000;
+const isParseSlow = ref(false);
+let slowParseTimer: ReturnType<typeof setTimeout> | undefined;
+
+watch(isProcessing, (processing) => {
+  clearTimeout(slowParseTimer);
+  isParseSlow.value = false;
+  if (processing) {
+    slowParseTimer = setTimeout(() => (isParseSlow.value = true), SLOW_PARSE_MS);
+  }
+});
+
+onBeforeUnmount(() => clearTimeout(slowParseTimer));
+
 watch(ingestionStatus, (state) => {
+  if (isParseAbandoned.value) return;
   if (state === "ready") {
     viewMode.value = "form";
   } else if (state === "error") {
@@ -200,8 +231,14 @@ const handleSubmit = async () => {
   v$.value.$touch();
   if (v$.value.$invalid) return;
 
+  isParseAbandoned.value = false;
   await startIngestion(jobDescriptionLink.value);
 };
+
+function abandonParse() {
+  isParseAbandoned.value = true;
+  handleManualEntry();
+}
 
 function handleManualEntry() {
   resetIngestion();
@@ -220,6 +257,7 @@ function handleBack() {
 }
 
 function resetForm() {
+  isParseAbandoned.value = false;
   viewMode.value = "link";
   jobDescriptionLink.value = "";
   v$.value.$reset();
@@ -237,9 +275,30 @@ watch(
   },
 );
 
+// Entry points like the first-run prompt open the dialog with the link
+// already provided (?job-link=) or straight in manual mode (?add-mode=manual).
+watch(
+  () => [isOpen, route.query["job-link"], route.query["add-mode"]] as const,
+  async ([open, prefilledLink, addMode]) => {
+    if (!open) return;
+
+    if (typeof prefilledLink === "string" && prefilledLink) {
+      await router.replace({ query: omit(route.query, "job-link") });
+      jobDescriptionLink.value = prefilledLink;
+      await handleSubmit();
+    } else if (addMode === "manual") {
+      await router.replace({ query: omit(route.query, "add-mode") });
+      handleManualEntry();
+    }
+  },
+  { immediate: true },
+);
+
 function toggleDialog(isOpen: boolean) {
   if (!isOpen) {
-    router.replace({ query: omit(route.query, "dialog-name") });
+    router.replace({
+      query: omit(route.query, "dialog-name", "job-link", "add-mode"),
+    });
   }
 }
 </script>

@@ -35,6 +35,16 @@ import JobLinkInput from '../components/vue/JobLinkInput.vue';
                 OpenApply replaces all of that. Paste a job link and the company, role, and details are filled in seconds. Get AI resume reviews matched to each role. Everything in one place.
               </p>
               <JobLinkInput client:visible />
+              <p class="text-xs text-muted-foreground text-center">
+                Looking for OpenApply school admissions?
+                <a
+                  href="https://www.openapply.com/"
+                  class="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                  data-school-admissions-link
+                >
+                  Go to Faria's OpenApply
+                </a>
+              </p>
             </div>
           </div>
         </section>
@@ -446,3 +456,12 @@ import JobLinkInput from '../components/vue/JobLinkInput.vue';
   </div>
 
 </Layout>
+
+<script>
+  document.querySelector("[data-school-admissions-link]")?.addEventListener("click", () => {
+    (window as unknown as { posthog?: { capture: (name: string, properties: object) => void } }).posthog?.capture(
+      "school_admissions_redirect_clicked",
+      { location: "landing_hero" },
+    );
+  });
+</script>
