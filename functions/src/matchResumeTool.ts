@@ -1,11 +1,13 @@
 import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
+import { logger } from "firebase-functions";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import {
   assertWithinLimits,
   buildMatchToolPrompt,
+  describeClientIp,
   getClientIp,
   hashClientKey,
   rateLimitWindows,
@@ -102,11 +104,13 @@ export const matchResumeTool = onCall(
 
     const input = validateMatchToolInput(request.data);
     const clientIp = getClientIp(request.rawRequest);
-    if (!clientIp) {
-      // Expected only in the emulator; in production a fresh anonymous uid
-      // per request would get around the per-client limits
-      console.warn("matchResumeTool: no client IP, rate limiting by uid");
-    }
+    // Structured, IP-free check that the rate limit key is the real client.
+    // No client IP is expected only in the emulator; in production a fresh
+    // anonymous uid per request would get around the per-client limits.
+    logger.info("matchResumeTool client key", {
+      ...describeClientIp(request.rawRequest),
+      keyedBy: clientIp ? "ip" : "uid",
+    });
     await consumeRateLimit(hashClientKey(clientIp ?? `uid:${request.auth.uid}`));
 
     let result: MatchToolResult | null;

@@ -35,6 +35,12 @@ vi.mock("firebase-functions/v2/https", () => {
   };
 });
 
+const mockLoggerInfo = vi.fn();
+
+vi.mock("firebase-functions", () => ({
+  logger: { info: (...args: unknown[]) => mockLoggerInfo(...args) },
+}));
+
 vi.mock("firebase-functions/params", () => ({
   defineString: () => ({ value: () => "" }),
 }));
@@ -149,6 +155,15 @@ describe("matchResumeTool", () => {
     for (const [, payload] of mockTransactionSet.mock.calls) {
       expect(Object.keys(payload).sort()).toEqual(["count", "expiresAt"]);
     }
+  });
+
+  it("logs how the client key was chosen without the IP", async () => {
+    await call({});
+    expect(mockLoggerInfo).toHaveBeenCalledWith(
+      "matchResumeTool client key",
+      expect.objectContaining({ forwardedCount: 1, keyedBy: "ip" }),
+    );
+    expect(JSON.stringify(mockLoggerInfo.mock.calls)).not.toContain("9.9.9.9");
   });
 
   it("maps generation failures to an internal error", async () => {

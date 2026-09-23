@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { BlockList, isIP } from "node:net";
 import { HttpsError } from "firebase-functions/v2/https";
 
 export const MIN_INPUT_CHARS = 200;
@@ -71,17 +72,65 @@ export function getClientIp(rawRequest: {
   headers?: Record<string, string | string[] | undefined>;
   ip?: string;
 }): string | null {
-  const header = rawRequest.headers?.["x-forwarded-for"];
-  const value = Array.isArray(header) ? header.join(",") : header;
-  const forwarded = value
-    ?.split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (forwarded && forwarded.length > 0) {
+  const forwarded = forwardedEntries(rawRequest);
+  if (forwarded.length > 0) {
     return forwarded[forwarded.length - 1] ?? null;
   }
   return rawRequest.ip || null;
+}
+
+function forwardedEntries(rawRequest: {
+  headers?: Record<string, string | string[] | undefined>;
+}): string[] {
+  const header = rawRequest.headers?.["x-forwarded-for"];
+  const value = Array.isArray(header) ? header.join(",") : header;
+  return value
+    ?.split(",")
+    .map((part) => part.trim())
+    .filter(Boolean) ?? [];
+}
+
+const PRIVATE_RANGES = new BlockList();
+PRIVATE_RANGES.addSubnet("10.0.0.0", 8, "ipv4");
+PRIVATE_RANGES.addSubnet("172.16.0.0", 12, "ipv4");
+PRIVATE_RANGES.addSubnet("192.168.0.0", 16, "ipv4");
+PRIVATE_RANGES.addSubnet("127.0.0.0", 8, "ipv4");
+PRIVATE_RANGES.addSubnet("169.254.0.0", 16, "ipv4");
+PRIVATE_RANGES.addSubnet("100.64.0.0", 10, "ipv4");
+PRIVATE_RANGES.addAddress("::1", "ipv6");
+PRIVATE_RANGES.addSubnet("fc00::", 7, "ipv6");
+PRIVATE_RANGES.addSubnet("fe80::", 10, "ipv6");
+
+// Google front end and load balancer proxy ranges
+const GOOGLE_PROXY_RANGES = new BlockList();
+GOOGLE_PROXY_RANGES.addSubnet("35.191.0.0", 16, "ipv4");
+GOOGLE_PROXY_RANGES.addSubnet("130.211.0.0", 22, "ipv4");
+
+function inRange(ranges: BlockList, ip: string | null): boolean | null {
+  if (!ip) return null;
+  const family = isIP(ip);
+  if (family === 0) return null;
+  return ranges.check(ip, family === 4 ? "ipv4" : "ipv6");
+}
+
+/**
+ * Describes where the rate limit key came from without exposing any IP, so
+ * production logs can confirm the chosen entry is the real client and not a
+ * Google proxy that every user would share.
+ */
+export function describeClientIp(rawRequest: {
+  headers?: Record<string, string | string[] | undefined>;
+  ip?: string;
+}) {
+  const chosen = getClientIp(rawRequest);
+  return {
+    forwardedCount: forwardedEntries(rawRequest).length,
+    hasSocketIp: Boolean(rawRequest.ip),
+    chosenEqualsSocketIp: chosen !== null && chosen === rawRequest.ip,
+    chosenIsValidIp: chosen !== null && isIP(chosen) !== 0,
+    chosenIsPrivate: inRange(PRIVATE_RANGES, chosen),
+    chosenIsGoogleProxy: inRange(GOOGLE_PROXY_RANGES, chosen),
+  };
 }
 
 /**

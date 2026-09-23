@@ -18,6 +18,7 @@ import {
   MAX_RESUME_CHARS,
   assertWithinLimits,
   buildMatchToolPrompt,
+  describeClientIp,
   getClientIp,
   hashClientKey,
   rateLimitWindows,
@@ -80,6 +81,57 @@ describe("getClientIp", () => {
 
   it("returns null when nothing is available", () => {
     expect(getClientIp({})).toBeNull();
+  });
+});
+
+describe("describeClientIp", () => {
+  it("describes a public client IP behind one proxy hop", () => {
+    expect(
+      describeClientIp({ headers: { "x-forwarded-for": "203.0.113.7" }, ip: "169.254.1.1" }),
+    ).toEqual({
+      forwardedCount: 1,
+      hasSocketIp: true,
+      chosenEqualsSocketIp: false,
+      chosenIsValidIp: true,
+      chosenIsPrivate: false,
+      chosenIsGoogleProxy: false,
+    });
+  });
+
+  it("flags a Google proxy as the chosen entry", () => {
+    const description = describeClientIp({
+      headers: { "x-forwarded-for": "1.2.3.4, 203.0.113.7, 35.191.10.20" },
+    });
+    expect(description.forwardedCount).toBe(3);
+    expect(description.chosenIsGoogleProxy).toBe(true);
+    expect(description.chosenIsPrivate).toBe(false);
+  });
+
+  it("flags private and IPv6 loopback addresses", () => {
+    expect(describeClientIp({ headers: { "x-forwarded-for": "10.1.2.3" } }).chosenIsPrivate).toBe(true);
+    expect(describeClientIp({ ip: "::1" })).toMatchObject({
+      forwardedCount: 0,
+      chosenEqualsSocketIp: true,
+      chosenIsPrivate: true,
+    });
+  });
+
+  it("reports unknown ranges for missing or invalid entries", () => {
+    expect(describeClientIp({})).toMatchObject({
+      chosenIsValidIp: false,
+      chosenIsPrivate: null,
+      chosenIsGoogleProxy: null,
+    });
+    expect(
+      describeClientIp({ headers: { "x-forwarded-for": "not-an-ip" } }).chosenIsValidIp,
+    ).toBe(false);
+  });
+
+  it("never includes an address in its output", () => {
+    const output = JSON.stringify(
+      describeClientIp({ headers: { "x-forwarded-for": "198.51.100.23" }, ip: "198.51.100.23" }),
+    );
+    expect(output).not.toContain("198.51.100.23");
   });
 });
 
