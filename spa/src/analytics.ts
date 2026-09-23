@@ -13,6 +13,11 @@ type EventMap = {
     position?: string;
     source?: "landing_page_parse";
   };
+  first_job_application_created: {
+    method: "link_parse" | "manual";
+    source?: "landing_page_parse";
+    minutesSinceSignup?: number;
+  };
   lp_job_parse_started: void;
   lp_auth_skipped: void;
   job_parse_succeeded: { company?: string; position?: string };
