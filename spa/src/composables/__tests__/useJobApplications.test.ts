@@ -21,8 +21,11 @@ vi.mock("firebase/firestore", () => ({
   where: (...args: unknown[]) => args,
 }));
 
+const mockAuth = vi.hoisted(() => ({ currentUser: null as { uid: string } | null }));
+
 vi.mock("@/firebase/config", () => ({
   db: "mock-db",
+  auth: mockAuth,
 }));
 
 const mockUser = ref<{ uid: string; metadata?: { creationTime?: string } } | null>({
@@ -49,6 +52,7 @@ describe("useJobApplications", () => {
     vi.clearAllMocks();
     mockUser.value = { uid: "user-123" };
     mockGetCountFromServer.mockResolvedValue({ data: () => ({ count: 5 }) });
+    mockAuth.currentUser = null;
   });
 
   describe("addJobApplication", () => {
@@ -120,6 +124,43 @@ describe("useJobApplications", () => {
         company: "Acme",
         position: "Dev",
         source: undefined,
+      });
+    });
+
+    it("falls back to auth.currentUser right after sign-up", async () => {
+      mockUser.value = null;
+      mockAuth.currentUser = { uid: "fresh-user" };
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      const { addJobApplication } = useJobApplications();
+      const result = await addJobApplication({
+        companyName: "Acme",
+        position: "Dev",
+        jobDescription: "",
+        technologies: [],
+      } as import("@/types").CreateJobApplicationInput);
+
+      expect(result.success).toBe(true);
+      expect(mockAddDoc.mock.calls[0][1].userId).toBe("fresh-user");
+    });
+
+    it("tracks match_tool method for applications from the landing tool", async () => {
+      mockAddDoc.mockResolvedValueOnce({ id: "new-doc-id" });
+      const { addJobApplication } = useJobApplications();
+      await addJobApplication(
+        {
+          companyName: "Acme",
+          position: "Dev",
+          jobDescription: "Build stuff",
+          technologies: [],
+        } as import("@/types").CreateJobApplicationInput,
+        { source: "resume_match_tool" },
+      );
+
+      expect(mockTrackEvent).toHaveBeenCalledWith("job_application_created", {
+        method: "match_tool",
+        company: "Acme",
+        position: "Dev",
+        source: "resume_match_tool",
       });
     });
 

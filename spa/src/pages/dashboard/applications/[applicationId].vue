@@ -161,6 +161,12 @@
         </div>
 
         <div class="flex flex-col gap-4">
+          <ToolMatchCard
+            v-if="application.toolMatch"
+            :match="application.toolMatch"
+            :just-saved="route.query.from === 'tool'"
+          />
+
           <JobApplicationDescription
             v-if="application"
             :application="application"
@@ -175,6 +181,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useDocument } from "vuefire";
 import {
   collection,
@@ -212,12 +219,14 @@ import {
 import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vue";
 import JobApplicationAttachments from "@/components/JobApplicationAttachments.vue";
 import JobApplicationDescription from "@/components/JobApplicationDescription.vue";
+import ToolMatchCard from "@/components/ToolMatchCard.vue";
 
 type ApplicationPageProps = {
   applicationId: string;
 };
 
 const { applicationId } = defineProps<ApplicationPageProps>();
+const route = useRoute();
 
 const { data: application } = useDocument<JobApplication>(
   doc(collection(db, "jobApplications"), applicationId),

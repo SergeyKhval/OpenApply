@@ -19,5 +19,6 @@ export * from "./migrateJobDescriptions";
 export * from "./jobApplications";
 export * from "./sendWelcomeEmail";
 export * from "./matchResumeWithJobApplication";
+export * from "./matchResumeTool";
 export * from "./sendWeeklyDigest";
 export * from "./processUserDigest";

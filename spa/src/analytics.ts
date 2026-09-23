@@ -5,17 +5,17 @@ function isLoaded(): boolean {
 }
 
 type EventMap = {
-  signup_completed: { source?: "landing_page_parse" | "direct" };
-  login_completed: { source?: "landing_page_parse" | "direct" };
+  signup_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
+  login_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
   job_application_created: {
-    method: "link_parse" | "manual";
+    method: "link_parse" | "manual" | "match_tool";
     company?: string;
     position?: string;
-    source?: "landing_page_parse";
+    source?: "landing_page_parse" | "resume_match_tool";
   };
   first_job_application_created: {
-    method: "link_parse" | "manual";
-    source?: "landing_page_parse";
+    method: "link_parse" | "manual" | "match_tool";
+    source?: "landing_page_parse" | "resume_match_tool";
     minutesSinceSignup?: number;
   };
   lp_job_parse_started: void;
