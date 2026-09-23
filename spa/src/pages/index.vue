@@ -13,13 +13,13 @@
     </div>
 
     <!-- Unauthenticated: split layout -->
-    <template v-else-if="!user">
+    <template v-else-if="!signedInUser">
       <!-- LEFT PANEL (desktop only, or mobile with pending job handled separately) -->
       <div
         class="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-primary/5 items-center justify-center p-12"
       >
         <!-- Variant A: Value pitch (no pending job) -->
-        <div v-if="!hasPendingJob" class="max-w-md space-y-8">
+        <div v-if="!hasPendingJob && !pendingToolApplication" class="max-w-md space-y-8">
           <div class="space-y-3">
             <h1 class="text-3xl font-bold text-foreground">
               Your job search, organized
@@ -76,6 +76,28 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Variant C: Job and match saved from the landing page match tool -->
+        <div v-else-if="pendingToolApplication" class="max-w-md space-y-6 text-center">
+          <PhCheckCircle :size="48" weight="fill" class="text-primary mx-auto" />
+          <h2 class="text-2xl font-bold text-foreground">
+            Sign up and this job is saved to your tracker
+          </h2>
+          <div class="rounded-lg border border-border bg-card p-4 text-left flex items-center gap-4">
+            <ResumeScore class="size-14 shrink-0" :score="pendingToolApplication.match.matchScore" />
+            <div class="min-w-0">
+              <p class="font-medium text-foreground truncate">
+                {{ pendingToolApplication.position || "Your job" }}
+              </p>
+              <p v-if="pendingToolApplication.companyName" class="text-sm text-muted-foreground truncate">
+                {{ pendingToolApplication.companyName }}
+              </p>
+            </div>
+          </div>
+          <p class="text-muted-foreground">
+            Your match check comes with it. Track status, interviews, and follow-ups for free.
+          </p>
         </div>
 
         <!-- Variant B: Parsing status (with pending job) -->
@@ -139,6 +161,17 @@
         </div>
       </div>
 
+      <!-- Mobile banner for a job saved from the match tool -->
+      <div
+        v-if="pendingToolApplication && !hasPendingJob"
+        class="md:hidden flex items-center gap-3 px-4 py-3 bg-primary/10 border-b border-primary/20"
+      >
+        <PhCheckCircle class="text-primary shrink-0" :size="20" />
+        <p class="text-sm text-foreground">
+          Sign up and {{ pendingToolApplication.position || "this job" }} is saved with your match check.
+        </p>
+      </div>
+
       <!-- Mobile banner for pending job (visible only on mobile) -->
       <div
         v-if="hasPendingJob"
@@ -171,13 +204,13 @@
         <SchoolAdmissionsNotice v-if="!hasPendingJob" />
         <SignInForm
           v-if="viewMode === 'sign-in'"
-          :pending-job="hasPendingJob"
+          :pending-job="hasPendingJob || !!pendingToolApplication"
           :source="source"
           @sign-up="viewMode = 'sign-up'"
         />
         <SignUpForm
           v-else
-          :pending-job="hasPendingJob"
+          :pending-job="hasPendingJob || !!pendingToolApplication"
           :source="source"
           @sign-in="viewMode = 'sign-in'"
         />
@@ -196,13 +229,24 @@ import SignInForm from "@/components/SignInForm.vue";
 import SignUpForm from "@/components/SignUpForm.vue";
 import SchoolAdmissionsNotice from "@/components/SchoolAdmissionsNotice.vue";
 import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
+import { readPendingToolApplication } from "@/composables/pendingToolApplication";
+import ResumeScore from "@/components/ResumeScore.vue";
 import { isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
 
 const user = useCurrentUser();
 const userLoaded = useIsCurrentUserLoaded();
+// The landing page signs visitors in anonymously to call its tools; that
+// session shares this origin but is not an account yet
+const signedInUser = computed(() =>
+  user.value && !user.value.isAnonymous ? user.value : null,
+);
 const { redirect, hasPendingJob, pendingJobId } = usePostAuthRedirect();
-const viewMode = ref<"sign-in" | "sign-up">(hasPendingJob.value ? "sign-up" : "sign-in");
+// Read once: the job the landing page match tool saved before signup
+const pendingToolApplication = readPendingToolApplication();
+const viewMode = ref<"sign-in" | "sign-up">(
+  hasPendingJob.value || pendingToolApplication ? "sign-up" : "sign-in",
+);
 
 // Subscribe to job document when pending job exists
 const jobDocRef = computed(() =>
@@ -219,13 +263,19 @@ const isParsed = computed(
 
 const parseFailed = computed(() => isJobParseFailed(jobSnapshot.value));
 
-const source = computed(() =>
-  hasPendingJob.value ? ("landing_page_parse" as const) : ("direct" as const),
-);
-
-watch(user, (newUser) => {
-  if (newUser) {
-    redirect();
-  }
+const source = computed(() => {
+  if (hasPendingJob.value) return "landing_page_parse" as const;
+  if (pendingToolApplication) return "resume_match_tool" as const;
+  return "direct" as const;
 });
+
+watch(
+  signedInUser,
+  (newUser) => {
+    if (newUser) {
+      redirect();
+    }
+  },
+  { immediate: true },
+);
 </script>

@@ -71,7 +71,7 @@ import { Label } from "@/components/ui/label";
 
 type SignInFormProps = {
   pendingJob?: boolean;
-  source?: "landing_page_parse" | "direct";
+  source?: "landing_page_parse" | "resume_match_tool" | "direct";
 };
 
 const { pendingJob = false, source = "direct" } = defineProps<SignInFormProps>();

@@ -1,0 +1,210 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ResumeMatchTool from '../../components/vue/ResumeMatchTool.vue';
+
+const currentPath = Astro.url.pathname;
+const pageTitle = "Free Resume vs Job Description Match Checker | OpenApply";
+const pageDescription = "Paste your resume and a job description. Get an honest match score, every requirement checked against your resume, the keywords you're missing, and what a parser sees in your PDF. Free, no signup.";
+const canonicalUrl = new URL('/tools/resume-job-match', Astro.site || 'https://openapply.app').href;
+const ogImage = 'https://openapply.app/images/og/resume-job-match.png';
+
+// Same instructions the tool uses, rewritten for a chat window
+const reusablePrompt = `You are a blunt, experienced recruiter who screens hundreds of resumes a week. Compare my resume to the job description below and tell me honestly how a screener would see it. Do not flatter me.
+
+Hard rule: never rewrite my resume and never invent anything. Do not suggest experience, employers, numbers, or years my resume does not show. Only point at gaps and at lines already in my resume. When counting years of experience, treat "present" as today's date.
+
+1. Parse check: does my resume text read in a sensible order, or are parts jumbled (dates split from jobs, columns interleaved)?
+2. Match score, 0 to 100, using this rubric. Weight must-haves far more than nice-to-haves, and judge by evidence, not keyword overlap.
+   85-100: meets nearly every must-have with clear evidence, plus most nice-to-haves.
+   70-84: meets most must-haves, with a few gaps.
+   50-69: meets some must-haves, with noticeable gaps.
+   0-49: missing several must-haves (years of experience, core skills, credentials).
+3. Verdict: 2 to 3 plain sentences on why a screener would pass on me for this job, or why I'd get through. Name the biggest gap.
+4. Requirement by requirement: the 6 to 10 most important requirements, must-haves first. Mark each matched, partial, or missing, and for matched or partial quote the exact line from my resume that proves it.
+5. Missing keywords: skills, tools, or terms from the job description that don't appear in my resume at all.
+6. Three places to fix, most impactful first. Point at the existing line that undersells a requirement and say which term to name or which result to quantify. Don't write the line for me. For a real gap, tell me plainly and how to address it honestly.
+
+<resume>
+PASTE YOUR RESUME HERE
+</resume>
+
+<job_description>
+PASTE THE JOB DESCRIPTION HERE
+</job_description>`;
+
+const faqs = [
+  {
+    question: "Is it really free?",
+    answer: "Yes. No signup, no credit card. There's a daily limit per person to keep it free for everyone.",
+  },
+  {
+    question: "Do you store my resume?",
+    answer: "No. If you upload a PDF, the text is pulled out in your browser and the file never leaves your device. The text is sent to Google Gemini for this one check and is not saved. We keep the job description so you can save the job to your tracker if you want to.",
+  },
+  {
+    question: "Will it rewrite my resume?",
+    answer: "No, on purpose. AI rewrites tend to invent employers, numbers, and years you don't have. This only points at gaps and at the lines in your resume that undersell a requirement. You make the edits, so everything stays true.",
+  },
+  {
+    question: "How is this different from an ATS keyword scanner?",
+    answer: "Keyword scanners count word overlap. This weighs must-have requirements over nice-to-haves and quotes the line in your resume that proves each one, so padding with buzzwords won't inflate the score.",
+  },
+  {
+    question: "Why check what a parser sees?",
+    answer: "Resumes designed in Canva, InDesign, or with two columns often come out as jumbled text when software reads them: dates split from jobs, sections mixed together. Upload your PDF and read the text box. If it's hard for you to follow, it's hard for the screener too.",
+  },
+  {
+    question: "Can I use the prompt myself?",
+    answer: "Please do. The full prompt is below. Paste it into ChatGPT, Claude, or Gemini with your resume and the job description.",
+  },
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Resume vs Job Description Match Checker",
+      "url": canonicalUrl,
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "description": pageDescription,
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((faq) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.answer },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  keywords="resume job description match, resume match score, resume keyword checker, ATS resume checker free, tailor resume to job description, resume vs job description"
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <div class="bg-background text-foreground antialiased">
+    <Header showHashLinks={false} currentPath={currentPath} />
+
+    <main>
+      <section class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-linear-to-br from-primary/15 via-background to-secondary/20"></div>
+        <div class="pointer-events-none absolute -left-32 top-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl"></div>
+        <div class="container mx-auto px-4 pt-12 pb-16 lg:pt-16 relative z-10 max-w-6xl">
+          <div class="text-center max-w-3xl mx-auto mb-10">
+            <p class="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-5">
+              Free tool · No signup
+            </p>
+            <h1 class="text-4xl lg:text-5xl font-bold leading-tight tracking-tight mb-4">
+              Would a screener pass on your resume for this job?
+            </h1>
+            <p class="text-lg text-muted-foreground">
+              Upload or paste your resume and the job description. In about 15 seconds you get an
+              honest match score, every requirement checked against your resume with the line that
+              proves it, the keywords you're missing, and what a parser sees in your PDF.
+              It never rewrites your resume or makes anything up.
+            </p>
+          </div>
+
+          <ResumeMatchTool client:load />
+        </div>
+      </section>
+
+      <section class="py-16 bg-muted/40">
+        <div class="container mx-auto px-4 max-w-4xl">
+          <h2 class="text-3xl font-bold mb-3">The prompt behind this tool</h2>
+          <p class="text-muted-foreground mb-6">
+            No secret sauce. This is what the tool asks the AI, rewritten so you can paste it
+            into ChatGPT, Claude, or Gemini yourself.
+          </p>
+          <div class="relative rounded-lg border border-border/60 bg-card/80">
+            <button
+              type="button"
+              id="copy-prompt"
+              class="absolute right-3 top-3 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+            >
+              <i class="ph ph-copy" aria-hidden="true"></i>
+              <span>Copy prompt</span>
+            </button>
+            <pre id="reusable-prompt" class="max-h-96 overflow-auto whitespace-pre-wrap p-5 pt-14 font-mono text-xs sm:text-sm leading-relaxed text-foreground">{reusablePrompt}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-16">
+        <div class="container mx-auto px-4 max-w-4xl">
+          <h2 class="text-3xl font-bold mb-8">Questions</h2>
+          <div class="flex flex-col gap-6">
+            {faqs.map((faq) => (
+              <div>
+                <h3 class="text-lg font-semibold mb-2">{faq.question}</h3>
+                <p class="text-muted-foreground">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+          <div class="mt-12 rounded-lg border border-border/60 bg-card/80 p-6 text-center">
+            <p class="text-muted-foreground mb-4">
+              OpenApply is a free, open-source job application tracker. Paste a job link, track
+              every application, and get AI resume reviews when you want them.
+            </p>
+            <a
+              href="/app/?utm_source=tool&utm_medium=cta&utm_campaign=resume_job_match"
+              id="footer-cta"
+              class="inline-flex items-center justify-center gap-2 text-sm font-semibold h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Start tracking for free
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  const posthog = () => (window as any).posthog;
+
+  document.getElementById('copy-prompt')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const text = document.getElementById('reusable-prompt')?.textContent ?? '';
+    try {
+      await navigator.clipboard.writeText(text);
+      const label = button.querySelector('span');
+      if (label) {
+        label.textContent = 'Copied';
+        setTimeout(() => (label.textContent = 'Copy prompt'), 2000);
+      }
+    } catch {
+      // Clipboard can be blocked; the prompt is still selectable
+    }
+    posthog()?.capture('tool_prompt_copied', { tool: 'resume_job_match' });
+  });
+
+  // Keep incoming UTMs on the bottom CTA, same as the in-tool CTA
+  const footerCta = document.getElementById('footer-cta') as HTMLAnchorElement | null;
+  const incoming = new URLSearchParams(window.location.search);
+  if (footerCta && incoming.has('utm_source')) {
+    const url = new URL(footerCta.href);
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((key) => {
+      url.searchParams.delete(key);
+      const value = incoming.get(key);
+      if (value) url.searchParams.set(key, value);
+    });
+    footerCta.href = url.toString();
+  }
+  footerCta?.addEventListener('click', () => {
+    posthog()?.capture('tool_cta_clicked', { tool: 'resume_job_match', cta: 'footer_signup' });
+  });
+</script>

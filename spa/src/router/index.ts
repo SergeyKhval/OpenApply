@@ -62,7 +62,8 @@ router.beforeEach(async (to) => {
 
   const user = await waitForInitialAuthState();
 
-  if (user) {
+  // Anonymous sessions come from the landing page tools, not real accounts
+  if (user && !user.isAnonymous) {
     if (to.matched.some((record) => record.meta.requiresAdmin)) {
       return user.email === import.meta.env.VITE_ADMIN_EMAIL;
     }

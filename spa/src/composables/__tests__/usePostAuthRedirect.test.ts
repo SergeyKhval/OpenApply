@@ -12,12 +12,65 @@ vi.mock("@/composables/useJobIngestion", () => ({
   isValidJobId: (val: unknown) => typeof val === "string" && /^[a-zA-Z0-9]{10,30}$/.test(val),
 }));
 
+const mockAddJobApplication = vi.fn();
+
+vi.mock("@/composables/useJobApplications", () => ({
+  useJobApplications: () => ({ addJobApplication: mockAddJobApplication }),
+}));
+
 import { usePostAuthRedirect } from "../usePostAuthRedirect";
+import {
+  PENDING_TOOL_APPLICATION_KEY,
+  resetPendingToolApplicationState,
+} from "../pendingToolApplication";
+
+const pendingToolApplication = {
+  version: 1,
+  savedAt: new Date().toISOString(),
+  companyName: "Acme",
+  position: "Frontend Engineer",
+  jobDescription: "Build accessible Vue apps.",
+  technologies: ["Vue"],
+  match: {
+    matchScore: 62,
+    verdict: "Close.",
+    parseCheck: { status: "clean", note: "" },
+    requirements: [],
+    missingKeywords: [],
+    fixes: [],
+  },
+};
 
 describe("usePostAuthRedirect", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockQuery.value = {};
+    localStorage.clear();
+    resetPendingToolApplicationState();
+  });
+
+  it("creates the application saved by the match tool and opens it", async () => {
+    localStorage.setItem(PENDING_TOOL_APPLICATION_KEY, JSON.stringify(pendingToolApplication));
+    mockAddJobApplication.mockResolvedValue({ success: true, id: "app123" });
+    const { redirect } = usePostAuthRedirect();
+
+    await Promise.all([redirect(), redirect()]);
+
+    expect(mockAddJobApplication).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/app123?from=tool");
+    expect(mockPush).not.toHaveBeenCalledWith("/dashboard/applications");
+    expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).toBeNull();
+  });
+
+  it("falls back to the default redirect and keeps the job when creation fails", async () => {
+    localStorage.setItem(PENDING_TOOL_APPLICATION_KEY, JSON.stringify(pendingToolApplication));
+    mockAddJobApplication.mockResolvedValue({ success: false, error: "nope" });
+    const { redirect } = usePostAuthRedirect();
+
+    await redirect();
+
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications");
+    expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).not.toBeNull();
   });
 
   it("redirects to job review page when job query param is present", () => {

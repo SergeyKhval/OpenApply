@@ -32,6 +32,24 @@ export type JobApplication = {
   hiredAt?: CalendarDate;
   archivedAt?: Timestamp;
   userId: string;
+  toolMatch?: ToolMatch;
+};
+
+// Result of the free resume match tool on the landing page, saved with the
+// application the tool creates after signup
+export type ToolMatch = {
+  matchScore: number;
+  verdict: string;
+  parseCheck: { status: "clean" | "issues" | "scrambled"; note: string };
+  requirements: {
+    requirement: string;
+    status: "matched" | "partial" | "missing";
+    importance: "must-have" | "nice-to-have";
+    evidence: string;
+  }[];
+  missingKeywords: string[];
+  fixes: { gap: string; where: string; action: string }[];
+  checkedAt: string;
 };
 
 export type JobApplicationNote = {
