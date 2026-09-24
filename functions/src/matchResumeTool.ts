@@ -11,6 +11,7 @@ import {
   getClientIp,
   hashClientKey,
   rateLimitWindows,
+  sanitizeRequirementEvidence,
   validateMatchToolInput,
 } from "./lib/matchTool";
 
@@ -133,7 +134,10 @@ export const matchResumeTool = onCall(
     const analysis: MatchToolResult = {
       ...result,
       matchScore,
-      requirements: result.requirements.slice(0, 10),
+      requirements: sanitizeRequirementEvidence(
+        input.resumeText,
+        result.requirements.slice(0, 10),
+      ),
       missingKeywords: result.missingKeywords.slice(0, 10),
       fixes: result.fixes.slice(0, 3),
       technologies: result.technologies.slice(0, 10),

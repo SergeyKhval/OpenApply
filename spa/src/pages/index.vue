@@ -201,7 +201,10 @@
 
       <!-- RIGHT PANEL: auth form -->
       <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-4 p-8">
-        <SchoolAdmissionsNotice v-if="!hasPendingJob" />
+        <a href="/" class="md:hidden flex flex-col items-center gap-1 mb-2 text-center">
+          <span class="text-2xl font-bold text-foreground">OpenApply</span>
+          <span class="text-sm text-muted-foreground">Track every job application. Free.</span>
+        </a>
         <SignInForm
           v-if="viewMode === 'sign-in'"
           :pending-job="hasPendingJob || !!pendingToolApplication"
@@ -228,7 +231,6 @@ import { PhCheckCircle } from "@phosphor-icons/vue";
 import { db } from "@/firebase/config";
 import SignInForm from "@/components/SignInForm.vue";
 import SignUpForm from "@/components/SignUpForm.vue";
-import SchoolAdmissionsNotice from "@/components/SchoolAdmissionsNotice.vue";
 import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
 import { readPendingToolApplication } from "@/composables/pendingToolApplication";
 import ResumeScore from "@/components/ResumeScore.vue";

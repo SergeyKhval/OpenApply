@@ -22,6 +22,7 @@ import {
   getClientIp,
   hashClientKey,
   rateLimitWindows,
+  sanitizeRequirementEvidence,
   validateMatchToolInput,
 } from "../matchTool";
 
@@ -178,10 +179,164 @@ describe("assertWithinLimits", () => {
   });
 });
 
+describe("sanitizeRequirementEvidence", () => {
+  const resume = "Senior Frontend Engineer with 6 years of React experience at Acme Corp.";
+
+  it("keeps a requirement whose evidence is a verbatim resume quote", () => {
+    const requirements = [
+      {
+        requirement: "React experience",
+        status: "matched" as const,
+        importance: "must-have" as const,
+        evidence: "6 years of React experience at Acme Corp",
+      },
+    ];
+    expect(sanitizeRequirementEvidence(resume, requirements)).toEqual(requirements);
+  });
+
+  it("is case- and whitespace-insensitive when checking a quote", () => {
+    const requirements = [
+      {
+        requirement: "React experience",
+        status: "matched" as const,
+        importance: "must-have" as const,
+        evidence: "  6 YEARS of   react experience  ",
+      },
+    ];
+    expect(sanitizeRequirementEvidence(resume, requirements)[0].status).toBe("matched");
+  });
+
+  it("downgrades a requirement whose evidence does not appear in the resume at all", () => {
+    const requirements = [
+      {
+        requirement: "AWS experience",
+        status: "matched" as const,
+        importance: "must-have" as const,
+        evidence: "5 years of AWS infrastructure work",
+      },
+    ];
+    expect(sanitizeRequirementEvidence(resume, requirements)).toEqual([
+      {
+        requirement: "AWS experience",
+        status: "missing",
+        importance: "must-have",
+        evidence: "",
+      },
+    ]);
+  });
+
+  it("leaves a missing requirement with empty evidence untouched", () => {
+    const requirements = [
+      {
+        requirement: "AWS experience",
+        status: "missing" as const,
+        importance: "must-have" as const,
+        evidence: "",
+      },
+    ];
+    expect(sanitizeRequirementEvidence(resume, requirements)).toEqual(requirements);
+  });
+});
+
 describe("buildMatchToolPrompt", () => {
   it("embeds both inputs in tagged blocks", () => {
     const prompt = buildMatchToolPrompt({ resumeText: "RESUME", jobDescription: "JOB" });
     expect(prompt).toContain("<resume>\nRESUME\n</resume>");
     expect(prompt).toContain("<job_description>\nJOB\n</job_description>");
+  });
+
+  it("tells the model not to infer language or nationality from an institution or address", () => {
+    const prompt = buildMatchToolPrompt({ resumeText, jobDescription });
+    expect(prompt.toLowerCase()).toContain("never infer an unstated attribute from context");
+    expect(prompt).toContain("TU Munich");
+  });
+});
+
+// Regression fixture for a real prod bug (design-review-2026-09-24.md P1-7): the
+// tool marked "German language skills" as partially met with evidence
+// "B.Sc. Computer Science, TU Munich, 2019", and "Fluent English" as partial with
+// evidence "Frontend Engineer | Berlin, Germany | maya.chen@example.com" — neither
+// line states a language skill, it only inferred one from a university/city name.
+// The tool's whole pitch is that it never invents evidence, so this must not
+// happen again.
+describe("the TU Munich / German skills regression case", () => {
+  const mayaChenResume = `Maya Chen
+Frontend Engineer | Berlin, Germany | maya.chen@example.com
+
+Experience
+Frontend Engineer, Lumen Health (2021-present)
+Built and maintained the patient portal in React and TypeScript. Led the
+migration from class components to hooks across the codebase.
+
+Frontend Developer, Acme Software (2019-2021)
+Shipped customer-facing dashboards in React. Worked closely with design on a
+component library used across four product teams.
+
+Education
+B.Sc. Computer Science, TU Munich, 2019
+
+Skills
+React, TypeScript, JavaScript, CSS, Jest, Git`;
+
+  const seniorFrontendJobDescription = `Senior Frontend Engineer at Lumen Health
+
+We're looking for a Senior Frontend Engineer to join our patient portal team.
+
+Requirements:
+- 5+ years of experience with React
+- Strong TypeScript skills
+- Fluent English, spoken and written
+- German language skills, since our support team is based in Munich
+- Experience with component libraries
+
+Nice to have: experience with Jest and automated testing.`;
+
+  it("shows the university and city lines are verbatim in the resume (so a plain substring check alone would not have caught the bug)", () => {
+    expect(mayaChenResume).toContain("TU Munich");
+    expect(mayaChenResume).toContain("Berlin, Germany");
+  });
+
+  it("still builds a valid prompt for this exact resume and job posting", () => {
+    const prompt = buildMatchToolPrompt({
+      resumeText: mayaChenResume,
+      jobDescription: seniorFrontendJobDescription,
+    });
+    expect(prompt).toContain(mayaChenResume);
+    expect(prompt).toContain(seniorFrontendJobDescription);
+  });
+
+  it("sanitizeRequirementEvidence downgrades a requirement whose 'evidence' is not an actual resume quote", () => {
+    // What the model produced in the incident: a real quote, but not
+    // evidence of the requirement it was attached to.
+    const requirements = [
+      {
+        requirement: "German language skills",
+        status: "partial" as const,
+        importance: "must-have" as const,
+        evidence: "B.Sc. Computer Science, TU Munich, 2019",
+      },
+    ];
+
+    // This line IS verbatim in the resume, so the mechanical backstop alone
+    // does not (and cannot) catch a real quote used as illegitimate
+    // evidence — that inference has to be blocked at the prompt level
+    // (see the "buildMatchToolPrompt" tests above). What the backstop does
+    // catch is evidence the model invented outright:
+    const withFabricatedEvidence = [
+      {
+        requirement: "German language skills",
+        status: "partial" as const,
+        importance: "must-have" as const,
+        evidence: "Fluent in German and English",
+      },
+    ];
+
+    expect(
+      sanitizeRequirementEvidence(mayaChenResume, requirements)[0],
+    ).toMatchObject({ status: "partial", evidence: "B.Sc. Computer Science, TU Munich, 2019" });
+
+    expect(
+      sanitizeRequirementEvidence(mayaChenResume, withFabricatedEvidence)[0],
+    ).toMatchObject({ status: "missing", evidence: "" });
   });
 });
