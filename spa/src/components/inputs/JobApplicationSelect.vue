@@ -20,9 +20,9 @@
             />
             <div
               v-else
-              class="w-6 h-6 rounded bg-gray-100 flex items-center justify-center"
+              class="w-6 h-6 rounded bg-muted flex items-center justify-center"
             >
-              <PhBuildings :size="12" class="text-gray-400" />
+              <PhBuildings :size="12" class="text-muted-foreground" />
             </div>
             <div>
               <span class="font-medium">{{ app.companyName }}</span>

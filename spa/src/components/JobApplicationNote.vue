@@ -1,7 +1,7 @@
 <template>
   <li class="border-l-3 border-sidebar-border pl-4 py-1 flex flex-col">
     <template v-if="viewMode === 'view'">
-      <div class="flex items-center gap-2 text-xs text-gray-400">
+      <div class="flex items-center gap-2 text-xs text-muted-foreground">
         <PhNote />
         <time :datetime="note.createdAt.toDate().toLocaleDateString()">{{
           note.createdAt.toDate().toLocaleString()

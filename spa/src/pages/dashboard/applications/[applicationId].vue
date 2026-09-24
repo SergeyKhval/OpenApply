@@ -104,7 +104,7 @@
                     v-if="application.status === 'hired' && status.status === 'hired'"
                     class="inline-flex items-center"
                   >
-                    <PhFire size="14" class="text-amber-400" />
+                    <PhFire size="14" class="text-stage-interviewing" />
                     <PhHandsClapping size="14" />
                   </span>
                 </button>
@@ -132,7 +132,7 @@
       </div>
 
       <Alert v-if="showJustCreatedPrompt" class="flex items-center justify-between">
-        <PhCheckCircle class="size-4 text-emerald-500" />
+        <PhCheckCircle class="size-4 text-success" />
         <AlertDescription class="flex items-center gap-3 flex-wrap">
           <span>Saved to your tracker. Have you applied yet?</span>
           <div class="flex gap-2 shrink-0">

@@ -2,7 +2,7 @@
   <div class="relative grow hidden lg:block max-w-100">
     <PhMagnifyingGlass
       :size="20"
-      class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
     />
     <Input
       v-model="model"
@@ -12,7 +12,7 @@
     />
     <button
       v-if="model"
-      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-soft-foreground"
       @click="model = ''"
     >
       <PhX :size="20" />

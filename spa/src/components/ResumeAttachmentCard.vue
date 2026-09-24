@@ -122,7 +122,7 @@
                           >
                             <PhWarningCircle
                               size="16"
-                              class="shrink-0 text-yellow-500"
+                              class="shrink-0 text-stage-interviewing"
                             />
                           </td>
                           <td class="py-2 pr-2 align-top">
@@ -145,7 +145,7 @@
                             <PhCheckFat
                               size="16"
                               weight="fill"
-                              class="text-emerald-600"
+                              class="text-success"
                             />
                           </td>
                           <td class="py-2 pr-2 align-top">{{ skill.skill }}</td>

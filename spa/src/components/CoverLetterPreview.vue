@@ -16,9 +16,9 @@
             />
             <div
               v-else
-              class="size-6 rounded bg-gray-100 flex items-center justify-center"
+              class="size-6 rounded bg-muted flex items-center justify-center"
             >
-              <PhBuildings :size="12" class="text-gray-400" />
+              <PhBuildings :size="12" class="text-muted-foreground" />
             </div>
             <span
               >{{ coverLetter.jobApplication.companyName }} -

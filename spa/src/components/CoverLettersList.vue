@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="isLoading" class="flex justify-center py-8">
-      <PhSpinner :size="32" class="animate-spin text-gray-400" />
+      <PhSpinner :size="32" class="animate-spin text-muted-foreground" />
     </div>
     <Empty v-else-if="filteredCoverLetters.length === 0" class="py-12">
       <template v-if="coverLetters.length === 0">
