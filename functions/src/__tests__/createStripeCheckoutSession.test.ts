@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockProfileGet = vi.fn();
 const mockSessionsCreate = vi.fn();
+let proPriceId = "price_pro_test";
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
@@ -15,7 +16,7 @@ vi.mock("firebase-admin/firestore", () => ({
 
 vi.mock("firebase-functions/params", () => ({
   defineString: (name: string) => ({
-    value: () => (name === "STRIPE_PRO_PRICE_ID" ? "price_pro_test" : "sk_test_key"),
+    value: () => (name === "STRIPE_PRO_PRICE_ID" ? proPriceId : "sk_test_key"),
   }),
 }));
 
@@ -57,6 +58,7 @@ const profile = (data: Record<string, unknown> | null) => ({
 describe("createStripeCheckoutSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    proPriceId = "price_pro_test";
     mockSessionsCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_test" });
   });
 
@@ -69,6 +71,17 @@ describe("createStripeCheckoutSession", () => {
     await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
     mockProfileGet.mockResolvedValue(profile(null));
     await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
+  });
+
+  it("says Pro isn't available until the price is configured", async () => {
+    proPriceId = "";
+    mockProfileGet.mockResolvedValue(profile({ stripeCustomerId: "cus_1" }));
+
+    await expect(call(request())).rejects.toMatchObject({
+      code: "failed-precondition",
+      message: "Pro isn't available yet. Try again later.",
+    });
+    expect(mockSessionsCreate).not.toHaveBeenCalled();
   });
 
   it("refuses a second subscription for a Pro user", async () => {

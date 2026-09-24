@@ -9,7 +9,10 @@ import {
 } from "./lib/billingProfile";
 
 const STRIPE_API_KEY = defineString("STRIPE_API_KEY");
-const STRIPE_PRO_PRICE_ID = defineString("STRIPE_PRO_PRICE_ID");
+// Empty default so deploys keep working before the live price exists.
+const STRIPE_PRO_PRICE_ID = defineString("STRIPE_PRO_PRICE_ID", {
+  default: "",
+});
 
 /**
  * Starts a Stripe Checkout for the Pro subscription. The name is kept from the
@@ -35,12 +38,20 @@ export const createStripeCheckoutSession = onCall<{
       throw new HttpsError("already-exists", "You're already on Pro");
     }
 
+    const proPriceId = STRIPE_PRO_PRICE_ID.value();
+    if (!proPriceId) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Pro isn't available yet. Try again later.",
+      );
+    }
+
     const stripeClient = new Stripe(STRIPE_API_KEY.value());
     const session = await stripeClient.checkout.sessions.create({
       mode: "subscription",
       customer: billingProfile.stripeCustomerId,
       client_reference_id: uid,
-      line_items: [{ price: STRIPE_PRO_PRICE_ID.value(), quantity: 1 }],
+      line_items: [{ price: proPriceId, quantity: 1 }],
       subscription_data: { metadata: { firebaseUid: uid } },
       automatic_tax: { enabled: true },
       customer_update: { address: "auto", name: "auto" },
