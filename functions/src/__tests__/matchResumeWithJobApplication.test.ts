@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { usagePeriod } from "../lib/aiAllowance";
 
 // --- Shared mock state (const so vi.mock hoisting can access them) ---
 
@@ -91,9 +92,15 @@ const OTHER_USER = "user-other";
 const RESUME_ID = "resume-1";
 const APP_ID = "app-1";
 
-const makeBillingSnap = (balance: number) => ({
+const CURRENT_PERIOD = usagePeriod(new Date());
+
+// checksUsed = AI checks already spent this month on the free plan (limit 15)
+const makeBillingSnap = (checksUsed: number) => ({
   exists: true,
-  data: () => ({ currentBalance: balance }),
+  data: () => ({
+    aiUsage: { period: CURRENT_PERIOD, count: checksUsed },
+    bonusChecks: 0,
+  }),
 });
 
 const makePromptSnap = (template?: string) => ({
@@ -130,7 +137,7 @@ const MOCK_AI_OUTPUT = {
  * Since all use the same mockGet, we set up 4 sequential return values.
  */
 function setupGetMocks(opts: {
-  billingBalance?: number;
+  checksUsed?: number;
   promptTemplate?: string;
   resumeUserId?: string;
   resumeText?: string;
@@ -141,7 +148,7 @@ function setupGetMocks(opts: {
   billingMissing?: boolean;
 }) {
   const {
-    billingBalance = 100,
+    checksUsed = 0,
     promptTemplate = "Resume: {{ resumeText }} JD: {{ jobDescriptionText }}",
     resumeUserId = USER_ID,
     resumeText = "My resume text",
@@ -154,7 +161,7 @@ function setupGetMocks(opts: {
 
   mockGet
     .mockResolvedValueOnce(
-      billingMissing ? missingSnap() : makeBillingSnap(billingBalance),
+      billingMissing ? missingSnap() : makeBillingSnap(checksUsed),
     )
     .mockResolvedValueOnce(
       promptTemplate ? makePromptSnap(promptTemplate) : makePromptSnap(undefined),
@@ -167,7 +174,7 @@ function setupGetMocks(opts: {
     );
 }
 
-function setupTransaction(billingBalance: number) {
+function setupTransaction(checksUsed: number) {
   const writes: { creates: unknown[]; updates: unknown[] } = {
     creates: [],
     updates: [],
@@ -175,7 +182,7 @@ function setupTransaction(billingBalance: number) {
 
   mockRunTransaction.mockImplementation(async (fn: (t: unknown) => unknown) => {
     const transaction = {
-      get: vi.fn().mockResolvedValue(makeBillingSnap(billingBalance)),
+      get: vi.fn().mockResolvedValue(makeBillingSnap(checksUsed)),
       create: vi.fn((...args: unknown[]) => writes.creates.push(args)),
       update: vi.fn((...args: unknown[]) => writes.updates.push(args)),
     };
@@ -186,10 +193,10 @@ function setupTransaction(billingBalance: number) {
   return writes;
 }
 
-function setupHappyPath(billingBalance = 100) {
-  setupGetMocks({ billingBalance });
+function setupHappyPath(checksUsed = 0) {
+  setupGetMocks({ checksUsed });
   mockGenerate.mockResolvedValue({ output: MOCK_AI_OUTPUT });
-  const writes = setupTransaction(billingBalance);
+  const writes = setupTransaction(checksUsed);
   return { writes };
 }
 
@@ -205,6 +212,7 @@ function callHandler(
 describe("matchResumeWithJobApplication", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGet.mockReset();
     docCallIndex = 0;
   });
 
@@ -258,7 +266,7 @@ describe("matchResumeWithJobApplication", () => {
     it("throws when prompt template is missing", async () => {
       // Manually set up mocks to return missing prompt template data
       mockGet
-        .mockResolvedValueOnce(makeBillingSnap(100))
+        .mockResolvedValueOnce(makeBillingSnap(0))
         .mockResolvedValueOnce({ exists: false, data: () => undefined })
         .mockResolvedValueOnce(makeResumeSnap(USER_ID, "text"))
         .mockResolvedValueOnce(makeAppSnap(USER_ID, "desc"));
@@ -290,8 +298,18 @@ describe("matchResumeWithJobApplication", () => {
 
   // --- Credit safety ---
 
-  describe("credit safety", () => {
-    it("does not deduct credits when AI generation fails", async () => {
+  describe("allowance", () => {
+    it("rejects before calling the model when the monthly allowance is used up", async () => {
+      setupGetMocks({ checksUsed: 15 });
+
+      await expect(callHandler()).rejects.toMatchObject({
+        code: "resource-exhausted",
+        details: { code: "ai-limit-reached", plan: "free", limit: 15 },
+      });
+      expect(mockGenerate).not.toHaveBeenCalled();
+    });
+
+    it("does not count a check when AI generation fails", async () => {
       setupGetMocks({});
       mockGenerate.mockRejectedValue(new Error("AI exploded"));
 
@@ -301,15 +319,15 @@ describe("matchResumeWithJobApplication", () => {
       expect(mockRunTransaction).not.toHaveBeenCalled();
     });
 
-    it("aborts transaction when balance dropped below required between pre-check and transaction", async () => {
-      setupGetMocks({ billingBalance: 100 });
+    it("aborts the transaction when the allowance ran out between pre-check and save", async () => {
+      setupGetMocks({ checksUsed: 14 });
       mockGenerate.mockResolvedValue({ output: MOCK_AI_OUTPUT });
 
       // Transaction re-reads billing and finds insufficient balance
       mockRunTransaction.mockImplementation(
         async (fn: (t: unknown) => unknown) => {
           const transaction = {
-            get: vi.fn().mockResolvedValue(makeBillingSnap(5)), // only 5, need 10
+            get: vi.fn().mockResolvedValue(makeBillingSnap(15)),
             create: vi.fn(),
             update: vi.fn(),
           };
@@ -319,23 +337,23 @@ describe("matchResumeWithJobApplication", () => {
       );
 
       await expect(callHandler()).rejects.toMatchObject({
-        code: "failed-precondition",
-        details: { code: "insufficient-credits" },
+        code: "resource-exhausted",
+        details: { code: "ai-limit-reached" },
       });
     });
 
-    it("deducts credits via FieldValue.increment(-10) and creates match on success", async () => {
-      const { writes } = setupHappyPath(100);
+    it("counts one AI check and creates the match on success", async () => {
+      const { writes } = setupHappyPath(3);
 
       const result = await callHandler();
 
       expect(result).toEqual({ success: true });
 
-      // Verify credit deduction
       expect(writes.updates.length).toBe(1);
       const updateArgs = writes.updates[0] as unknown[];
       const updateData = updateArgs[1] as Record<string, unknown>;
-      expect(updateData.currentBalance).toEqual({ __increment: -10 });
+      expect(updateData.aiUsage).toEqual({ period: CURRENT_PERIOD, count: 4 });
+      expect(updateData.bonusChecks).toBe(0);
 
       // Verify match result creation
       expect(writes.creates.length).toBe(1);

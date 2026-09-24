@@ -34,10 +34,10 @@ vi.mock("@genkit-ai/googleai", () => {
   return { googleAI };
 });
 
+import { HttpsError } from "firebase-functions/v2/https";
 import {
   validateAuth,
   handleError,
-  createInsufficientCreditsError,
 } from "../generateCoverLetter";
 
 describe("validateAuth", () => {
@@ -59,8 +59,7 @@ describe("validateAuth", () => {
 
 describe("handleError", () => {
   it("re-throws HttpsError as-is", () => {
-    // Create an error that matches the mocked HttpsError class
-    const error = createInsufficientCreditsError("generate");
+    const error = new HttpsError("resource-exhausted", "limit reached");
     expect(() => handleError(error, "generating")).toThrow(error);
   });
 
@@ -82,21 +81,5 @@ describe("handleError", () => {
       expect(error.code).toBe("internal");
       expect(error.message).toBe("Failed to regenerate cover letter");
     }
-  });
-});
-
-describe("createInsufficientCreditsError", () => {
-  it("returns correct error for generate", () => {
-    const error = createInsufficientCreditsError("generate");
-    expect(error.message).toContain("generate");
-    expect(error.message).toContain("10");
-    expect((error as unknown as { details: { code: string } }).details.code).toBe(
-      "insufficient-credits",
-    );
-  });
-
-  it("returns correct error for regenerate", () => {
-    const error = createInsufficientCreditsError("regenerate");
-    expect(error.message).toContain("regenerate");
   });
 });
