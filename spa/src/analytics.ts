@@ -5,14 +5,8 @@ function isLoaded(): boolean {
 }
 
 type EventMap = {
-  signup_completed: {
-    source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
-    method?: "password" | "google" | "email_code";
-  };
-  login_completed: {
-    source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
-    method?: "password" | "google" | "email_code";
-  };
+  signup_completed: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
+  login_completed: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
   signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
   job_application_created: {
     method: "link_parse" | "manual" | "match_tool" | "extension";
