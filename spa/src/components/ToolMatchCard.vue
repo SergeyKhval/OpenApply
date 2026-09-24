@@ -9,7 +9,7 @@
 
     <CardContent class="flex flex-col gap-5">
       <Alert v-if="justSaved">
-        <PhCheckCircle class="text-emerald-500" />
+        <PhCheckCircle class="text-success" />
         <AlertDescription class="flex items-center justify-between gap-3 flex-wrap">
           <p>Saved from your match check. This application is a draft for now.</p>
           <Button
@@ -21,7 +21,7 @@
           >
             I applied
           </Button>
-          <span v-else class="text-sm text-emerald-600 font-medium shrink-0">Marked as Applied ✓</span>
+          <span v-else class="text-sm text-success font-medium shrink-0">Marked as Applied ✓</span>
         </AlertDescription>
       </Alert>
 
@@ -50,12 +50,12 @@
             >
               <PhCheckCircle
                 v-if="requirement.status === 'matched'"
-                class="text-emerald-500 shrink-0 mt-0.5"
+                class="text-success shrink-0 mt-0.5"
                 :size="16"
               />
               <PhCircleHalf
                 v-else-if="requirement.status === 'partial'"
-                class="text-amber-500 shrink-0 mt-0.5"
+                class="text-stage-interviewing shrink-0 mt-0.5"
                 :size="16"
               />
               <PhXCircle v-else class="text-destructive shrink-0 mt-0.5" :size="16" />

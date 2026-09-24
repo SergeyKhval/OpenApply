@@ -12,7 +12,7 @@
           :value="resume.id"
         >
           <div class="flex items-center gap-2">
-            <PhFile :size="16" class="text-gray-400" />
+            <PhFile :size="16" class="text-muted-foreground" />
             <span>{{ resume.fileName }}</span>
           </div>
         </SelectItem>

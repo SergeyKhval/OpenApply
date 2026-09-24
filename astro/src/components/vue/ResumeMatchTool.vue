@@ -201,7 +201,7 @@
               <p v-if="requirement.evidence" class="mt-1 text-xs text-muted-foreground border-l-2 border-border pl-2 italic">
                 “{{ requirement.evidence }}”
               </p>
-              <p v-else class="mt-1 text-xs text-rose-300/80">No evidence in your resume</p>
+              <p v-else class="mt-1 text-xs text-destructive/80">No evidence in your resume</p>
             </div>
           </li>
         </ul>
@@ -214,7 +214,7 @@
           <li
             v-for="missingKeyword in analysis.missingKeywords"
             :key="missingKeyword"
-            class="px-2.5 py-1 text-xs font-medium rounded-full border border-rose-400/40 bg-rose-500/10 text-rose-200"
+            class="px-2.5 py-1 text-xs font-medium rounded-full border border-destructive/40 bg-destructive-soft text-destructive"
           >
             {{ missingKeyword }}
           </li>
@@ -240,7 +240,7 @@
       </div>
 
       <!-- CTA -->
-      <div class="rounded-lg border border-primary/40 bg-linear-to-br from-primary/15 via-card to-card p-6 flex flex-col md:flex-row md:items-center gap-4">
+      <div class="rounded-card border border-primary/30 bg-secondary p-6 flex flex-col md:flex-row md:items-center gap-4">
         <div class="flex-1">
           <h3 class="text-lg font-bold text-foreground">Applying to this one? Don't lose track of it.</h3>
           <p class="text-sm text-muted-foreground mt-1">
@@ -326,9 +326,9 @@ const LOADING_MESSAGES = [
   "Being honest with you…",
 ];
 const REQUIREMENT_TONES: Record<RequirementStatus, { icon: string; label: string }> = {
-  matched: { icon: "ph-check-circle text-emerald-400", label: "Matched" },
-  partial: { icon: "ph-circle-half text-amber-400", label: "Partially matched" },
-  missing: { icon: "ph-x-circle text-rose-400", label: "Missing" },
+  matched: { icon: "ph-check-circle text-success", label: "Matched" },
+  partial: { icon: "ph-circle-half text-stage-interviewing-text", label: "Partially matched" },
+  missing: { icon: "ph-x-circle text-destructive", label: "Missing" },
 };
 
 const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
@@ -390,9 +390,9 @@ const scoreTone = computed(() => {
   // need to be fully (not partially) met, or the label contradicts the count
   // right next to it.
   const strongEligible = total === 0 || matched / total >= 0.8;
-  if (score >= 75 && strongEligible) return { label: "Strong match", text: "text-emerald-400", stroke: "stroke-emerald-400" };
-  if (score >= 55) return { label: "Possible, with gaps", text: "text-amber-400", stroke: "stroke-amber-400" };
-  return { label: "Long shot as it stands", text: "text-rose-400", stroke: "stroke-rose-400" };
+  if (score >= 75 && strongEligible) return { label: "Strong match", text: "text-success", stroke: "stroke-success" };
+  if (score >= 55) return { label: "Possible, with gaps", text: "text-stage-interviewing-text", stroke: "stroke-stage-interviewing" };
+  return { label: "Long shot as it stands", text: "text-destructive", stroke: "stroke-destructive" };
 });
 
 const parseTone = computed(() => {
@@ -401,23 +401,23 @@ const parseTone = computed(() => {
     return {
       title: "Your resume text comes out scrambled",
       icon: "ph-warning-octagon",
-      text: "text-rose-300",
-      box: "border-rose-400/40 bg-rose-500/10",
+      text: "text-destructive",
+      box: "border-destructive/40 bg-destructive-soft",
     };
   }
   if (status === "issues") {
     return {
       title: "Parts of your resume don't read cleanly",
       icon: "ph-warning",
-      text: "text-amber-300",
-      box: "border-amber-400/40 bg-amber-500/10",
+      text: "text-stage-interviewing-text",
+      box: "border-stage-interviewing/40 bg-stage-interviewing-soft",
     };
   }
   return {
     title: "Your resume reads cleanly as plain text",
     icon: "ph-check-circle",
-    text: "text-emerald-300",
-    box: "border-emerald-400/30 bg-emerald-500/5",
+    text: "text-success",
+    box: "border-success/30 bg-success-soft",
   };
 });
 
@@ -446,7 +446,7 @@ const ctaHref = computed(() => {
 });
 
 function counterClass(value: string) {
-  return value.length >= MAX_CHARS * 0.95 ? "text-amber-400" : "text-muted-foreground";
+  return value.length >= MAX_CHARS * 0.95 ? "text-stage-interviewing-text" : "text-muted-foreground";
 }
 
 function trackEvent(eventName: string, properties: Record<string, unknown> = {}) {
