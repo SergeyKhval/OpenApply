@@ -7,6 +7,7 @@ Refreshed 2026-09-24 for extension 1.1.1 (in-page extraction, editable popup fie
 
 ## Submission checklist (for Sergey)
 
+0. Before submitting: try Save and Check match once on a job you're signed in to on LinkedIn and on Indeed (never verified live, only on captured fixtures). The summary names both sites; if either fails, change the summary to "Works on Greenhouse, Lever, Ashby and more" (also `description` in extension/manifest.json).
 1. Build the zip: `export ASDF_NODEJS_VERSION=22.22.2 && pnpm build:extension` (repo root). Confirms `extension/dist/openapply-extension-1.1.1.zip`.
 2. Go to the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole), pay the one-time $5 registration fee if you haven't, then "New item" and upload the zip.
 3. **Store listing tab**: paste the Name, Summary and Description below. Category: Productivity. Language: English.
