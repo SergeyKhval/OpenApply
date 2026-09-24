@@ -1,0 +1,255 @@
+/*
+ * OpenApply theme ("Warm and steady"), shared by the app (spa/src/index.css)
+ * and the landing (astro/src/styles/global.css). Import it right after
+ * tailwindcss. Values are hex so spa/src/lib/__tests__/themeTokens.test.ts can
+ * check contrast. Design source: vault redesign/phase2-hifi/.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #FFF8F1;
+  --foreground: #2A1E16;
+  --soft-foreground: #56443A;
+  --card: #FFFFFF;
+  --card-foreground: #2A1E16;
+  --popover: #FFFFFF;
+  --popover-foreground: #2A1E16;
+  --primary: #BF4E1B;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FCE6D8;
+  --secondary-foreground: #A9431A;
+  --muted: #F8EDE1;
+  --muted-foreground: #7A6758;
+  --accent: #F8EDE1;
+  --accent-foreground: #2A1E16;
+  --destructive: #B3261E;
+  --destructive-foreground: #FFFFFF;
+  --destructive-soft: #FBE7E4;
+  --success: #276B44;
+  --success-soft: #E3F3E9;
+  --border: #EFDFCF;
+  --input: #E0CBB6;
+  --ring: #BF4E1B;
+  --chart-1: #BF4E1B;
+  --chart-2: #2F6FB0;
+  --chart-3: #B7791F;
+  --chart-4: #2E8A5A;
+  --chart-5: #9A7B5F;
+  --sidebar: #FFF8F1;
+  --sidebar-foreground: #56443A;
+  --sidebar-primary: #FCE6D8;
+  --sidebar-primary-foreground: #A9431A;
+  --sidebar-accent: #F8EDE1;
+  --sidebar-accent-foreground: #2A1E16;
+  --sidebar-border: #EFDFCF;
+  --sidebar-ring: #BF4E1B;
+
+  --stage-saved: #9A7B5F;
+  --stage-saved-soft: #F6ECE0;
+  --stage-saved-text: #6E5238;
+  --stage-applied: #2F6FB0;
+  --stage-applied-soft: #E6F0FA;
+  --stage-applied-text: #245A91;
+  --stage-interviewing: #B7791F;
+  --stage-interviewing-soft: #FCF1D9;
+  --stage-interviewing-text: #83540F;
+  --stage-offer: #2E8A5A;
+  --stage-offer-soft: #E3F3E9;
+  --stage-offer-text: #226B45;
+  --stage-closed: #8C7B6E;
+  --stage-closed-soft: #F3EAE0;
+  --stage-closed-text: #5E4E42;
+
+  --avatar-1: #F4D7C5;
+  --avatar-2: #D9E8F6;
+  --avatar-3: #DCEFE2;
+  --avatar-4: #F5E6BF;
+  --avatar-5: #E7DDF3;
+  --avatar-6: #F6D6DC;
+  --avatar-7: #D5EEEC;
+
+  --font-sans: "Figtree", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --radius: 1rem;
+  --shadow-card: 0 1px 2px rgb(80 45 20 / 0.06), 0 4px 14px rgb(80 45 20 / 0.06);
+  --shadow-pop: 0 18px 48px rgb(60 30 10 / 0.18), 0 3px 8px rgb(60 30 10 / 0.08);
+  --shadow-2xs: 0 1px 2px rgb(80 45 20 / 0.05);
+  --shadow-xs: 0 1px 2px rgb(80 45 20 / 0.06);
+  --shadow-sm: var(--shadow-card);
+  --shadow: var(--shadow-card);
+  --shadow-md: 0 2px 4px rgb(80 45 20 / 0.06), 0 8px 20px rgb(80 45 20 / 0.08);
+  --shadow-lg: var(--shadow-pop);
+  --shadow-xl: var(--shadow-pop);
+  --shadow-2xl: var(--shadow-pop);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #1A1410;
+  --foreground: #F5EBE1;
+  --soft-foreground: #D6C5B6;
+  --card: #241C16;
+  --card-foreground: #F5EBE1;
+  --popover: #241C16;
+  --popover-foreground: #F5EBE1;
+  --primary: #E0733D;
+  --primary-foreground: #1A1410;
+  --secondary: #3D2517;
+  --secondary-foreground: #F29A6B;
+  --muted: #2E241D;
+  --muted-foreground: #A8958A;
+  --accent: #2E241D;
+  --accent-foreground: #F5EBE1;
+  --destructive: #F08A7E;
+  --destructive-foreground: #1A1410;
+  --destructive-soft: #3A1C18;
+  --success: #5CC08A;
+  --success-soft: #182D22;
+  --border: #3A2E25;
+  --input: #4C3D31;
+  --ring: #E0733D;
+  --chart-1: #E0733D;
+  --chart-2: #6FA6DE;
+  --chart-3: #E0A94F;
+  --chart-4: #5CC08A;
+  --chart-5: #B89A7E;
+  --sidebar: #1A1410;
+  --sidebar-foreground: #D6C5B6;
+  --sidebar-primary: #3D2517;
+  --sidebar-primary-foreground: #F29A6B;
+  --sidebar-accent: #2E241D;
+  --sidebar-accent-foreground: #F5EBE1;
+  --sidebar-border: #3A2E25;
+  --sidebar-ring: #E0733D;
+
+  --stage-saved: #B89A7E;
+  --stage-saved-soft: #2A211B;
+  --stage-saved-text: #D9C2AB;
+  --stage-applied: #6FA6DE;
+  --stage-applied-soft: #1B2733;
+  --stage-applied-text: #A9CBEE;
+  --stage-interviewing: #E0A94F;
+  --stage-interviewing-soft: #33271A;
+  --stage-interviewing-text: #F0C88A;
+  --stage-offer: #5CC08A;
+  --stage-offer-soft: #182D22;
+  --stage-offer-text: #93DDB3;
+  --stage-closed: #A8958A;
+  --stage-closed-soft: #2A221C;
+  --stage-closed-text: #CDBBAE;
+
+  --avatar-1: #4A2F22;
+  --avatar-2: #223447;
+  --avatar-3: #1F3A2B;
+  --avatar-4: #433616;
+  --avatar-5: #35294A;
+  --avatar-6: #48262E;
+  --avatar-7: #1E3B39;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.25);
+  --shadow-pop: 0 18px 48px rgb(0 0 0 / 0.55), 0 3px 8px rgb(0 0 0 / 0.3);
+  --shadow-2xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.35), 0 8px 20px rgb(0 0 0 / 0.3);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-soft-foreground: var(--soft-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-stage-saved: var(--stage-saved);
+  --color-stage-saved-soft: var(--stage-saved-soft);
+  --color-stage-saved-text: var(--stage-saved-text);
+  --color-stage-applied: var(--stage-applied);
+  --color-stage-applied-soft: var(--stage-applied-soft);
+  --color-stage-applied-text: var(--stage-applied-text);
+  --color-stage-interviewing: var(--stage-interviewing);
+  --color-stage-interviewing-soft: var(--stage-interviewing-soft);
+  --color-stage-interviewing-text: var(--stage-interviewing-text);
+  --color-stage-offer: var(--stage-offer);
+  --color-stage-offer-soft: var(--stage-offer-soft);
+  --color-stage-offer-text: var(--stage-offer-text);
+  --color-stage-closed: var(--stage-closed);
+  --color-stage-closed-soft: var(--stage-closed-soft);
+  --color-stage-closed-text: var(--stage-closed-text);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-field: 14px;
+  --radius-card: 20px;
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    letter-spacing: var(--tracking-normal);
+  }
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
