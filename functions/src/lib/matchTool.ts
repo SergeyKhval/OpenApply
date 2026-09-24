@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { BlockList, isIP } from "node:net";
 import { HttpsError } from "firebase-functions/v2/https";
 
@@ -134,13 +134,21 @@ export function describeClientIp(rawRequest: {
 }
 
 /**
- * Hashes a client identifier so raw IPs are never stored.
+ * Hashes a client identifier so raw IPs are never stored. Uses HMAC-SHA256
+ * keyed with a secret, since a plain hash of an IP is reversible by brute
+ * force (the IPv4 space is small enough to enumerate). Falls back to the
+ * previous unsalted SHA-256 with a warning when no secret is configured, so
+ * a deploy without the param set still works.
  */
-export function hashClientKey(value: string): string {
-  return createHash("sha256")
-    .update(`openapply-match-tool:${value}`)
-    .digest("hex")
-    .slice(0, 32);
+export function hashClientKey(value: string, secret?: string): string {
+  const input = `openapply-match-tool:${value}`;
+  if (!secret) {
+    console.warn(
+      "hashClientKey: RATE_LIMIT_HASH_KEY is not set; falling back to unsalted SHA-256, which is reversible by brute force. Set the RATE_LIMIT_HASH_KEY param to fix this.",
+    );
+    return createHash("sha256").update(input).digest("hex").slice(0, 32);
+  }
+  return createHmac("sha256", secret).update(input).digest("hex").slice(0, 32);
 }
 
 /**

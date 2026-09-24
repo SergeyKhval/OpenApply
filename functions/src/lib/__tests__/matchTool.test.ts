@@ -137,11 +137,34 @@ describe("describeClientIp", () => {
 });
 
 describe("hashClientKey", () => {
-  it("is stable and does not contain the raw value", () => {
+  it("without a secret, is stable, warns, and does not contain the raw value", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const hash = hashClientKey("1.2.3.4");
     expect(hash).toBe(hashClientKey("1.2.3.4"));
     expect(hash).not.toContain("1.2.3.4");
     expect(hash).toHaveLength(32);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("with a secret, uses HMAC and does not warn", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const hash = hashClientKey("1.2.3.4", "test-secret");
+    expect(hash).toBe(hashClientKey("1.2.3.4", "test-secret"));
+    expect(hash).not.toContain("1.2.3.4");
+    expect(hash).toHaveLength(32);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("a different secret produces a different hash for the same value", () => {
+    expect(hashClientKey("1.2.3.4", "secret-a")).not.toBe(hashClientKey("1.2.3.4", "secret-b"));
+  });
+
+  it("the keyed hash differs from the unsalted fallback hash", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(hashClientKey("1.2.3.4", "test-secret")).not.toBe(hashClientKey("1.2.3.4"));
+    warn.mockRestore();
   });
 });
 
