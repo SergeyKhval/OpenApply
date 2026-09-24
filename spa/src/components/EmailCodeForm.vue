@@ -21,7 +21,7 @@
 
   <form v-else class="space-y-4" @submit.prevent="handleVerifyCode">
     <p class="text-sm text-foreground">
-      We sent a 6-digit code to <strong class="break-all">{{ sentTo }}</strong>. It expires in 10 minutes.
+      We sent a 6-digit code to <strong class="break-words">{{ sentTo }}</strong>. It expires in 10 minutes.
     </p>
 
     <div>
