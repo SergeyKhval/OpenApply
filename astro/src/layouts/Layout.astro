@@ -1,5 +1,8 @@
 ---
 import '../styles/global.css';
+// Self-hosted Phosphor icons. Imported here, not in a <style> block: Astro scopes
+// component styles, so an @import there wouldn't reach icons in other components.
+import '@phosphor-icons/web/regular';
 import PostHog from "../components/posthog.astro";
 
 export interface Props {
@@ -109,8 +112,3 @@ const fontFamilies = includeMonoFont
   </script>
 	</body>
 </html>
-
-<style>
-	/* Phosphor Icons CSS, self-hosted instead of loaded from unpkg */
-	@import "@phosphor-icons/web/regular";
-</style>
