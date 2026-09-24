@@ -15,6 +15,7 @@ export * from "./generateCoverLetter";
 export * from "./createUserProfile";
 export * from "./createStripeCheckoutSession";
 export * from "./stripeWebhook";
+export * from "./createBillingPortalSession";
 export * from "./migrateJobDescriptions";
 export * from "./jobApplications";
 export * from "./sendWelcomeEmail";

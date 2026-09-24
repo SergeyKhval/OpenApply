@@ -1,152 +1,136 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockDocGet = vi.fn();
-const mockSessionCreate = vi.fn();
+const mockProfileGet = vi.fn();
+const mockSessionsCreate = vi.fn();
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
     collection: () => ({
       doc: () => ({
-        collection: () => ({
-          doc: () => ({
-            get: mockDocGet,
-          }),
-        }),
+        collection: () => ({ doc: () => ({ get: mockProfileGet }) }),
       }),
     }),
   }),
 }));
 
 vi.mock("firebase-functions/params", () => ({
-  defineString: () => ({
-    value: () => "sk_test_key",
+  defineString: (name: string) => ({
+    value: () => (name === "STRIPE_PRO_PRICE_ID" ? "price_pro_test" : "sk_test_key"),
   }),
 }));
 
-vi.mock("stripe", () => {
-  return {
-    default: class Stripe {
-      checkout = {
-        sessions: {
-          create: (...args: unknown[]) => mockSessionCreate(...args),
-        },
-      };
-    },
-  };
-});
+vi.mock("stripe", () => ({
+  default: class Stripe {
+    checkout = {
+      sessions: { create: (...args: unknown[]) => mockSessionsCreate(...args) },
+    };
+  },
+}));
 
-vi.mock("firebase-functions/v2/https", () => ({
-  onCall: (fn: Function) => fn,
-  HttpsError: class HttpsError extends Error {
+vi.mock("firebase-functions/v2/https", () => {
+  class HttpsError extends Error {
     code: string;
     constructor(code: string, message: string) {
       super(message);
       this.code = code;
     }
-  },
-}));
+  }
+  return { HttpsError, onCall: (fn: unknown) => fn };
+});
 
 import { createStripeCheckoutSession } from "../createStripeCheckoutSession";
 
-const VALID_PRICE_ID = "price_1SJE8pAZ6qTVMaZC4YZ6FC0m";
+const call = createStripeCheckoutSession as unknown as (req: unknown) => Promise<{ url: string }>;
+const SUCCESS = "https://openapply.app/app/dashboard/applications?dialog-name=checkout-success";
+const CANCEL = "https://openapply.app/app/dashboard/applications?dialog-name=checkout-canceled";
 
-const callFunction = (overrides: {
-  auth?: { uid: string } | null;
-  data?: Record<string, unknown>;
-}) => {
-  const request = {
-    auth: overrides.auth !== undefined ? overrides.auth : { uid: "user-123" },
-    data: {
-      priceId: VALID_PRICE_ID,
-      success_url: "https://example.com/success",
-      cancel_url: "https://example.com/cancel",
-      ...overrides.data,
-    },
-  };
-  return (createStripeCheckoutSession as unknown as Function)(request);
-};
+const request = (data: Record<string, unknown> = {}, uid: string | null = "user-1") => ({
+  auth: uid ? { uid } : undefined,
+  data: { success_url: SUCCESS, cancel_url: CANCEL, ...data },
+});
+
+const profile = (data: Record<string, unknown> | null) => ({
+  exists: data !== null,
+  data: () => data ?? undefined,
+});
 
 describe("createStripeCheckoutSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSessionsCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_test" });
   });
 
-  describe("validation", () => {
-    it("rejects unauthenticated requests", async () => {
-      await expect(callFunction({ auth: null })).rejects.toMatchObject({
-        code: "unauthenticated",
-      });
+  it("requires sign-in", async () => {
+    await expect(call(request({}, null))).rejects.toMatchObject({ code: "unauthenticated" });
+  });
+
+  it("fails when the billing profile has no Stripe customer", async () => {
+    mockProfileGet.mockResolvedValue(profile({}));
+    await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
+    mockProfileGet.mockResolvedValue(profile(null));
+    await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
+  });
+
+  it("refuses a second subscription for a Pro user", async () => {
+    mockProfileGet.mockResolvedValue(
+      profile({ stripeCustomerId: "cus_1", subscriptionStatus: "active" }),
+    );
+    await expect(call(request())).rejects.toMatchObject({ code: "already-exists" });
+    expect(mockSessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("creates a Pro subscription checkout with Stripe Tax", async () => {
+    mockProfileGet.mockResolvedValue(profile({ stripeCustomerId: "cus_1" }));
+
+    await expect(call(request())).resolves.toEqual({
+      url: "https://checkout.stripe.com/c/pay/cs_test",
     });
 
-    it("rejects unknown priceId", async () => {
-      await expect(
-        callFunction({ data: { priceId: "price_unknown" } }),
-      ).rejects.toMatchObject({
-        code: "invalid-argument",
-      });
-    });
-
-    it("rejects missing priceId", async () => {
-      await expect(
-        callFunction({ data: { priceId: "" } }),
-      ).rejects.toMatchObject({
-        code: "invalid-argument",
-      });
-    });
-
-    it("rejects when billing profile does not exist", async () => {
-      mockDocGet.mockResolvedValue({ exists: false });
-
-      await expect(callFunction({})).rejects.toMatchObject({
-        code: "failed-precondition",
-        message: "Billing profile not initialized",
-      });
-    });
-
-    it("rejects when billing profile has no stripeCustomerId", async () => {
-      mockDocGet.mockResolvedValue({
-        exists: true,
-        data: () => ({ someField: "value" }),
-      });
-
-      await expect(callFunction({})).rejects.toMatchObject({
-        code: "failed-precondition",
-        message: "User does not have a Stripe customer ID",
-      });
+    expect(mockSessionsCreate).toHaveBeenCalledWith({
+      mode: "subscription",
+      customer: "cus_1",
+      client_reference_id: "user-1",
+      line_items: [{ price: "price_pro_test", quantity: 1 }],
+      subscription_data: { metadata: { firebaseUid: "user-1" } },
+      automatic_tax: { enabled: true },
+      customer_update: { address: "auto", name: "auto" },
+      tax_id_collection: { enabled: true },
+      success_url: SUCCESS,
+      cancel_url: CANCEL,
     });
   });
 
-  describe("happy path", () => {
-    const STRIPE_CUSTOMER_ID = "cus_abc123";
-    const SESSION_URL = "https://checkout.stripe.com/pay/cs_test_123";
+  it("lets a canceled subscriber subscribe again", async () => {
+    mockProfileGet.mockResolvedValue(
+      profile({ stripeCustomerId: "cus_1", subscriptionStatus: "canceled" }),
+    );
+    await call(request());
+    expect(mockSessionsCreate).toHaveBeenCalledTimes(1);
+  });
 
-    beforeEach(() => {
-      mockDocGet.mockResolvedValue({
-        exists: true,
-        data: () => ({ stripeCustomerId: STRIPE_CUSTOMER_ID }),
-      });
-      mockSessionCreate.mockResolvedValue({ url: SESSION_URL });
-    });
+  it("gives an old client's coin pack request a Pro checkout", async () => {
+    mockProfileGet.mockResolvedValue(profile({ stripeCustomerId: "cus_1" }));
 
-    it("returns the Stripe checkout session URL", async () => {
-      const result = await callFunction({});
-      expect(result).toEqual({ url: SESSION_URL });
-    });
+    await call(request({ priceId: "price_1SJE8pAZ6qTVMaZC4YZ6FC0m" }));
 
-    it("creates Stripe session with correct customer, price, and metadata", async () => {
-      await callFunction({});
+    expect(mockSessionsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "subscription",
+        line_items: [{ price: "price_pro_test", quantity: 1 }],
+      }),
+    );
+  });
 
-      expect(mockSessionCreate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          mode: "payment",
-          customer: STRIPE_CUSTOMER_ID,
-          client_reference_id: "user-123",
-          metadata: { creditPackPriceId: VALID_PRICE_ID },
-          line_items: [{ price: VALID_PRICE_ID, quantity: 1 }],
-          success_url: "https://example.com/success",
-          cancel_url: "https://example.com/cancel",
-        }),
-      );
-    });
+  it("does not redirect to other sites after checkout", async () => {
+    mockProfileGet.mockResolvedValue(profile({ stripeCustomerId: "cus_1" }));
+
+    await call(request({ success_url: "https://evil.example/", cancel_url: "" }));
+
+    expect(mockSessionsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success_url: "https://openapply.app/app/dashboard/applications?dialog-name=checkout-success",
+        cancel_url: "https://openapply.app/app/dashboard/applications?dialog-name=checkout-canceled",
+      }),
+    );
   });
 });

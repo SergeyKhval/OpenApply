@@ -32,7 +32,10 @@ export const createUserProfile = user().onCreate(async (user) => {
   }
 
   try {
-    const customer = await stripeClient.customers.create({ email: user.email });
+    const customer = await stripeClient.customers.create({
+      email: user.email,
+      metadata: { firebaseUid: user.uid },
+    });
     const userRef = db.collection("users").doc(user.uid);
     const billingProfileRef = userRef
       .collection("billingProfile")
@@ -48,9 +51,9 @@ export const createUserProfile = user().onCreate(async (user) => {
 
     await billingProfileRef.set({
       stripeCustomerId: customer.id,
-      currentBalance: 100,
-      lifetimeCreditsPurchased: 0,
-      welcomeCreditsGrantedAt: FieldValue.serverTimestamp(),
+      aiUsage: null,
+      bonusChecks: 0,
+      subscriptionStatus: null,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
