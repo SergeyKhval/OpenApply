@@ -20,44 +20,6 @@
           </RouterLink>
         </li>
       </ul>
-      <div class="flex items-center mb-2">
-        <div class="grow flex items-center gap-2">
-          <PhCoins :size="32" />
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <p class="text-xl">
-                {{ userProfile?.billingProfile?.currentBalance }}
-              </p>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p class="text-center">
-                <template v-if="isOnFreeCredits">Free coins to try AI features,<br />e.g. cover letter generation</template>
-                <template v-else>Coins are used for AI features,<br />e.g. cover letter generation</template>
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <span v-if="isOnFreeCredits" class="text-xs text-muted-foreground">free</span>
-        </div>
-        <Dialog>
-          <DialogTrigger v-if="!isOnFreeCredits" as-child>
-            <Button size="sm">Top up</Button>
-          </DialogTrigger>
-          <DialogScrollContent class="md:min-w-200">
-            <DialogHeader>
-              <DialogTitle>Top up your coins</DialogTitle>
-              <DialogDescription
-                >Coins are used for AI features</DialogDescription
-              >
-            </DialogHeader>
-
-            <CreditPackOptions
-              :loading="isProcessing"
-              @purchase="startCheckout"
-            />
-          </DialogScrollContent>
-        </Dialog>
-      </div>
-
       <div class="rounded-lg border border-dashed border-sidebar-border/70 p-4">
         <p class="text-sm font-medium text-foreground">Join the community</p>
         <p class="mt-1 text-sm text-muted-foreground">
@@ -105,6 +67,9 @@
                 {{ user?.displayName }}
               </p>
               <p class="text-xs text-muted-foreground">{{ user?.email }}</p>
+              <p v-if="proLabel" class="text-xs font-medium text-primary">
+                {{ proLabel }}
+              </p>
             </div>
           </div>
           <DropdownMenuSeparator />
@@ -113,6 +78,14 @@
               <PhGear />
               Settings
             </RouterLink>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            v-if="hasSubscription"
+            :disabled="isOpeningPortal"
+            @click="openBillingPortal"
+          >
+            <PhCreditCard />
+            Manage subscription
           </DropdownMenuItem>
           <DropdownMenuItem @click="handleLogout">
             <PhSignOut />
@@ -131,7 +104,7 @@ import { useAuth } from "@/composables/useAuth.ts";
 import {
   PhBriefcase,
   PhCaretUp,
-  PhCoins,
+  PhCreditCard,
   PhDiscordLogo,
   PhFiles,
   PhGear,
@@ -146,22 +119,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogHeader,
-  DialogScrollContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import CreditPackOptions from "@/components/CreditPackOptions.vue";
-import { useCreditsCheckout } from "@/composables/useCreditsCheckout.ts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useAiAllowance } from "@/composables/useAiAllowance";
+import { useProSubscription } from "@/composables/useProSubscription";
 
 type AppNavigationEmits = {
   (event: "close-nav"): void;
@@ -177,14 +136,25 @@ const navLinks = [
   { id: 2, name: "Documents", to: "/documents", icon: PhFiles },
 ];
 
-const { startCheckout, isProcessing } = useCreditsCheckout();
+const { allowance } = useAiAllowance();
+const { isOpeningPortal, openBillingPortal } = useProSubscription();
 
-// A brand-new user who hasn't bought anything yet is still on their welcome
-// grant; asking them to pay before they've tried any AI feature is a
-// worse first impression than just showing what they have to try with.
-const isOnFreeCredits = computed(() => {
+// Anyone with a Stripe subscription (even a lapsed one) can manage it.
+const hasSubscription = computed(
+  () => !!userProfile.value?.billingProfile?.stripeSubscriptionId,
+);
+
+const proLabel = computed(() => {
   const billing = userProfile.value?.billingProfile;
-  return !!billing && billing.lifetimeCreditsPurchased === 0 && billing.currentBalance > 0;
+  if (allowance.value?.plan !== "pro") return null;
+  if (billing?.cancelAtPeriodEnd && billing.currentPeriodEnd) {
+    const endDate = billing.currentPeriodEnd.toDate().toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    });
+    return `Pro until ${endDate}`;
+  }
+  return "Pro";
 });
 
 const handleLogout = async () => {

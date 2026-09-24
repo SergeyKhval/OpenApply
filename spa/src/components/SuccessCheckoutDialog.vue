@@ -2,18 +2,23 @@
   <Dialog :open="isOpen" @update:open="updateDialogOpenState">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Payment successful!</DialogTitle>
+        <DialogTitle>{{ isPro ? "Welcome to Pro" : "Payment received" }}</DialogTitle>
 
-        <div class="flex flex-col items-center">
-          <PhSealCheck size="96" class="text-green-400" />
-          <p class="text-center text-lg mb-4">Thanks for your purchase!</p>
-
-          <p class="text-2xl flex items-center gap-2">
-            <PhCoins />
-            {{ userProfile?.billingProfile?.currentBalance }}
-          </p>
-          <p class="text-muted-foreground mb-4">current coins balance</p>
-          <p>Good luck in your job search!</p>
+        <div class="flex flex-col items-center gap-2 py-4">
+          <template v-if="isPro">
+            <PhSealCheck size="96" class="text-green-400" />
+            <p class="text-center text-lg">You now have 150 AI checks a month.</p>
+            <p class="text-center text-muted-foreground">
+              Manage or cancel anytime from your account menu.
+            </p>
+          </template>
+          <template v-else>
+            <Spinner class="size-12" />
+            <p class="text-center text-lg">Activating your plan…</p>
+            <p class="text-center text-muted-foreground">
+              This usually takes a few seconds.
+            </p>
+          </template>
         </div>
       </DialogHeader>
 
@@ -28,7 +33,9 @@
 
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
-import { PhCoins, PhSealCheck } from "@phosphor-icons/vue";
+import { computed } from "vue";
+import { PhSealCheck } from "@phosphor-icons/vue";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +44,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { omit } from "lodash";
-import { useAuth } from "@/composables/useAuth.ts";
+import { useAiAllowance } from "@/composables/useAiAllowance";
 import { useRoute, useRouter } from "vue-router";
 
 type SuccessCheckoutDialogProps = {
@@ -48,7 +55,8 @@ const { isOpen } = defineProps<SuccessCheckoutDialogProps>();
 
 const router = useRouter();
 const route = useRoute();
-const { userProfile } = useAuth();
+const { allowance } = useAiAllowance();
+const isPro = computed(() => allowance.value?.plan === "pro");
 
 function updateDialogOpenState(open: boolean) {
   if (!open) {
