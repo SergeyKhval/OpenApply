@@ -1,4 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("@/firebase/config", () => ({
+  db: "mock-db",
+  functions: "mock-functions",
+}));
+
+vi.mock("firebase/firestore", () => ({
+  collection: () => "mock-collection-ref",
+  doc: () => "mock-doc-ref",
+}));
+
+vi.mock("firebase/functions", () => ({
+  httpsCallable: () => vi.fn(),
+}));
+
+vi.mock("vuefire", () => ({
+  useDocument: () => ({ value: undefined }),
+}));
+
+vi.mock("@/analytics", () => ({
+  trackEvent: vi.fn(),
+}));
+
 import { friendlyRequestError } from "../useJobIngestion";
 
 describe("friendlyRequestError", () => {
