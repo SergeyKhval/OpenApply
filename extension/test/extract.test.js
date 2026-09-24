@@ -54,6 +54,21 @@ describe("extractJob on captured job pages", () => {
     expect(extractFrom(fixture).location).toBe(location);
   });
 
+  it.each([
+    ["workable", ["At Hugging Face, we're on a journey", "If you love open-source", "More about Hugging Face"]],
+    ["workable-netguru", ["Netguru is a trusted partner", "Project Details:", "Requirements", "Must-have:", "3+ years of hands-on Snowflake experience", "Benefits", "100% remote work;"]],
+  ])("reads the description, requirements and benefits of a Workable job (%s)", (fixture, snippets) => {
+    const { title, company, description } = extractFrom(fixture);
+    for (const snippet of snippets) expect(description).toContain(snippet);
+    // In page order, one section after another
+    expect(description.indexOf("Requirements")).toBeGreaterThan(description.indexOf("Description"));
+    expect(description.indexOf("Benefits")).toBeGreaterThan(description.indexOf("Requirements"));
+    if (fixture === "workable-netguru") {
+      expect(title).toBe("(Senior) Data Engineer with AI - Freelance");
+      expect(company).toBe("Netguru");
+    }
+  });
+
   it("reads every section of a theprotocol.it offer, not just the first", () => {
     const { description } = extractFrom("theprotocol");
     for (const heading of ["Nasze wymagania", "O projekcie", "To oferujemy", "Założona w 1988 roku"]) {

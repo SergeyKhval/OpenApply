@@ -222,7 +222,11 @@ export function extractJob() {
       title: ['[data-ui="job-title"]', "h1"],
       company: [],
       location: ['[data-ui="job-location"]'],
-      description: ['[data-ui="job-description"]', '[data-ui="job-breakdown"]'],
+      // Description, requirements and benefits are separate sections
+      description: [
+        { all: '[data-ui="job-description"], [data-ui="job-requirements"], [data-ui="job-benefits"]' },
+        '[data-ui="job-breakdown"]',
+      ],
     },
     {
       // A single-page app: the server scraper only gets a bot challenge
