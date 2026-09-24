@@ -221,6 +221,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useCurrentUser, useIsCurrentUserLoaded, useDocument } from "vuefire";
 import { doc, collection } from "firebase/firestore";
 import { PhCheckCircle } from "@phosphor-icons/vue";
@@ -233,6 +234,10 @@ import { readPendingToolApplication } from "@/composables/pendingToolApplication
 import ResumeScore from "@/components/ResumeScore.vue";
 import { isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
+import { trackEvent } from "@/analytics";
+
+const route = useRoute();
+const router = useRouter();
 
 const user = useCurrentUser();
 const userLoaded = useIsCurrentUserLoaded();
@@ -245,8 +250,22 @@ const { redirect, hasPendingJob, pendingJobId } = usePostAuthRedirect();
 // Read once: the job the landing page match tool saved before signup
 const pendingToolApplication = readPendingToolApplication();
 const viewMode = ref<"sign-in" | "sign-up">(
-  hasPendingJob.value || pendingToolApplication ? "sign-up" : "sign-in",
+  hasPendingJob.value || pendingToolApplication || route.query.mode === "signup"
+    ? "sign-up"
+    : "sign-in",
 );
+
+// Keep the URL in sync so the sign-in/sign-up toggle is deep-linkable
+// (Header/hero "Get Started" links point here with ?mode=signup)
+watch(viewMode, (mode) => {
+  const query = { ...route.query };
+  if (mode === "sign-up") {
+    query.mode = "signup";
+  } else {
+    delete query.mode;
+  }
+  router.replace({ query });
+});
 
 // Subscribe to job document when pending job exists
 const jobDocRef = computed(() =>
@@ -268,6 +287,14 @@ const source = computed(() => {
   if (pendingToolApplication) return "resume_match_tool" as const;
   return "direct" as const;
 });
+
+watch(
+  viewMode,
+  (mode) => {
+    if (mode === "sign-up") trackEvent("signup_view_shown", { source: source.value });
+  },
+  { immediate: true },
+);
 
 watch(
   signedInUser,

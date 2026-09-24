@@ -128,7 +128,7 @@
       </div>
 
       <Alert
-        v-if="resumes.length === 0 && !isResumeBannerDismissed"
+        v-if="resumes.length === 0 && !isResumeBannerDismissed && !application?.toolMatch"
         class="flex items-center justify-between"
       >
         <PhUploadSimple class="size-4" />
@@ -151,6 +151,13 @@
         </Button>
       </Alert>
 
+      <ToolMatchCard
+        v-if="application?.toolMatch"
+        :match="application.toolMatch"
+        :just-saved="route.query.from === 'tool'"
+        @mark-applied="updateJobApplicationStatus('applied')"
+      />
+
       <div v-if="application" class="grid lg:grid-cols-2 gap-4">
         <div class="flex flex-col gap-4">
           <JobApplicationAttachments :application="application" />
@@ -161,12 +168,6 @@
         </div>
 
         <div class="flex flex-col gap-4">
-          <ToolMatchCard
-            v-if="application.toolMatch"
-            :match="application.toolMatch"
-            :just-saved="route.query.from === 'tool'"
-          />
-
           <JobApplicationDescription
             v-if="application"
             :application="application"

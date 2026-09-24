@@ -76,8 +76,8 @@ const isOnResumeMatchPage = currentPath.startsWith('/tools/resume-job-match');
           >
             Sign In
           </a>
-          <a 
-            href="/app"
+          <a
+            href="/app?mode=signup"
             class="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all duration-200"
             onclick="window.posthog?.capture('header_get_started_clicked', { source: 'header' })"
           >

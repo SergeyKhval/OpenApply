@@ -24,7 +24,7 @@
 
     <p class="text-sm text-muted-foreground mt-3 text-center">
       or
-      <a :href="`${spaBase}/`" class="text-primary hover:underline">skip and sign up directly</a>
+      <a :href="`${spaBase}/?mode=signup`" class="text-primary hover:underline">skip and sign up directly</a>
     </p>
   </div>
 </template>
