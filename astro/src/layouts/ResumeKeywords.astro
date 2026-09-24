@@ -73,7 +73,7 @@ const toolHref = frontmatter.role
   articleTags={frontmatter.tags}
   keywords={frontmatter.tags ? frontmatter.tags.join(", ") : undefined}
 >
-  <Header showHashLinks={false} currentPath={currentPath} />
+  <Header currentPath={currentPath} />
 
   <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
