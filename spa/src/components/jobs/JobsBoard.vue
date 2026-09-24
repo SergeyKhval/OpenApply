@@ -1,14 +1,16 @@
 <template>
-  <!-- Below xl the Closed column doesn't fit; it becomes a link above the lanes -->
+  <!-- When the board is narrower than ~68rem the Closed column doesn't fit:
+       it becomes a link above the lanes (container query on the board's width) -->
+  <div class="@container">
   <RouterLink
     v-if="closedJobs.length"
     :to="{ path: '/jobs', query: { stage: 'closed' } }"
-    class="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground xl:hidden"
+    class="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground @min-[68rem]:hidden"
   >
     <PhArchive :size="16" />
     Closed · {{ closedJobs.length }}
   </RouterLink>
-  <div class="grid grid-cols-4 items-start gap-4 xl:grid-cols-[repeat(4,minmax(0,1fr))_170px]">
+  <div class="grid grid-cols-4 items-start gap-4 @min-[68rem]:grid-cols-[repeat(4,minmax(0,1fr))_170px]">
     <section
       v-for="stage in OPEN_STAGES"
       :key="stage"
@@ -31,7 +33,7 @@
       </p>
     </section>
 
-    <section aria-label="Closed" class="hidden flex-col gap-3 rounded-[22px] bg-stage-closed-soft p-3.5 xl:flex">
+    <section aria-label="Closed" class="hidden flex-col gap-3 rounded-[22px] bg-stage-closed-soft p-3.5 @min-[68rem]:flex">
       <header class="flex items-center justify-between px-1">
         <h3 class="text-[17px] font-bold">Closed</h3>
         <span class="grid h-6 min-w-7 place-items-center rounded-full bg-card px-2 text-[13px] font-bold text-stage-closed-text">
@@ -57,6 +59,7 @@
       </Button>
       <p v-else class="px-1 pb-1 text-sm text-muted-foreground">Nothing closed yet.</p>
     </section>
+  </div>
   </div>
 </template>
 
