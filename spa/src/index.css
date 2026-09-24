@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "../../theme/tokens.css";
+@import "../../shared/theme.css";
 
 @theme inline {
   --animate-accordion-down: accordion-down 0.2s ease-out;

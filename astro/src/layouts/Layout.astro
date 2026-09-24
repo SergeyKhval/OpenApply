@@ -36,16 +36,26 @@ const {
 } = Astro.props;
 
 const fontFamilies = includeMonoFont
-  ? "family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800"
-  : "family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900";
+  ? "family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500"
+  : "family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700";
 ---
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 	<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0f0f17" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFF8F1" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1A1410" />
+    <script is:inline>
+      (function () {
+        var preference = "system";
+        try { preference = localStorage.getItem("oa-theme") || "system"; } catch (e) {}
+        var dark = preference === "dark" || (preference !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
     <!-- Google Fonts -->

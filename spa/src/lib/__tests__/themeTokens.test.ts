@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(resolve(__dirname, path), "utf8");
-const tokens = read("../../../../theme/tokens.css");
+const tokens = read("../../../../shared/theme.css");
 
 const block = (css: string, selector: ":root" | ".dark") => {
   const start = css.indexOf(`${selector} {`);
@@ -30,7 +30,7 @@ const contrast = (a: string, b: string) => {
 
 describe("app and landing import the same theme", () => {
   it.each(["../../index.css", "../../../../astro/src/styles/global.css"])("%s", (path) => {
-    expect(read(path)).toMatch(/@import\s+"[./]*\/theme\/tokens\.css"/);
+    expect(read(path)).toMatch(/@import\s+"[./]*\/shared\/theme\.css"/);
   });
 });
 
