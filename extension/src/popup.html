@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenApply</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="brand">
+      <img src="../icons/icon32.png" alt="" width="20" height="20" />
+      <span>OpenApply</span>
+    </header>
+
+    <section id="job" class="job" aria-live="polite">
+      <p class="job-loading">Reading this page...</p>
+    </section>
+
+    <div class="actions">
+      <button id="save" type="button" class="button primary" disabled>
+        Save to OpenApply
+      </button>
+      <button id="match" type="button" class="button secondary" disabled>
+        Check my resume match
+      </button>
+      <p id="hint" class="hint" hidden></p>
+    </div>
+
+    <footer class="footer">
+      Nothing leaves this page until you click.
+      <a href="https://openapply.app/privacy#browser-extension" target="_blank" rel="noopener">Privacy</a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

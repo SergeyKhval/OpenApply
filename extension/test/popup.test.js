@@ -1,0 +1,115 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { startPopup } from "../src/popup.js";
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+const popupHtml = readFileSync(join(here, "../src/popup.html"), "utf8");
+const description = "Build accessible Vue apps. ".repeat(20);
+
+function fakeChrome({ tab, result, injectionError } = {}) {
+  return {
+    tabs: {
+      query: vi.fn().mockResolvedValue(tab ? [tab] : []),
+      create: vi.fn().mockResolvedValue({}),
+    },
+    scripting: {
+      executeScript: injectionError
+        ? vi.fn().mockRejectedValue(injectionError)
+        : vi.fn().mockResolvedValue([{ result }]),
+    },
+  };
+}
+
+const jobTab = { id: 7, url: "https://www.linkedin.com/jobs/search/?currentJobId=42", title: "Jobs | LinkedIn" };
+const button = (id) => document.getElementById(id);
+
+describe("popup", () => {
+  let fakeWindow;
+
+  beforeEach(() => {
+    document.documentElement.innerHTML = popupHtml.replace(/^<!doctype html>/i, "");
+    fakeWindow = { close: vi.fn() };
+  });
+
+  it("shows the job and saves its canonical link", async () => {
+    const chrome = fakeChrome({
+      tab: jobTab,
+      result: { title: "Frontend Engineer", company: "Acme", description, source: "site" },
+    });
+    await startPopup({ chrome, document, window: fakeWindow });
+
+    expect(chrome.scripting.executeScript).toHaveBeenCalledWith(
+      expect.objectContaining({ target: { tabId: 7 } }),
+    );
+    expect(document.querySelector(".job-title").textContent).toBe("Frontend Engineer");
+    expect(document.querySelector(".job-meta").textContent).toBe("Acme · linkedin.com");
+
+    button("save").click();
+    await vi.waitFor(() => expect(fakeWindow.close).toHaveBeenCalled());
+    const opened = new URL(chrome.tabs.create.mock.calls[0][0].url);
+    expect(opened.pathname).toBe("/save");
+    expect(opened.searchParams.get("url")).toBe("https://www.linkedin.com/jobs/view/42/");
+  });
+
+  it("sends the job description to the match tool", async () => {
+    const chrome = fakeChrome({
+      tab: jobTab,
+      result: { title: "Frontend Engineer", company: "Acme", description, source: "site" },
+    });
+    await startPopup({ chrome, document, window: fakeWindow });
+
+    expect(button("match").disabled).toBe(false);
+    button("match").click();
+    await vi.waitFor(() => expect(chrome.tabs.create).toHaveBeenCalled());
+    const opened = new URL(chrome.tabs.create.mock.calls[0][0].url);
+    expect(opened.pathname).toBe("/tools/resume-job-match");
+    expect(new URLSearchParams(opened.hash.slice(1)).get("jd")).toBe(description);
+  });
+
+  it("still saves the link when there's no description to check", async () => {
+    const chrome = fakeChrome({ tab: jobTab, result: { title: "", company: "", description: "", source: "none" } });
+    await startPopup({ chrome, document, window: fakeWindow });
+
+    expect(button("save").disabled).toBe(false);
+    expect(button("match").disabled).toBe(true);
+    expect(button("hint").hidden).toBe(false);
+    expect(document.querySelector(".job-title").textContent).toBe("Jobs | LinkedIn");
+  });
+
+  it("says when it's using the selected text", async () => {
+    const chrome = fakeChrome({
+      tab: jobTab,
+      result: { title: "Frontend Engineer", company: "", description, source: "selection" },
+    });
+    await startPopup({ chrome, document, window: fakeWindow });
+    expect(button("hint").textContent).toContain("text you selected");
+  });
+
+  it("saves the link even where Chrome blocks page scripts", async () => {
+    const chrome = fakeChrome({ tab: jobTab, injectionError: new Error("Cannot access contents of the page") });
+    await startPopup({ chrome, document, window: fakeWindow });
+    expect(button("save").disabled).toBe(false);
+    expect(button("match").disabled).toBe(true);
+  });
+
+  it("does nothing on browser pages", async () => {
+    const chrome = fakeChrome({ tab: { id: 1, url: "chrome://newtab/" } });
+    await startPopup({ chrome, document, window: fakeWindow });
+    expect(chrome.scripting.executeScript).not.toHaveBeenCalled();
+    expect(button("save").disabled).toBe(true);
+    expect(document.querySelector(".job-title").textContent).toBe("Open a job posting");
+  });
+
+  it("renders page text as text, not HTML", async () => {
+    const chrome = fakeChrome({
+      tab: jobTab,
+      result: { title: "<img src=x onerror=alert(1)>", company: "", description: "", source: "none" },
+    });
+    await startPopup({ chrome, document, window: fakeWindow });
+    expect(document.querySelector("#job img")).toBeNull();
+    expect(document.querySelector(".job-title").textContent).toBe("<img src=x onerror=alert(1)>");
+  });
+});
