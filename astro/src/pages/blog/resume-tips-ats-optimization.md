@@ -83,6 +83,6 @@ That's it.
 
 ## See How Your Resume Stacks Up
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/) analyzes your resume against any job description and tells you exactly what to improve, keywords, skills gaps, and formatting issues. Get actionable feedback in seconds.
+Not sure if your resume matches the job? Try the [free resume vs job description match checker](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-ats-optimization), no signup needed. Upload your PDF and it shows the raw text a parser actually pulls from it, so you can see for yourself whether a two-column layout or a design-tool export scrambled your dates and bullets.
 
-[Check your resume match →](https://openapply.app/)
+[Check your resume match →](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-ats-optimization)
