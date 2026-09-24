@@ -88,4 +88,35 @@ describe("useUpdateJobApplicationStatus", () => {
     expect(mockDoc).toHaveBeenCalledWith("mock-db", "jobApplications", "app-xyz");
     expect(mockUpdateDoc).toHaveBeenCalledWith("mock-doc-ref", expect.any(Object));
   });
+
+  describe("follow-ups", () => {
+    const { markApplied, snoozeFollowUp, clearFollowUp } = useUpdateJobApplicationStatus();
+
+    it("I applied sets Applied, the applied date and a follow-up a week out", async () => {
+      await markApplied("app-1");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates.status).toBe("applied");
+      expect(updates.appliedAt).toEqual(new Date("2025-01-15"));
+      expect(updates.followUpAt).toEqual(new Date("2025-01-22"));
+      expect(updates.interviewedAt).toBeNull();
+    });
+
+    it("snooze moves the follow-up 3 days from today", async () => {
+      await snoozeFollowUp("app-1");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates).toEqual({ followUpAt: new Date("2025-01-18"), updatedAt: "mock-timestamp" });
+    });
+
+    it("done clears the follow-up", async () => {
+      await clearFollowUp("app-1");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates).toEqual({ followUpAt: null, updatedAt: "mock-timestamp" });
+    });
+
+    it("withdrew is a closed status with no extra dates", async () => {
+      await updateJobApplicationStatus("app-1", "withdrew");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates).toEqual({ status: "withdrew", updatedAt: "mock-timestamp" });
+    });
+  });
 });
