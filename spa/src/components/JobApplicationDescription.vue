@@ -7,8 +7,11 @@
     <CardContent>
       <template v-if="viewMode === 'view'">
         <template v-if="jobDescription">
-          <p :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'">
-            {{ jobDescription }}
+          <p
+            class="whitespace-pre-line break-words"
+            :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'"
+          >
+            {{ displayedDescription }}
           </p>
           <Button
             size="sm"
@@ -76,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import {
@@ -113,6 +116,9 @@ const { application } = defineProps<JobApplicationDescriptionProps>();
 const { toast } = useToast();
 
 const jobDescription = ref(application.jobDescription);
+const displayedDescription = computed(() =>
+  jobDescription.value.replace(/\n{3,}/g, "\n\n"),
+);
 const isWholeDescriptionVisible = ref(false);
 const viewMode = ref<"view" | "edit">("view");
 
