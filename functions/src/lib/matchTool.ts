@@ -9,7 +9,7 @@ export const MAX_JOB_DESCRIPTION_CHARS = 15000;
 // Anonymous abuse limits for the public match tool
 export const HOURLY_LIMIT_PER_CLIENT = 6;
 export const DAILY_LIMIT_PER_CLIENT = 15;
-export const DAILY_GLOBAL_LIMIT = 1000;
+export const DAILY_GLOBAL_LIMIT = 200;
 
 export type MatchToolInput = {
   resumeText: string;
