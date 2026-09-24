@@ -10,7 +10,7 @@ OpenApply is not affiliated with Faria's OpenApply, a school admissions platform
 
 ## Product
 
-- [Homepage](https://openapply.app/): Paste a job link to create a tracked application with company, role, and description filled in automatically. Track status, notes, contacts, and interviews. AI resume review and cover letter generation are pay-as-you-go; tracking itself is free.
+- [Homepage](https://openapply.app/): Paste a job link to create a tracked application with company, role, and description filled in automatically. Track status, notes, contacts, and interviews. Tracking is free, with 15 AI checks a month for resume reviews and cover letters; Pro is $9 a month for 150.
 - [App (sign in required)](https://openapply.app/app/): The job application tracker itself.
 
 ## Source
