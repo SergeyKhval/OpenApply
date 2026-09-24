@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OpenApply: Save Jobs and Check Resume Match",
   "short_name": "OpenApply",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Save any job posting to your OpenApply tracker in one click, or check how your resume matches it. Free and open source.",
   "homepage_url": "https://openapply.app",
   "action": {
