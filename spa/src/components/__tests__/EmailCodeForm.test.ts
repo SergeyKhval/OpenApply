@@ -96,3 +96,43 @@ describe("EmailCodeForm", () => {
     vi.useRealTimers();
   });
 });
+
+describe("EmailCodeForm when the code service is down", () => {
+  it.each(["functions/not-found", "functions/internal", "functions/unavailable"])(
+    "emits unavailable with the email when sending fails with %s",
+    async (code) => {
+      mockSendSignInCode.mockResolvedValue({ success: false, error: "Something went wrong.", code });
+      const wrapper = mount(EmailCodeForm);
+      await requestCode(wrapper, " sam@example.com ");
+
+      expect(wrapper.emitted("unavailable")).toEqual([["sam@example.com"]]);
+    },
+  );
+
+  it("emits unavailable when verifying fails with internal", async () => {
+    mockVerifySignInCode.mockResolvedValue({
+      success: false,
+      error: "We couldn't sign you in.",
+      code: "functions/internal",
+    });
+    const wrapper = mount(EmailCodeForm);
+    await requestCode(wrapper);
+    await wrapper.get('input[autocomplete="one-time-code"]').setValue("123456");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(wrapper.emitted("unavailable")).toEqual([["sam@example.com"]]);
+  });
+
+  it.each(["functions/invalid-argument", "functions/resource-exhausted"])(
+    "keeps the code flow for %s",
+    async (code) => {
+      mockSendSignInCode.mockResolvedValue({ success: false, error: "Too many codes requested.", code });
+      const wrapper = mount(EmailCodeForm);
+      await requestCode(wrapper);
+
+      expect(wrapper.emitted("unavailable")).toBeUndefined();
+      expect(wrapper.get('[role="alert"]').text()).toContain("Too many codes requested.");
+    },
+  );
+});

@@ -22,6 +22,7 @@ const mockSignInWithCustomToken = vi.fn();
 vi.mock("firebase/auth", () => ({
   signInWithCustomToken: (...args: unknown[]) => mockSignInWithCustomToken(...args),
   getAdditionalUserInfo: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
   GoogleAuthProvider: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
@@ -65,6 +66,7 @@ describe("sendSignInCode", () => {
     await expect(sendSignInCode("sam@example.com")).resolves.toEqual({
       success: false,
       error: "Too many codes requested.",
+      code: "functions/resource-exhausted",
     });
   });
 
@@ -75,6 +77,7 @@ describe("sendSignInCode", () => {
     await expect(sendSignInCode("sam@example.com")).resolves.toEqual({
       success: false,
       error: "Something went wrong. Try again.",
+      code: "functions/unavailable",
     });
   });
 });

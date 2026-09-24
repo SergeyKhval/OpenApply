@@ -27,9 +27,14 @@
         id-prefix="signin"
         :source="source"
         @signed-in="redirect()"
+        @unavailable="fallBackToPassword"
       />
 
       <form v-else @submit.prevent="handleLogin" class="space-y-4">
+        <p v-if="codesUnavailable" role="status" class="text-sm text-muted-foreground">
+          Code sign-in isn't working right now. Sign in with your password instead.
+        </p>
+
         <div>
           <Label for="signin-email" class="block text-sm font-medium mb-1">Email</Label>
           <Input
@@ -142,6 +147,7 @@ const { login, loginWithGoogle, resetPassword } = useAuth();
 // Accounts made before code sign-in keep their password as a fallback in
 // case the code email is slow or lands in spam
 const usePassword = ref(false);
+const codesUnavailable = ref(false);
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
@@ -153,8 +159,15 @@ const resetSent = ref(false);
 
 const togglePassword = () => {
   usePassword.value = !usePassword.value;
+  codesUnavailable.value = false;
   error.value = "";
   errorCode.value = undefined;
+};
+
+const fallBackToPassword = (address: string) => {
+  email.value = address;
+  usePassword.value = true;
+  codesUnavailable.value = true;
 };
 
 const handleLogin = async () => {

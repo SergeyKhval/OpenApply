@@ -2,6 +2,7 @@ import { useCurrentUser, useDocument, useFirebaseAuth } from "vuefire";
 import {
   type Auth,
   getAdditionalUserInfo,
+  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -119,6 +120,28 @@ export function useAuth() {
     }
   };
 
+  const register = async (
+    email: string,
+    password: string,
+    options?: { source?: AuthSource },
+  ): Promise<AuthResult> => {
+    if (!auth) return { success: false, error: "Auth not initialized" };
+
+    try {
+      const result: UserCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
+      trackEvent("signup_completed", { source: options?.source ?? "direct", method: "password" });
+      return { success: true, user: result.user };
+    } catch (error) {
+      const { message, code } = friendlyAuthError(error);
+      return { success: false, error: message, code };
+    }
+  };
+
   const loginWithGoogle = async (
     options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
   ): Promise<AuthResult> => {
@@ -138,12 +161,15 @@ export function useAuth() {
     }
   };
 
-  const sendSignInCode = async (email: string): Promise<LogoutResult> => {
+  const sendSignInCode = async (
+    email: string,
+  ): Promise<{ success: true } | { success: false; error: string; code?: string }> => {
     try {
       await httpsCallable(functions, "sendSignInCode")({ email });
       return { success: true };
     } catch (error) {
-      return { success: false, error: friendlyCallableError(error).message };
+      const { message, code } = friendlyCallableError(error);
+      return { success: false, error: message, code };
     }
   };
 
@@ -202,6 +228,7 @@ export function useAuth() {
     user,
     userProfile,
     login,
+    register,
     loginWithGoogle,
     sendSignInCode,
     verifySignInCode,

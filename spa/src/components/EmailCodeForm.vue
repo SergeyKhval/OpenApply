@@ -86,11 +86,16 @@ const { source = "direct", idPrefix = "email-code" } = defineProps<EmailCodeForm
 
 type EmailCodeFormEmits = {
   (event: "signed-in"): void;
+  // The code service is down or not deployed; the parent offers a password
+  (event: "unavailable", email: string): void;
 };
 
 const emit = defineEmits<EmailCodeFormEmits>();
 
 const RESEND_COOLDOWN_SECONDS = 30;
+// Failures that mean the code flow itself is broken (function missing, email
+// provider or token signing failing), not a wrong code or a rate limit
+const SERVICE_DOWN_CODES = new Set(["functions/not-found", "functions/internal", "functions/unavailable"]);
 
 const { sendSignInCode, verifySignInCode } = useAuth();
 
@@ -121,7 +126,11 @@ async function sendCode(address: string) {
   const result = await sendSignInCode(address);
   loading.value = false;
   if (!result.success) {
-    error.value = result.error;
+    if (result.code && SERVICE_DOWN_CODES.has(result.code)) {
+      emit("unavailable", address);
+    } else {
+      error.value = result.error;
+    }
     return false;
   }
   startCooldown();
@@ -149,6 +158,8 @@ async function handleVerifyCode() {
   loading.value = false;
   if (result.success) {
     emit("signed-in");
+  } else if (result.code && SERVICE_DOWN_CODES.has(result.code)) {
+    emit("unavailable", sentTo.value);
   } else {
     error.value = result.error;
   }
