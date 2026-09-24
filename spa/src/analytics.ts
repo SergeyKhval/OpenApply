@@ -5,18 +5,18 @@ function isLoaded(): boolean {
 }
 
 type EventMap = {
-  signup_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
-  login_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
-  signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
+  signup_completed: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
+  login_completed: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
+  signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
   job_application_created: {
-    method: "link_parse" | "manual" | "match_tool";
+    method: "link_parse" | "manual" | "match_tool" | "extension";
     company?: string;
     position?: string;
-    source?: "landing_page_parse" | "resume_match_tool";
+    source?: "landing_page_parse" | "resume_match_tool" | "extension";
   };
   first_job_application_created: {
-    method: "link_parse" | "manual" | "match_tool";
-    source?: "landing_page_parse" | "resume_match_tool";
+    method: "link_parse" | "manual" | "match_tool" | "extension";
+    source?: "landing_page_parse" | "resume_match_tool" | "extension";
     minutesSinceSignup?: number;
   };
   lp_job_parse_started: void;

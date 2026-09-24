@@ -1,6 +1,7 @@
-// Hands a job and its match check from the landing page tool to the app.
-// The app (spa/src/composables/pendingToolApplication.ts) creates the job
-// application from it right after sign-in. Landing and app share an origin,
+// Hands a job (and its match check, when it comes from the landing page tool)
+// to the app. The app (spa/src/composables/pendingToolApplication.ts) creates
+// the job application from it right after sign-in, or at once if signed in.
+// The browser extension's Save uses it too, via /save. Landing and app share an origin,
 // so localStorage carries it through signup without storing anything server-side.
 export const PENDING_TOOL_APPLICATION_KEY = "oa-pending-tool-application";
 
@@ -11,9 +12,13 @@ export type PendingToolApplication = {
   position: string;
   jobDescription: string;
   technologies: string[];
-  // The posting's URL, when the check started from the browser extension
+  // The posting's URL, when the job came from the browser extension
   jobDescriptionLink?: string;
-  match: {
+  // Where the job came from; absent means the match tool
+  source?: "extension";
+  location?: string;
+  // Absent when the extension saved the job without a match check
+  match?: {
     matchScore: number;
     verdict: string;
     parseCheck: { status: "clean" | "issues" | "scrambled"; note: string };

@@ -30,6 +30,19 @@ const pending: PendingToolApplication = {
   },
 };
 
+// What /save stores for a job the browser extension read from the page
+const extensionPending: PendingToolApplication = {
+  version: 1,
+  savedAt,
+  source: "extension",
+  companyName: "ASTEK Polska",
+  position: "Starszy Programista Full-stack",
+  location: "Warszawa, mazowieckie · Remote",
+  jobDescription: "Wymagania: Vue.js 3, PHP.",
+  jobDescriptionLink: "https://theprotocol.it/szczegoly/praca/x,oferta,1",
+  technologies: [],
+};
+
 const store = (value: unknown) =>
   localStorage.setItem(PENDING_TOOL_APPLICATION_KEY, JSON.stringify(value));
 
@@ -54,6 +67,17 @@ describe("pendingToolApplication", () => {
       const eightDaysLater = new Date(savedAt).getTime() + 8 * 24 * 60 * 60 * 1000;
       expect(readPendingToolApplication(eightDaysLater)).toBeNull();
       expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).toBeNull();
+    });
+
+    it("accepts a job from the extension without a match check", () => {
+      store(extensionPending);
+      expect(readPendingToolApplication(new Date(savedAt).getTime() + 1000)).toEqual(extensionPending);
+    });
+
+    it("requires a match check for jobs from the match tool", () => {
+      const { match: _match, ...withoutMatch } = pending;
+      store(withoutMatch);
+      expect(readPendingToolApplication(new Date(savedAt).getTime() + 1000)).toBeNull();
     });
 
     it("drops malformed entries", () => {
@@ -89,6 +113,23 @@ describe("pendingToolApplication", () => {
       expect(input).not.toHaveProperty("jobDescriptionLink");
     });
 
+    it("maps an extension job with its location and no match", () => {
+      expect(toJobApplicationInput(extensionPending)).toEqual({
+        companyName: "ASTEK Polska",
+        position: "Starszy Programista Full-stack",
+        jobDescription: "Location: Warszawa, mazowieckie · Remote\n\nWymagania: Vue.js 3, PHP.",
+        jobDescriptionLink: "https://theprotocol.it/szczegoly/praca/x,oferta,1",
+        technologies: [],
+        remotePolicy: "remote",
+      });
+    });
+
+    it("leaves the description alone without a location", () => {
+      const input = toJobApplicationInput({ ...extensionPending, location: "" });
+      expect(input.jobDescription).toBe("Wymagania: Vue.js 3, PHP.");
+      expect(input).not.toHaveProperty("remotePolicy");
+    });
+
     it("fills required fields the job description didn't state", () => {
       const input = toJobApplicationInput({ ...pending, companyName: "", position: "" });
       expect(input.companyName).toBe("Unknown company");
@@ -106,11 +147,23 @@ describe("pendingToolApplication", () => {
         consumePendingToolApplication(addJobApplication),
       ]);
 
-      expect(ids).toEqual(["app1", "app1"]);
+      expect(ids).toEqual([
+        { id: "app1", source: "resume_match_tool" },
+        { id: "app1", source: "resume_match_tool" },
+      ]);
       expect(addJobApplication).toHaveBeenCalledTimes(1);
       expect(addJobApplication.mock.calls[0][1]).toEqual({ source: "resume_match_tool" });
       expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).toBeNull();
       expect(hasPendingToolApplication()).toBe(true);
+    });
+
+    it("creates an extension job as an extension application", async () => {
+      store({ ...extensionPending, savedAt: new Date().toISOString() });
+      const addJobApplication = vi.fn().mockResolvedValue({ success: true, id: "app2" });
+
+      expect(await consumePendingToolApplication(addJobApplication)).toEqual({ id: "app2", source: "extension" });
+      expect(addJobApplication.mock.calls[0][1]).toEqual({ source: "extension" });
+      expect(addJobApplication.mock.calls[0][0]).not.toHaveProperty("toolMatch");
     });
 
     it("restores the entry when creation fails", async () => {

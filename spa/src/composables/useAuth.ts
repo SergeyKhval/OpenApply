@@ -81,7 +81,7 @@ export function useAuth() {
   const login = async (
     email: string,
     password: string,
-    options?: { source?: "landing_page_parse" | "resume_match_tool" | "direct" },
+    options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
   ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 
@@ -103,7 +103,7 @@ export function useAuth() {
   const register = async (
     email: string,
     password: string,
-    options?: { source?: "landing_page_parse" | "resume_match_tool" | "direct" },
+    options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
   ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 
@@ -123,7 +123,7 @@ export function useAuth() {
   };
 
   const loginWithGoogle = async (
-    options?: { source?: "landing_page_parse" | "resume_match_tool" | "direct" },
+    options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
   ): Promise<AuthResult> => {
     if (!auth) return { success: false, error: "Auth not initialized" };
 

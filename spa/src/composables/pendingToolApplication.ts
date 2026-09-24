@@ -1,7 +1,8 @@
 import type { CreateJobApplicationInput, ToolMatch } from "@/types";
 
-// Written by the landing page resume match tool (astro/src/lib/pendingToolApplication.ts)
-// when a visitor clicks "Save and track this job". Consumed once, right after sign-in.
+// Written by the landing page (astro/src/lib/pendingToolApplication.ts) when a
+// visitor clicks "Save and track this job" in the resume match tool, or saves a
+// job with the browser extension (/save). Consumed once, right after sign-in.
 export const PENDING_TOOL_APPLICATION_KEY = "oa-pending-tool-application";
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -12,15 +13,25 @@ export type PendingToolApplication = {
   position: string;
   jobDescription: string;
   technologies: string[];
-  // The posting's URL, when the check started from the browser extension
+  // The posting's URL, when the job came from the browser extension
   jobDescriptionLink?: string;
-  match: Omit<ToolMatch, "checkedAt">;
+  // Absent means the match tool
+  source?: "extension";
+  location?: string;
+  // Absent when the extension saved the job without a match check
+  match?: Omit<ToolMatch, "checkedAt">;
 };
+
+export type PendingApplicationSource = "resume_match_tool" | "extension";
 
 type AddJobApplication = (
   payload: CreateJobApplicationInput,
-  options?: { source?: "resume_match_tool" },
+  options?: { source?: PendingApplicationSource },
 ) => Promise<{ success: boolean; id?: string }>;
+
+export function pendingApplicationSource(pending: PendingToolApplication): PendingApplicationSource {
+  return pending.source === "extension" ? "extension" : "resume_match_tool";
+}
 
 function isPendingToolApplication(value: unknown): value is PendingToolApplication {
   if (typeof value !== "object" || value === null) return false;
@@ -34,10 +45,15 @@ function isPendingToolApplication(value: unknown): value is PendingToolApplicati
     typeof candidate.jobDescription === "string" &&
     candidate.jobDescription.length > 0 &&
     Array.isArray(candidate.technologies) &&
-    typeof match === "object" &&
-    match !== null &&
-    typeof match.matchScore === "number" &&
-    Array.isArray(match.requirements)
+    (candidate.source === undefined || candidate.source === "extension") &&
+    (candidate.location === undefined || typeof candidate.location === "string") &&
+    // Only the extension saves a job without a match check
+    (match === undefined
+      ? candidate.source === "extension"
+      : typeof match === "object" &&
+        match !== null &&
+        typeof match.matchScore === "number" &&
+        Array.isArray(match.requirements))
   );
 }
 
@@ -95,21 +111,35 @@ function isWebUrl(value: unknown): value is string {
   }
 }
 
+function remotePolicyOf(location: string): CreateJobApplicationInput["remotePolicy"] {
+  if (/\bhybrid\b/i.test(location)) return "hybrid";
+  if (/\bremote\b/i.test(location)) return "remote";
+  return undefined;
+}
+
 export function toJobApplicationInput(
   pending: PendingToolApplication,
 ): CreateJobApplicationInput {
+  // Applications have no location field: keep it at the top of the description
+  const location = pending.location?.trim() ?? "";
   const input: CreateJobApplicationInput = {
     companyName: pending.companyName || "Unknown company",
     position: pending.position || "Unknown position",
-    jobDescription: pending.jobDescription,
+    jobDescription: location
+      ? `Location: ${location}\n\n${pending.jobDescription}`
+      : pending.jobDescription,
     technologies: pending.technologies.slice(0, 10),
-    toolMatch: { ...pending.match, checkedAt: pending.savedAt },
   };
+  if (pending.match) input.toolMatch = { ...pending.match, checkedAt: pending.savedAt };
   if (isWebUrl(pending.jobDescriptionLink)) input.jobDescriptionLink = pending.jobDescriptionLink;
+  const remotePolicy = remotePolicyOf(location);
+  if (remotePolicy) input.remotePolicy = remotePolicy;
   return input;
 }
 
-let inFlight: Promise<string | null> | null = null;
+export type CreatedPendingApplication = { id: string; source: PendingApplicationSource };
+
+let inFlight: Promise<CreatedPendingApplication | null> | null = null;
 
 // Test hook: forget the shared creation between cases
 export function resetPendingToolApplicationState() {
@@ -124,31 +154,33 @@ export function hasPendingToolApplication(): boolean {
 }
 
 /**
- * Creates the job application saved by the landing page tool and clears it.
+ * Creates the job application saved by the landing page and clears it.
  * Every caller in this page load shares one creation, so it happens at most
  * once and late callers still get the same id.
- * Resolves to the new application id, or null if there was nothing to create
- * or creation failed (the entry is kept for a retry in that case).
+ * Resolves to the new application id and where the job came from, or null if
+ * there was nothing to create or creation failed (the entry is kept for a
+ * retry in that case).
  */
 export function consumePendingToolApplication(
   addJobApplication: AddJobApplication,
-): Promise<string | null> {
+): Promise<CreatedPendingApplication | null> {
   if (inFlight) return inFlight;
 
   const pending = readPendingToolApplication();
   if (!pending) return Promise.resolve(null);
 
+  const source = pendingApplicationSource(pending);
   removePending();
-  inFlight = addJobApplication(toJobApplicationInput(pending), { source: "resume_match_tool" })
-    .then((result) => (result.success && result.id ? result.id : null))
+  inFlight = addJobApplication(toJobApplicationInput(pending), { source })
+    .then((result) => (result.success && result.id ? { id: result.id, source } : null))
     .catch(() => null)
-    .then((id) => {
-      if (!id) {
+    .then((created) => {
+      if (!created) {
         // Keep the entry so the next sign-in can retry
         restorePending(pending);
         inFlight = null;
       }
-      return id;
+      return created;
     });
 
   return inFlight;

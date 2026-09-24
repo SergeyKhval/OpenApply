@@ -1,6 +1,6 @@
 {
   "name": "openapply-extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "OpenApply Chrome extension: save job postings and check resume match",
   "private": true,
   "type": "module",

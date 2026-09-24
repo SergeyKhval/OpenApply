@@ -2,8 +2,10 @@
 import Layout from '../layouts/Layout.astro';
 import SaveJobLink from '../components/vue/SaveJobLink.vue';
 
-// Landing spot for the "Save to OpenApply" button in the browser extension:
-// /save?url=<job posting>. Runs the same parse flow as the landing page link input.
+// Landing spot for the "Save to OpenApply" button in the browser extension.
+// /save#job=<payload>: the job the extension read from the page, created in the
+// app without a server scrape. /save?url=<job posting>: the fallback when the
+// extension couldn't read the page; runs the landing page link input's parse flow.
 ---
 <Layout title="Saving job | OpenApply" noindex>
   <main class="min-h-screen bg-background flex items-center justify-center px-4 py-12">

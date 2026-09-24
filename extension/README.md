@@ -2,7 +2,7 @@
 
 Manifest V3 Chrome extension with a toolbar popup and two actions for the job posting in the current tab:
 
-- **Save to OpenApply** opens `openapply.app/save?url=<posting>`. That page runs the same flow as the landing page's paste-a-link box: signed-in users land on the new application form, signed-out users on signup with the job waiting.
+- **Save to OpenApply** shows the title, company and location it read as editable fields, then opens `openapply.app/save#job=<payload>`: the job (url, title, company, location, description) as base64url of zlib-deflated JSON, in the fragment so it never reaches a server. `/save` hands it to the app as a pending application (`shared/extensionJob.ts` decodes it): signed-in users land on the new application, signed-out users on signup with the job waiting. No server scrape, so single-page apps and login-gated pages work. When the popup finds no description, Save falls back to `openapply.app/save?url=<posting>`, the landing page's server-side link parser.
 - **Check my resume match** opens `openapply.app/tools/resume-job-match#jd=<description>&url=<posting>`. The tool prefills the job description from the fragment, which browsers never send to a server.
 
 Plain JavaScript, no build step. The extension never talks to Firebase and holds no auth.
@@ -16,9 +16,11 @@ Plain JavaScript, no build step. The extension never talks to Firebase and holds
 `src/extract.js`, first match wins:
 
 1. Text the user selected (200+ characters)
-2. Site selectors: LinkedIn, Indeed, Greenhouse, Lever, Ashby, Workable
+2. Site selectors: LinkedIn, Indeed, Greenhouse, Lever, Ashby, Workable, theprotocol.it
 3. schema.org `JobPosting` JSON-LD (most ATSs and many career sites)
-4. The page's densest block of paragraphs and bullets, then `<main>`
+4. The page's densest block of paragraphs and bullets, widened over sibling sections of prose, then `<main>`
+
+Title, company and location follow the same order. On pages without rules or JSON-LD, the title is the page's `<h1>` when the tab title confirms it, the company comes from the tab title ("Role at Company", "Role, Company") or company-named elements, and the location from location-named elements.
 
 `src/links.js` turns search-page URLs into posting URLs (LinkedIn `currentJobId`, Indeed `vjk`) and strips tracking params before saving.
 

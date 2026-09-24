@@ -107,7 +107,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SignInFormProps = {
   pendingJob?: boolean;
-  source?: "landing_page_parse" | "resume_match_tool" | "direct";
+  source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
 };
 
 const { pendingJob = false, source = "direct" } = defineProps<SignInFormProps>();

@@ -17,8 +17,8 @@ import { getLocalTimeZone } from "@internationalized/date";
 import { trackEvent } from "@/analytics";
 
 type ApplicationCreatedProperties = {
-  method: "link_parse" | "manual" | "match_tool";
-  source?: "landing_page_parse" | "resume_match_tool";
+  method: "link_parse" | "manual" | "match_tool" | "extension";
+  source?: "landing_page_parse" | "resume_match_tool" | "extension";
 };
 
 // Activation metric: fires once, when the user's first application is saved.
@@ -49,7 +49,7 @@ export function useJobApplications() {
 
   const addJobApplication = async (
     payload: CreateJobApplicationInput,
-    options?: { source?: "landing_page_parse" | "resume_match_tool" },
+    options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" },
   ): Promise<{ success: boolean; error?: string; id?: string }> => {
     // Right after sign-up, auth.currentUser is set before vuefire's user ref
     const currentUser = user.value ?? auth.currentUser;
@@ -67,7 +67,9 @@ export function useJobApplications() {
 
       const method = options?.source === "resume_match_tool"
         ? "match_tool"
-        : payload.jobDescriptionLink ? "link_parse" : "manual";
+        : options?.source === "extension"
+          ? "extension"
+          : payload.jobDescriptionLink ? "link_parse" : "manual";
       trackEvent("job_application_created", {
         method,
         company: payload.companyName,
