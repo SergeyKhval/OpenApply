@@ -10,15 +10,13 @@ import {
   describeClientIp,
   getClientIp,
   hashClientKey,
+  rateLimitHashKey,
   rateLimitWindows,
   sanitizeRequirementEvidence,
   validateMatchToolInput,
 } from "./lib/matchTool";
 
 defineString("GEMINI_API_KEY");
-// Secret for hashing the rate-limit client key (IP or uid); optional so a
-// deploy without it still works, falling back to an unsalted hash.
-const RATE_LIMIT_HASH_KEY = defineString("RATE_LIMIT_HASH_KEY", { default: "" });
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -116,7 +114,7 @@ export const matchResumeTool = onCall(
       keyedBy: clientIp ? "ip" : "uid",
     });
     await consumeRateLimit(
-      hashClientKey(clientIp ?? `uid:${request.auth.uid}`, RATE_LIMIT_HASH_KEY.value() || undefined),
+      hashClientKey(clientIp ?? `uid:${request.auth.uid}`, rateLimitHashKey()),
     );
 
     let result: MatchToolResult | null;

@@ -20,7 +20,19 @@
 
       <div class="text-center text-sm text-muted-foreground mb-4">or</div>
 
-      <form @submit.prevent="handleSignUp" class="flex flex-col gap-4">
+      <EmailCodeForm
+        v-if="!usePassword"
+        id-prefix="signup"
+        :source="source"
+        @signed-in="redirect()"
+        @unavailable="fallBackToPassword"
+      />
+
+      <form v-else @submit.prevent="handleSignUp" class="flex flex-col gap-4">
+        <p v-if="codesUnavailable" role="status" class="text-sm text-muted-foreground">
+          Code sign-in isn't working right now. Choose a password instead.
+        </p>
+
         <div>
           <Label for="signup-email" class="text-sm mb-1">Email</Label>
           <Input
@@ -66,7 +78,17 @@
         </Button>
       </form>
 
-      <Alert v-if="error" variant="destructive" class="mt-4">
+      <p class="mt-4 text-center text-sm">
+        <button
+          type="button"
+          class="text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+          @click="togglePassword"
+        >
+          {{ usePassword ? "Email me a code instead" : "Sign up with a password instead" }}
+        </button>
+      </p>
+
+      <Alert v-if="error" variant="destructive" class="mt-4" role="alert">
         <AlertDescription>
           {{ error }}
           <button
@@ -103,6 +125,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import EmailCodeForm from "@/components/EmailCodeForm.vue";
 
 type SignUpFormProps = {
   pendingJob?: boolean;
@@ -120,12 +143,29 @@ const emit = defineEmits<SignUpFormEmits>();
 const { redirect } = usePostAuthRedirect();
 const { register, loginWithGoogle } = useAuth();
 
+// Password sign-up stays reachable until code sign-in is proven in
+// production, and takes over automatically if the code service is down
+const usePassword = ref(false);
+const codesUnavailable = ref(false);
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
 const showPassword = ref(false);
 const error = ref("");
 const errorCode = ref<string | undefined>(undefined);
+
+const togglePassword = () => {
+  usePassword.value = !usePassword.value;
+  codesUnavailable.value = false;
+  error.value = "";
+  errorCode.value = undefined;
+};
+
+const fallBackToPassword = (address: string) => {
+  email.value = address;
+  usePassword.value = true;
+  codesUnavailable.value = true;
+};
 
 const handleGoogleLogin = async () => {
   loading.value = true;

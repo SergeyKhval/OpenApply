@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 
 vi.mock("firebase-functions/v2/https", () => {
   class HttpsError extends Error {
@@ -21,6 +21,7 @@ import {
   describeClientIp,
   getClientIp,
   hashClientKey,
+  rateLimitHashKey,
   rateLimitWindows,
   sanitizeRequirementEvidence,
   validateMatchToolInput,
@@ -361,5 +362,25 @@ Nice to have: experience with Jest and automated testing.`;
     expect(
       sanitizeRequirementEvidence(mayaChenResume, withFabricatedEvidence)[0],
     ).toMatchObject({ status: "missing", evidence: "" });
+  });
+});
+
+describe("rateLimitHashKey", () => {
+  const original = process.env.RATE_LIMIT_HASH_KEY;
+  afterEach(() => {
+    if (original === undefined) delete process.env.RATE_LIMIT_HASH_KEY;
+    else process.env.RATE_LIMIT_HASH_KEY = original;
+  });
+
+  it("reads the key from the environment", () => {
+    process.env.RATE_LIMIT_HASH_KEY = "secret";
+    expect(rateLimitHashKey()).toBe("secret");
+  });
+
+  it("is undefined when unset or empty, so hashing falls back instead of failing", () => {
+    delete process.env.RATE_LIMIT_HASH_KEY;
+    expect(rateLimitHashKey()).toBeUndefined();
+    process.env.RATE_LIMIT_HASH_KEY = "";
+    expect(rateLimitHashKey()).toBeUndefined();
   });
 });
