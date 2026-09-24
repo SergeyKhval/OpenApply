@@ -94,7 +94,7 @@ const breadcrumbItems = [
   keywords={frontmatter.tags ? frontmatter.tags.join(", ") : undefined}
   includeMonoFont
 >
-  <Header showHashLinks={false} currentPath={currentPath} />
+  <Header currentPath={currentPath} />
 
   <!-- Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
