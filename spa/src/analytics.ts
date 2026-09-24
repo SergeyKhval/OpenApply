@@ -7,6 +7,7 @@ function isLoaded(): boolean {
 type EventMap = {
   signup_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
   login_completed: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
+  signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "direct" };
   job_application_created: {
     method: "link_parse" | "manual" | "match_tool";
     company?: string;

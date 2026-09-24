@@ -105,14 +105,18 @@
         class="text-muted-foreground flex flex-col items-center gap-2"
       >
         <PhReadCvLogo size="64" />
-        <p class="text-center mb-4">
+        <p v-if="application.toolMatch" class="text-center mb-4">
+          Save the resume you checked so you can re-run matches and write a
+          cover letter.
+        </p>
+        <p v-else class="text-center mb-4">
           Upload your first resume and get an AI-powered review against this job
           plus actionable fixes. <br />Then instantly generate a job‑tailored
           cover letter.
         </p>
         <Button size="sm" variant="outline" @click="openFileDialog">
           <PhFilePdf />
-          Upload first resume
+          {{ application.toolMatch ? "Upload resume" : "Upload first resume" }}
         </Button>
       </div>
     </CardContent>
