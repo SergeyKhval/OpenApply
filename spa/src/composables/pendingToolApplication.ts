@@ -12,6 +12,8 @@ export type PendingToolApplication = {
   position: string;
   jobDescription: string;
   technologies: string[];
+  // The posting's URL, when the check started from the browser extension
+  jobDescriptionLink?: string;
   match: Omit<ToolMatch, "checkedAt">;
 };
 
@@ -83,16 +85,28 @@ export function readPendingToolApplication(now = Date.now()): PendingToolApplica
   return null;
 }
 
+function isWebUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export function toJobApplicationInput(
   pending: PendingToolApplication,
 ): CreateJobApplicationInput {
-  return {
+  const input: CreateJobApplicationInput = {
     companyName: pending.companyName || "Unknown company",
     position: pending.position || "Unknown position",
     jobDescription: pending.jobDescription,
     technologies: pending.technologies.slice(0, 10),
     toolMatch: { ...pending.match, checkedAt: pending.savedAt },
   };
+  if (isWebUrl(pending.jobDescriptionLink)) input.jobDescriptionLink = pending.jobDescriptionLink;
+  return input;
 }
 
 let inFlight: Promise<string | null> | null = null;

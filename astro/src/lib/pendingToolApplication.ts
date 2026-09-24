@@ -11,6 +11,8 @@ export type PendingToolApplication = {
   position: string;
   jobDescription: string;
   technologies: string[];
+  // The posting's URL, when the check started from the browser extension
+  jobDescriptionLink?: string;
   match: {
     matchScore: number;
     verdict: string;

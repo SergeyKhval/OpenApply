@@ -11,6 +11,13 @@
       class="flex flex-col gap-6"
       @submit.prevent="handleSubmit"
     >
+      <p
+        v-if="prefilledFromExtension"
+        class="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground"
+      >
+        Job description added from the page you were on.
+        {{ resumeText ? "Check it, then run the match." : "Add your resume, then run the match." }}
+      </p>
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between gap-2 min-h-11">
@@ -47,6 +54,15 @@
               {{ resumeText.length.toLocaleString("en-US") }} / {{ MAX_CHARS.toLocaleString("en-US") }}
             </span>
           </p>
+          <label class="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+            <input
+              v-model="rememberResumeOnDevice"
+              type="checkbox"
+              class="h-4 w-4 accent-primary"
+              @change="onRememberToggle"
+            />
+            Remember my resume in this browser, so the next job only needs a click
+          </label>
         </div>
         <div class="flex flex-col gap-2">
           <div class="flex items-center min-h-11">
@@ -73,6 +89,7 @@
 
       <div class="flex flex-col items-center gap-3">
         <button
+          ref="submitButton"
           type="submit"
           :disabled="isSubmitting || isReadingPdf"
           class="inline-flex w-full sm:w-auto min-w-64 items-center justify-center gap-2 whitespace-nowrap text-base font-semibold h-12 rounded-md px-8 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:pointer-events-none shadow-lg shadow-primary/40"
@@ -252,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { getFirebaseAuth, getFirebaseFunctions } from "../../lib/firebase";
 import { savePendingToolApplication } from "../../lib/pendingToolApplication";
 
@@ -282,6 +299,8 @@ const MIN_CHARS = 200;
 const MAX_CHARS = 15000;
 const TOOL_NAME = "resume_job_match";
 const RESUME_STORAGE_KEY = "oa-tool-resume";
+// Opt-in: kept across tabs so the browser extension's "Check my match" needs no re-paste
+const SAVED_RESUME_STORAGE_KEY = "oa-tool-resume-saved";
 const LOADING_MESSAGES = [
   "Reading your resume...",
   "Reading the job description...",
@@ -308,6 +327,10 @@ const analysis = ref<MatchAnalysis | null>(null);
 const submittedJobDescription = ref("");
 const loadingMessageIndex = ref(0);
 const pageSearch = ref("");
+const rememberResumeOnDevice = ref(false);
+const jobDescriptionLink = ref<string | null>(null);
+const prefilledFromExtension = ref(false);
+const submitButton = ref<HTMLButtonElement | null>(null);
 let loadingTimer: ReturnType<typeof setInterval> | undefined;
 
 const loadingMessage = computed(() => LOADING_MESSAGES[loadingMessageIndex.value]);
@@ -403,6 +426,7 @@ function saveAndTrackCta(placement: string) {
       position,
       technologies,
       jobDescription: submittedJobDescription.value,
+      ...(jobDescriptionLink.value ? { jobDescriptionLink: jobDescriptionLink.value } : {}),
       match: {
         matchScore: match.matchScore,
         verdict: match.verdict,
@@ -427,13 +451,66 @@ function onParserViewToggle(event: Event) {
   }
 }
 
-// The resume stays in this tab only, so "check another job" doesn't need a re-paste
+// The resume stays in this tab, so "check another job" doesn't need a re-paste.
+// It outlives the tab only if the visitor ticked "Remember my resume".
 function rememberResume(value: string) {
   try {
     sessionStorage.setItem(RESUME_STORAGE_KEY, value);
+    if (rememberResumeOnDevice.value) localStorage.setItem(SAVED_RESUME_STORAGE_KEY, value);
   } catch {
     // Storage can be unavailable (private mode); the tool still works
   }
+}
+
+function onRememberToggle() {
+  trackEvent("tool_remember_resume_toggled", { enabled: rememberResumeOnDevice.value });
+  if (rememberResumeOnDevice.value) return;
+  try {
+    localStorage.removeItem(SAVED_RESUME_STORAGE_KEY);
+  } catch {
+    // Nothing stored
+  }
+}
+
+function readSavedResume(): string {
+  try {
+    const saved = localStorage.getItem(SAVED_RESUME_STORAGE_KEY);
+    if (saved) {
+      rememberResumeOnDevice.value = true;
+      return saved;
+    }
+    return sessionStorage.getItem(RESUME_STORAGE_KEY) ?? "";
+  } catch {
+    // Storage can be unavailable (private mode)
+    return "";
+  }
+}
+
+function webUrlOrNull(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+// The browser extension opens this page with #jd=<job description>&url=<posting>.
+// A fragment never reaches the server, so the posting text isn't logged anywhere.
+// It only fills the textarea; nothing runs until the visitor clicks Check.
+function readExtensionHandoff() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+  const handedOff = params.get("jd")?.trim();
+  if (!handedOff) return;
+
+  jobDescription.value = handedOff.slice(0, MAX_CHARS);
+  jobDescriptionLink.value = webUrlOrNull(params.get("url"));
+  prefilledFromExtension.value = true;
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+  trackEvent("tool_prefilled", { source: "extension", job_description_chars: handedOff.length });
 }
 
 async function handlePdfUpload(event: Event) {
@@ -546,6 +623,8 @@ function startOver() {
   // Keep the resume so checking another job only needs a new description
   analysis.value = null;
   jobDescription.value = "";
+  jobDescriptionLink.value = null;
+  prefilledFromExtension.value = false;
   errorMessage.value = null;
   trackEvent("tool_restarted");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -558,12 +637,13 @@ watch(resumeText, (value, previous) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
   pageSearch.value = window.location.search;
-  try {
-    resumeText.value = sessionStorage.getItem(RESUME_STORAGE_KEY) ?? "";
-  } catch {
-    // Storage can be unavailable (private mode)
+  resumeText.value = readSavedResume();
+  readExtensionHandoff();
+  if (prefilledFromExtension.value && resumeText.value) {
+    await nextTick();
+    submitButton.value?.focus();
   }
 });
 

@@ -14,7 +14,7 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
   <main class="min-h-screen bg-background">
     <div class="container mx-auto px-4 py-12 max-w-4xl">
       <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">Privacy Policy</h1>
-      <p class="text-sm text-muted-foreground mb-8">Last updated: November 5, 2025</p>
+      <p class="text-sm text-muted-foreground mb-8">Last updated: September 24, 2026</p>
 
       <div class="prose prose-lg dark:prose-invert max-w-none space-y-8">
         <section>
@@ -67,9 +67,38 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
           <h2 class="text-2xl font-bold text-foreground mb-4">AI Processing</h2>
           <p class="text-muted-foreground leading-relaxed">
             When you use our AI features (resume reviews, cover letter generation), your resume content and
-            job descriptions are processed by third-party AI services (such as OpenAI). This data is used
+            job descriptions are processed by third-party AI services (Google Gemini). This data is used
             solely to provide the requested AI analysis and is not stored by these AI providers beyond the
             processing period required to deliver results.
+          </p>
+        </section>
+
+        <section id="browser-extension">
+          <h2 class="text-2xl font-bold text-foreground mb-4">Browser Extension</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            The OpenApply browser extension reads a page only when you click its toolbar button, and only
+            the tab you are on. It collects nothing in the background, has no access to other tabs or
+            sites, keeps no browsing history, and stores nothing in your browser.
+          </p>
+          <ul class="list-disc list-inside text-muted-foreground space-y-2">
+            <li>
+              <strong>Save to OpenApply</strong> sends the address of the job posting to openapply.app, which
+              opens and reads that page to fill in the job's details, the same as pasting the link yourself.
+            </li>
+            <li>
+              <strong>Check my resume match</strong> opens our free resume match tool with the job
+              description from the page already filled in. The description travels in the part of the link
+              after "#", which your browser does not send to any server. It is only sent, together with your
+              resume, when you click "Check my match", as described in AI Processing above.
+            </li>
+            <li>
+              The match tool remembers your resume in your own browser only if you tick "Remember my resume
+              in this browser". Untick it to delete it.
+            </li>
+          </ul>
+          <p class="text-muted-foreground leading-relaxed mt-4">
+            We do not sell data from the extension, use it for advertising, or use it for anything other than
+            saving jobs and checking your resume match.
           </p>
         </section>
 
@@ -79,7 +108,7 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
             We do not sell your personal data. We may share your information with:
           </p>
           <ul class="list-disc list-inside text-muted-foreground space-y-2">
-            <li><strong>Service Providers:</strong> Firebase (hosting), Stripe (payments), OpenAI (AI processing)</li>
+            <li><strong>Service Providers:</strong> Firebase (hosting), Stripe (payments), Google Gemini (AI processing)</li>
             <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
             <li><strong>Business Transfers:</strong> In case of merger, acquisition, or asset sale</li>
           </ul>

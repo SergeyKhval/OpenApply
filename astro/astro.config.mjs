@@ -7,7 +7,11 @@ import sitemap from "@astrojs/sitemap";
 // https://astro.build/config
 export default defineConfig({
   site: "https://openapply.app",
-  integrations: [vue(), sitemap()],
+  integrations: [
+    vue(),
+    // /save is the browser extension's handoff page, not content
+    sitemap({ filter: (page) => !page.endsWith("/save/") && !page.endsWith("/save") }),
+  ],
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
