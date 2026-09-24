@@ -1,0 +1,392 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+  background: #0f0f1a;
+  color: #e2e2f5;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  position: relative;
+}
+
+.canvas {
+  position: relative;
+  width: 1280px;
+  height: 800px;
+  background: radial-gradient(1100px 500px at -10% -20%, rgba(110, 86, 207, 0.35), transparent 60%), #0f0f1a;
+}
+
+.hero {
+  padding: 40px 56px 0;
+}
+
+.hero h1 {
+  font-size: 31px;
+  line-height: 1.25;
+  font-weight: 800;
+  margin: 0 0 9px;
+  color: #ffffff;
+  max-width: 920px;
+  white-space: nowrap;
+}
+
+.hero p {
+  font-size: 15.5px;
+  margin: 0;
+  color: #a0a0c0;
+  max-width: 860px;
+  white-space: nowrap;
+}
+
+.brand {
+  position: absolute;
+  top: 44px;
+  right: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 19px;
+  color: #ffffff;
+}
+
+.brand img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.stage {
+  position: absolute;
+  left: 56px;
+  top: 190px;
+  width: 1168px;
+  height: 610px;
+  background: #ffffff;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  color: #1a1a2e;
+}
+
+.popup-wrap {
+  position: absolute;
+  top: 214px;
+  right: 88px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.5);
+  border: 1px solid #303052;
+}
+
+.popup-wrap iframe {
+  display: block;
+  width: 372px;
+  border: none;
+}
+
+/* page-chrome: fictional job board top bar, reused inside .stage */
+.page-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 28px;
+  border-bottom: 1px solid #ececf5;
+}
+
+.page-top .logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1f9a8f;
+}
+
+.page-top .company {
+  font-weight: 700;
+  font-size: 15px;
+  color: #2a2a4a;
+}
+
+.page-body {
+  padding: 28px 32px;
+}
+
+.job-title-lg {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #16162a;
+}
+
+.job-meta-lg {
+  font-size: 14px;
+  color: #6c6c8a;
+  margin: 0 0 18px;
+}
+
+.apply-btn {
+  display: inline-block;
+  background: #1f9a8f;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 6px;
+  margin-bottom: 22px;
+}
+
+.page-body p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #33334d;
+  max-width: 640px;
+}
+
+.page-body h3 {
+  font-size: 15px;
+  margin: 20px 0 8px;
+  color: #16162a;
+}
+
+.page-body ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.page-body li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #33334d;
+}
+
+/* chip grid for compatibility screenshot */
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 48px 56px;
+  max-width: 700px;
+}
+
+.chip {
+  padding: 16px 26px;
+  border-radius: 10px;
+  background: #f5f5ff;
+  border: 1px solid #e0e0f0;
+  font-weight: 700;
+  font-size: 17px;
+  color: #2a2a4a;
+}
+
+.check-list {
+  padding: 8px 56px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  max-width: 700px;
+}
+
+.check-list div {
+  font-size: 14px;
+  color: #33334d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-list .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1f9a8f;
+}
+
+/* trust / privacy list */
+.trust-list {
+  padding: 44px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 620px;
+}
+
+.trust-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.trust-dot {
+  margin-top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6e56cf;
+  flex: none;
+}
+
+.trust-item p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #2a2a4a;
+}
+
+.trust-item strong {
+  color: #16162a;
+}
+
+/* mocked web-app frame for the result screenshot */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 16px 28px;
+  border-bottom: 1px solid #ececf5;
+}
+
+.app-nav .brandname {
+  font-weight: 800;
+  font-size: 16px;
+  color: #16162a;
+  margin-right: auto;
+}
+
+.app-nav .navitem {
+  font-size: 13px;
+  color: #6c6c8a;
+}
+
+.app-nav .navitem.active {
+  color: #6e56cf;
+  font-weight: 700;
+}
+
+.app-nav .pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1f9a8f;
+  margin-left: 4px;
+}
+
+.app-nav .btn {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.app-nav .btn.ghost {
+  border: 1px solid #e0e0f0;
+  color: #2a2a4a;
+}
+
+.app-nav .btn.solid {
+  background: #6e56cf;
+  color: #fff;
+}
+
+.result-body {
+  padding: 24px 32px;
+  display: flex;
+  gap: 22px;
+}
+
+.result-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.score-ring {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 7px solid #f0b429;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #16162a;
+}
+
+.verdict {
+  font-size: 14px;
+  color: #33334d;
+  max-width: 520px;
+}
+
+.req-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.req {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #ececf5;
+  font-size: 13.5px;
+}
+
+.req .icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 2px;
+}
+
+.req .icon.matched { background: #2ea36e; }
+.req .icon.partial { background: #f0b429; }
+.req .icon.missing { background: #d94f4f; }
+
+.req .badge {
+  font-size: 9.5px;
+  border: 1px solid #e0e0f0;
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: #6c6c8a;
+  margin-left: 6px;
+}
+
+.req .evidence {
+  display: block;
+  font-style: italic;
+  color: #6c6c8a;
+  margin-top: 2px;
+}
+
+.gap-panel {
+  background: #f9f8ff;
+  border: 1px solid #ece8ff;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.gap-panel h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #16162a;
+}
+
+.gap-panel ol {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.gap-panel li {
+  font-size: 13px;
+  color: #33334d;
+  line-height: 1.6;
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+<div class="canvas">
+  <div class="hero">
+    <h1>Nothing leaves the page until you click</h1>
+    <p>Two permissions, the smallest Chrome offers. No background access.</p>
+  </div>
+  <div class="brand"><img src="icon128.png" alt="" /> OpenApply</div>
+
+  <div class="stage">
+    <div class="trust-list">
+      <div class="trust-item"><span class="trust-dot"></span><p><strong>Reads a page only when you click the icon.</strong> No background scripts, no access until you ask.</p></div>
+      <div class="trust-item"><span class="trust-dot"></span><p><strong>Just two permissions:</strong> the active tab, and reading it, on click. No host access to every site.</p></div>
+      <div class="trust-item"><span class="trust-dot"></span><p><strong>No account needed to install.</strong> Sign up only when you want to save your first job.</p></div>
+      <div class="trust-item"><span class="trust-dot"></span><p><strong>Open source.</strong> Read every line at github.com/SergeyKhval/OpenApply.</p></div>
+    </div>
+  </div>
+
+  <div class="popup-wrap"><iframe src="popup/popup-form.html"></iframe></div>
+</div>
+<script>
+  const ifr = document.querySelector('.popup-wrap iframe');
+  ifr.addEventListener('load', () => {
+    ifr.style.height = ifr.contentDocument.documentElement.scrollHeight + 'px';
+  });
+</script>
+</body>
+</html>

@@ -3,20 +3,36 @@
 Everything the Chrome Web Store developer dashboard asks for, ready to paste.
 Upload file: `pnpm build:extension` (repo root) writes `extension/dist/openapply-extension-<version>.zip`.
 
+Refreshed 2026-09-24 for extension 1.1.1 (in-page extraction, editable popup fields, instant save with no server scrape). The previous listing and screenshots described the 1.0 flow (server-side link parsing, no editable fields) and are now stale.
+
+## Submission checklist (for Sergey)
+
+0. Before submitting: try Save and Check match once on a job you're signed in to on LinkedIn and on Indeed (never verified live, only on captured fixtures). The summary names both sites; if either fails, change the summary to "Works on Greenhouse, Lever, Ashby and more" (also `description` in extension/manifest.json).
+1. Build the zip: `export ASDF_NODEJS_VERSION=22.22.2 && pnpm build:extension` (repo root). Confirms `extension/dist/openapply-extension-1.1.1.zip`.
+2. Go to the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole), pay the one-time $5 registration fee if you haven't, then "New item" and upload the zip.
+3. **Store listing tab**: paste the Name, Summary and Description below. Category: Productivity. Language: English.
+4. **Graphics**: upload `icon-128.png`, the 5 files in `screenshots/`, and `promo-small-440x280.png` in that order (Chrome shows screenshots in upload order).
+5. **Privacy tab**: paste the Single purpose text, add the two Permission justifications (`activeTab`, `scripting`), answer "No" to remote code, tick only the one Data usage box listed below, and check all three certification boxes.
+6. Privacy policy URL: `https://openapply.app/privacy#browser-extension`. Confirm that section is live (it is, as of this branch).
+7. **Distribution tab**: Visibility Public, all regions.
+8. Submit for review. First review is typically 1-3 business days; MV3 extensions with only `activeTab`/`scripting` and no host permissions usually clear the fast lane.
+9. After it's live: update `astro/README.md` / the extension's own README with the real Chrome Web Store URL, and swap any "coming soon" extension links.
+10. Do not post the store link publicly until Sergey approves the post per the sprint's posting rules.
+
 ## Store listing tab
 
-**Name** (from manifest, 43/75 chars)
-OpenApply: Save Jobs and Check Resume Match
+**Name** (75 char max, 65/75 used)
+OpenApply Job Application Tracker: Save Jobs & Check Resume Match
 
-**Summary** (from manifest, 118/132 chars)
-Save any job posting to your OpenApply tracker in one click, or check how your resume matches it. Free and open source.
+**Summary** (132 char max, 114/132 used)
+One click saves any job to your free job tracker and checks your resume match. Works on LinkedIn, Indeed and more.
 
 **Description**
 
 ```
 Found a job worth applying to? Click OpenApply in your toolbar.
 
-SAVE TO OPENAPPLY
+SAVE TO YOUR JOB APPLICATION TRACKER
 One click adds the job to your free OpenApply tracker. The extension reads the posting right in your browser, so it works on single-page job boards and on pages behind a login: role, company, location and the full description, which you can fix before saving. No copy and paste. Not signed up yet? You create a free account and the job is waiting for you.
 
 CHECK MY RESUME MATCH
@@ -36,6 +52,9 @@ PRIVATE BY DESIGN
 - The job description goes to the match tool in the part of the link that browsers never send to a server.
 - Open source: read every line at https://github.com/SergeyKhval/OpenApply
 
+WHAT IT DOESN'T DO
+It does not fill out or submit job applications for you. It saves the job to your tracker and checks your resume against it; you still apply on the company's own site.
+
 OpenApply is a free, open-source job application tracker. Track every application, interview and follow-up in one place, and use AI resume reviews and cover letters only when you want them.
 
 Not affiliated with Faria Education Group's OpenApply school admissions platform.
@@ -46,11 +65,11 @@ Not affiliated with Faria Education Group's OpenApply school admissions platform
 
 **Graphic assets** (all in this folder)
 - Store icon 128x128: `icon-128.png` (96px artwork with 16px transparent padding, per Chrome's guidelines)
-- Screenshots 1280x800: `screenshots/1-save.png`, `screenshots/2-check.png`, `screenshots/3-result.png`
-- Small promo tile 440x280: `promo-small-440x280.png`
+- Screenshots 1280x800: `screenshots/1-save.png`, `screenshots/2-everywhere.png`, `screenshots/3-match.png`, `screenshots/4-result.png`, `screenshots/5-privacy.png`
+- Small promo tile 440x280: `promo-small-440x280.png` (unchanged, still accurate for 1.1.1: "Save jobs and check your resume match in one click. Free and open source.")
 - Marquee 1400x560: not made (optional, only used if Google features the extension)
 
-The screenshots show a fictional posting (Northwind Labs) and a fictional resume, run through the real extension and the real match tool. No real company appears.
+The screenshots show a fictional posting (Northwind Labs) and a fictional resume. The popup shown in screenshots 1, 2, 3 and 5 is the real 1.1.1 popup markup and stylesheet (`extension/src/popup.html`/`popup.css`, unchanged) rendered with sample field values in place of the live Chrome APIs, composited onto a mocked job-board page for the marketing frame; screenshot 4 mocks the real resume-match result UI (score, verdict, matched/partial/missing requirements). No real company appears. Source: `extension/store/source/`.
 
 **Official URL**: https://openapply.app (verify the domain in Search Console under the same Google account, if not already)
 **Homepage URL**: https://openapply.app
