@@ -65,13 +65,19 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "WebApplication",
+      "@type": ["SoftwareApplication", "WebApplication"],
       "name": "Resume vs Job Description Match Checker",
       "url": canonicalUrl,
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Any",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "description": pageDescription,
+      "isPartOf": {
+        "@type": "SoftwareApplication",
+        "name": "OpenApply",
+        "url": "https://openapply.app/",
+        "applicationCategory": "BusinessApplication",
+      },
     },
     {
       "@type": "FAQPage",

@@ -103,6 +103,6 @@ For frequent job changes: startup implosions and layoffs are self-explanatory wi
 
 ## See How Your Resume Stacks Up
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/) analyzes your resume against any job description and tells you exactly what to improve, keywords, skills gaps, and formatting issues. Get actionable feedback in seconds.
+Not sure if your resume matches the job? Try the [free resume vs job description match checker](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-software-engineer), no signup needed. It marks every requirement matched, partial, or missing with the exact line from your resume as proof, and lists the ATS keywords you're missing.
 
-[Check your resume match →](https://openapply.app/)
+[Check your resume match →](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-software-engineer)
