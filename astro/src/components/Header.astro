@@ -32,7 +32,7 @@ const isOnResumeMatchPage = currentPath.startsWith('/tools/resume-job-match');
       </label>
       
       <!-- Navigation -->
-      <nav class="peer-checked:translate-y-0 -mx-4 peer-checked:opacity-100 peer-checked:visible peer-checked:pointer-events-auto absolute lg:relative top-full left-0 right-0 lg:top-auto bg-background lg:bg-transparent border-b lg:border-0 border-border flex flex-col lg:flex-row items-stretch lg:items-center gap-6 lg:gap-8 p-6 lg:p-0 -translate-y-full lg:translate-y-0 opacity-0 lg:opacity-100 invisible lg:visible pointer-events-none lg:pointer-events-auto transition-all duration-300 ease-in-out">
+      <nav class="peer-checked:translate-y-0 -mx-4 peer-checked:opacity-100 peer-checked:visible peer-checked:pointer-events-auto absolute lg:relative top-full left-0 right-0 lg:top-auto bg-background lg:bg-transparent border-b lg:border-0 border-border flex flex-col lg:flex-row items-stretch lg:items-center gap-6 lg:gap-5 p-6 lg:p-0 -translate-y-full lg:translate-y-0 opacity-0 lg:opacity-100 invisible lg:visible pointer-events-none lg:pointer-events-auto transition-all duration-300 ease-in-out">
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6 order-2 lg:order-1">
           <a href="/tools/resume-job-match" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnResumeMatchPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Free resume check</a>
           <a href="/#pricing" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Pricing</a>
@@ -45,10 +45,10 @@ const isOnResumeMatchPage = currentPath.startsWith('/tools/resume-job-match');
             href="https://github.com/SergeyKhval/OpenApply" 
             target="_blank" 
             rel="noopener noreferrer"
-            class="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2"
+            class="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
             aria-label="View on GitHub"
           >
-            <i class="ph ph-github-logo text-xl" aria-hidden="true"></i>
+            <i class="ph ph-github-logo block text-xl leading-none" aria-hidden="true"></i>
           </a>
           <!-- Primary auth CTAs -->
           <a
