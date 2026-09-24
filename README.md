@@ -1,11 +1,22 @@
 # OpenApply
 
-Open, self-hostable, AI-powered job search assistant.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PR Checks](https://github.com/SergeyKhval/OpenApply/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/SergeyKhval/OpenApply/actions/workflows/pr-checks.yml)
+[![Website](https://img.shields.io/badge/website-openapply.app-blue)](https://openapply.app)
 
-Website: https://openapply.app
+Open, self-hostable, AI-powered job search assistant. Paste a job link, track every application, and get AI resume reviews and tailored cover letters, without paying for one of the closed SaaS trackers.
+
+## Try it free, no signup
+
+**[Check your resume against a job description →](https://openapply.app/tools/resume-job-match?utm_source=github&utm_medium=readme&utm_campaign=sprint-2609&utm_content=readme)**
+
+Paste your resume and a job posting and get an honest match score, every requirement checked against your resume with the line that proves it, the keywords you're missing, and what a parser actually sees in your PDF. It never rewrites your resume or invents experience, and the full prompt behind it is shown on the page so you can run it yourself in any AI chat.
+
+![Resume vs job description match checker](astro/public/images/og/resume-job-match.png)
 
 ## Features
 
+- Free resume vs job description match checker (no signup)
 - AI resume reviews and tailored cover letters
 - Job application tracking
 - Interview / contact management
