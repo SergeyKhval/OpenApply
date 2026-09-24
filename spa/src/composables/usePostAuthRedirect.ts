@@ -22,12 +22,15 @@ export function usePostAuthRedirect() {
   const fromLp = computed(() => route.query.from === "lp");
 
   function redirect() {
-    // A job saved from the landing page match tool becomes the user's first
-    // tracked application, with no extra steps
+    // A job saved from the landing page match tool or the browser extension
+    // becomes a tracked application, with no extra steps
     if (hasPendingToolApplication()) {
-      return consumePendingToolApplication(addJobApplication).then((applicationId) => {
-        if (applicationId) {
-          router.push(`/dashboard/applications/${applicationId}?from=tool`);
+      return consumePendingToolApplication(addJobApplication).then((created) => {
+        if (created) {
+          // The extension's job gets the same "Saved. Have you applied?" prompt
+          // as a manual save; the tool's has its own on the match card
+          const query = created.source === "extension" ? "created=1" : "from=tool";
+          router.push(`/dashboard/applications/${created.id}?${query}`);
         } else {
           redirectToDefault();
         }

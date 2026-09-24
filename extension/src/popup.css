@@ -68,6 +68,43 @@ body {
   overflow: hidden;
 }
 
+.job-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-form[hidden] {
+  display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.field input {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.field input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
 .job-meta,
 .job-loading {
   margin: 2px 0 0;

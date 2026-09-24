@@ -78,14 +78,18 @@
           </div>
         </div>
 
-        <!-- Variant C: Job and match saved from the landing page match tool -->
+        <!-- Variant C: Job saved from the landing page match tool or the browser extension -->
         <div v-else-if="pendingToolApplication" class="max-w-md space-y-6 text-center">
           <PhCheckCircle :size="48" weight="fill" class="text-primary mx-auto" />
           <h2 class="text-2xl font-bold text-foreground">
             Sign up and this job is saved to your tracker
           </h2>
           <div class="rounded-lg border border-border bg-card p-4 text-left flex items-center gap-4">
-            <ResumeScore class="size-14 shrink-0" :score="pendingToolApplication.match.matchScore" />
+            <ResumeScore
+              v-if="pendingToolApplication.match"
+              class="size-14 shrink-0"
+              :score="pendingToolApplication.match.matchScore"
+            />
             <div class="min-w-0">
               <p class="font-medium text-foreground truncate">
                 {{ pendingToolApplication.position || "Your job" }}
@@ -96,7 +100,8 @@
             </div>
           </div>
           <p class="text-muted-foreground">
-            Your match check comes with it. Track status, interviews, and follow-ups for free.
+            <template v-if="pendingToolApplication.match">Your match check comes with it.</template>
+            Track status, interviews, and follow-ups for free.
           </p>
         </div>
 
@@ -168,7 +173,9 @@
       >
         <PhCheckCircle class="text-primary shrink-0" :size="20" />
         <p class="text-sm text-foreground">
-          Sign up and {{ pendingToolApplication.position || "this job" }} is saved with your match check.
+          Sign up and {{ pendingToolApplication.position || "this job" }} is saved{{
+            pendingToolApplication.match ? " with your match check" : " to your tracker"
+          }}.
         </p>
       </div>
 
@@ -232,7 +239,10 @@ import { db } from "@/firebase/config";
 import SignInForm from "@/components/SignInForm.vue";
 import SignUpForm from "@/components/SignUpForm.vue";
 import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
-import { readPendingToolApplication } from "@/composables/pendingToolApplication";
+import {
+  pendingApplicationSource,
+  readPendingToolApplication,
+} from "@/composables/pendingToolApplication";
 import ResumeScore from "@/components/ResumeScore.vue";
 import { isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
@@ -249,7 +259,7 @@ const signedInUser = computed(() =>
   user.value && !user.value.isAnonymous ? user.value : null,
 );
 const { redirect, hasPendingJob, pendingJobId } = usePostAuthRedirect();
-// Read once: the job the landing page match tool saved before signup
+// Read once: the job the landing page match tool or the extension saved before signup
 const pendingToolApplication = readPendingToolApplication();
 const viewMode = ref<"sign-in" | "sign-up">(
   hasPendingJob.value || pendingToolApplication || route.query.mode === "signup"
@@ -286,7 +296,7 @@ const parseFailed = computed(() => isJobParseFailed(jobSnapshot.value));
 
 const source = computed(() => {
   if (hasPendingJob.value) return "landing_page_parse" as const;
-  if (pendingToolApplication) return "resume_match_tool" as const;
+  if (pendingToolApplication) return pendingApplicationSource(pendingToolApplication);
   return "direct" as const;
 });
 

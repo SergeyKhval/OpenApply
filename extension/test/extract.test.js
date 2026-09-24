@@ -11,9 +11,10 @@ const source = readFileSync(join(here, "../src/extract.js"), "utf8")
 
 // Runs the extractor inside a page built from a saved fixture, the way
 // chrome.scripting.executeScript runs it in the real tab
-function extractFrom(fixture, { select } = {}) {
-  const html = readFileSync(join(here, `fixtures/${fixture}.html`), "utf8");
-  const url = html.match(/Captured (\S+)/)[1];
+function extractFrom(fixture, { select, withoutJsonLd = false, url: pageUrl } = {}) {
+  let html = readFileSync(join(here, `fixtures/${fixture}.html`), "utf8");
+  if (withoutJsonLd) html = html.replace(/<script[^>]*ld\+json[^>]*>[\s\S]*?<\/script>/g, "");
+  const url = pageUrl ?? html.match(/Captured (\S+)/)[1];
   const dom = new JSDOM(html, { url, runScripts: "outside-only" });
   if (select) {
     const range = dom.window.document.createRange();
@@ -32,6 +33,7 @@ describe("extractJob on captured job pages", () => {
     ["workable", "Senior Open-Source Python Engineer, ML Developer Tools - EMEA Remote", "Hugging Face", "site", "At Hugging Face, we're on a journey", 2000],
     ["linkedin", "Senior Software Engineer, Frontend", "Circle", "site", "Circle (NYSE: CRCL)", 4000],
     ["airbnb", "Account Manager", "Airbnb", "page", "Airbnb was born in 2007", 5000],
+    ["theprotocol", "Starszy Programista Full-stack (JavaScript + PHP) (K/M)", "ASTEK Polska", "site", "Rozwój i utrzymanie aplikacji webowych", 3000],
   ])("%s", (fixture, title, company, sourceKind, snippet, minChars) => {
     const job = extractFrom(fixture);
     expect(job.title).toBe(title);
@@ -39,6 +41,42 @@ describe("extractJob on captured job pages", () => {
     expect(job.source).toBe(sourceKind);
     expect(job.description).toContain(snippet);
     expect(job.description.length).toBeGreaterThan(minChars);
+  });
+
+  it.each([
+    ["greenhouse", "Remote, Bangalore"],
+    ["lever", "London / Stockholm"],
+    ["ashby", "New York City, NY, USA · Remote"],
+    ["workable", "Remote"],
+    ["linkedin", "Salt Lake City Metropolitan Area"],
+    ["theprotocol", "Warszawa, mazowieckie"],
+  ])("reads the location on %s", (fixture, location) => {
+    expect(extractFrom(fixture).location).toBe(location);
+  });
+
+  it("reads every section of a theprotocol.it offer, not just the first", () => {
+    const { description } = extractFrom("theprotocol");
+    for (const heading of ["Nasze wymagania", "O projekcie", "To oferujemy", "Założona w 1988 roku"]) {
+      expect(description).toContain(heading);
+    }
+    // Recommended offers and the "ask a question" box aren't the job
+    expect(description).not.toContain("Mid PHP Developer");
+    expect(description).not.toContain("Brakuje Ci informacji");
+  });
+
+  it("reads a single-page app it has no rules for", () => {
+    // theprotocol.it's rendered page on an unknown host, without its JSON-LD
+    const job = extractFrom("theprotocol", { withoutJsonLd: true, url: "https://careers.example.com/offer/1" });
+    expect(job).toMatchObject({
+      title: "Starszy Programista Full-stack (JavaScript + PHP) (K/M)",
+      company: "ASTEK Polska",
+      location: "Warszawa, mazowieckie",
+      source: "page",
+    });
+    for (const section of ["Nasze wymagania", "O projekcie", "To oferujemy"]) {
+      expect(job.description).toContain(section);
+    }
+    expect(job.description).not.toContain("Mid PHP Developer");
   });
 
   it("keeps site navigation and footers out of a generic career page", () => {
@@ -65,6 +103,21 @@ describe("extractJob on layouts that can't be captured headless", () => {
     const job = extractFrom("indeed-synthetic");
     expect(job).toMatchObject({ title: "Frontend Engineer", company: "Acme Robotics", source: "site" });
     expect(job.description).toContain("About the role");
+  });
+
+  it("reads title, company and location from the page's own markup", () => {
+    const dom = new JSDOM(
+      `<title>Platform Engineer at Initech | Initech Careers</title>
+      <header><h1>Initech</h1><span class="location">Head office</span></header>
+      <main>
+        <h1>Platform Engineer</h1>
+        <div class="job-location">Location: Austin, TX</div>
+        <p>${"Run the platform. ".repeat(20)}</p>
+      </main>`,
+      { url: "https://initech.example/jobs/9", runScripts: "outside-only" },
+    );
+    const job = dom.window.eval(`${source}; extractJob()`);
+    expect(job).toMatchObject({ title: "Platform Engineer", company: "Initech", location: "Austin, TX" });
   });
 
   it("falls back to schema.org JobPosting", () => {

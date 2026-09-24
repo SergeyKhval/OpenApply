@@ -16,6 +16,22 @@
       <p class="job-loading">Reading this page...</p>
     </section>
 
+    <form id="job-form" class="job job-form" hidden>
+      <label class="field">
+        <span>Job title</span>
+        <input id="field-title" name="title" type="text" maxlength="300" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Company</span>
+        <input id="field-company" name="company" type="text" maxlength="300" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Location</span>
+        <input id="field-location" name="location" type="text" maxlength="300" autocomplete="off" />
+      </label>
+      <p id="description-note" class="job-meta"></p>
+    </form>
+
     <div class="actions">
       <button id="save" type="button" class="button primary" disabled>
         Save to OpenApply

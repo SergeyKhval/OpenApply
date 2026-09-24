@@ -62,6 +62,18 @@ describe("usePostAuthRedirect", () => {
     expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).toBeNull();
   });
 
+  it("opens a job saved by the browser extension with the saved prompt", async () => {
+    const { match: _match, ...job } = pendingToolApplication;
+    localStorage.setItem(PENDING_TOOL_APPLICATION_KEY, JSON.stringify({ ...job, source: "extension" }));
+    mockAddJobApplication.mockResolvedValue({ success: true, id: "app456" });
+    const { redirect } = usePostAuthRedirect();
+
+    await redirect();
+
+    expect(mockAddJobApplication).toHaveBeenCalledWith(expect.anything(), { source: "extension" });
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/app456?created=1");
+  });
+
   it("falls back to the default redirect and keeps the job when creation fails", async () => {
     localStorage.setItem(PENDING_TOOL_APPLICATION_KEY, JSON.stringify(pendingToolApplication));
     mockAddJobApplication.mockResolvedValue({ success: false, error: "nope" });

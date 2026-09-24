@@ -7,6 +7,7 @@
  * @property {string} url           location.href of the page
  * @property {string} title         job title, "" when not found
  * @property {string} company       company name, "" when not found
+ * @property {string} location      where the job is ("Warsaw, Poland", "Remote"), "" when not found
  * @property {string} description   plain-text job description, "" when not found
  * @property {"selection"|"site"|"json-ld"|"page"|"none"} source where the description came from
  */
@@ -65,26 +66,50 @@ export function extractJob() {
     return (value || "").replace(/\s+/g, " ").trim();
   }
 
-  function firstText(selectors) {
+  function visibleText(element) {
+    // Screen-reader-only suffixes like Indeed's " - job post"
+    const copy = element.cloneNode(true);
+    copy.querySelectorAll(".visually-hidden, .sr-only, .screen-reader-text").forEach((hidden) => hidden.remove());
+    return clean(copy.textContent);
+  }
+
+  function firstText(selectors = []) {
     for (const selector of selectors) {
       const element = document.querySelector(selector);
-      if (!element) continue;
-      // Screen-reader-only suffixes like Indeed's " - job post"
-      const copy = element.cloneNode(true);
-      copy.querySelectorAll(".visually-hidden, .sr-only, .screen-reader-text").forEach((hidden) => hidden.remove());
-      const text = clean(copy.textContent);
+      const text = element ? visibleText(element) : "";
       if (text) return text;
     }
     return "";
   }
 
+  // A selector, or { all } to join every match: some boards split the
+  // description into sections (requirements, benefits, about us)
   function firstBlock(selectors) {
     for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      const text = element ? blockText(element) : "";
+      const elements = typeof selector === "string"
+        ? [document.querySelector(selector)].filter(Boolean)
+        : [...document.querySelectorAll(selector.all)];
+      const text = elements.map(blockText).filter(Boolean).join("\n\n");
       if (text.length >= MIN_DESCRIPTION_CHARS) return text;
     }
     return "";
+  }
+
+  // "Firma: ASTEK Polska", "Company: Acme"
+  function withoutLabel(value) {
+    return value.replace(/^(company|employer|firma|pracodawca|unternehmen|entreprise)\s*:\s*/i, "");
+  }
+
+  function placeName(place) {
+    if (!place || typeof place !== "object") return "";
+    const address = typeof place.address === "string" ? { streetAddress: place.address } : place.address || {};
+    const country = typeof address.addressCountry === "object"
+      ? address.addressCountry?.name
+      : address.addressCountry;
+    const parts = [address.addressLocality, address.addressRegion, country]
+      .map(clean)
+      .filter((part, index, all) => part && all.indexOf(part) === index);
+    return parts.join(", ") || clean(place.name);
   }
 
   // schema.org JobPosting: Greenhouse, Lever, Ashby, Workable and many career sites publish it
@@ -112,9 +137,14 @@ export function extractJob() {
     const organization = Array.isArray(job.hiringOrganization)
       ? job.hiringOrganization[0]
       : job.hiringOrganization;
+    const places = (Array.isArray(job.jobLocation) ? job.jobLocation : [job.jobLocation])
+      .map(placeName)
+      .filter(Boolean);
+    const remote = [job.jobLocationType].flat().includes("TELECOMMUTE") ? "Remote" : "";
     return {
       title: clean(job.title),
       company: clean(typeof organization === "string" ? organization : organization?.name),
+      location: [...new Set([...places.slice(0, 3), remote])].filter(Boolean).join(" · "),
       description: typeof job.description === "string" ? htmlToText(job.description) : "",
     };
   }
@@ -137,6 +167,10 @@ export function extractJob() {
         ".topcard__org-name-link",
         ".topcard__flavor",
       ],
+      location: [
+        ".job-details-jobs-unified-top-card__primary-description-container .tvm__text",
+        ".topcard__flavor--bullet",
+      ],
       description: [
         "#job-details",
         ".jobs-description__content",
@@ -157,18 +191,21 @@ export function extractJob() {
         '[data-company-name="true"]',
         ".jobsearch-CompanyInfoContainer a",
       ],
+      location: ['[data-testid="inlineHeader-companyLocation"]', '[data-testid="job-location"]'],
       description: ["#jobDescriptionText", ".jobsearch-jobDescriptionText"],
     },
     {
       host: /(^|\.)greenhouse\.io$/,
       title: [".job__title h1", "h1.app-title", ".app-title", "h1"],
       company: [".company-name"],
+      location: [".job__location", ".location"],
       description: [".job__description", "#content"],
     },
     {
       host: /(^|\.)lever\.co$/,
       title: [".posting-headline h2", "h2"],
       company: [],
+      location: [".posting-categories .location"],
       description: [
         ".posting-page .section-wrapper.page-full-width:not(.accent-section)",
         '[data-qa="job-description"]',
@@ -184,12 +221,40 @@ export function extractJob() {
       host: /(^|\.)workable\.com$/,
       title: ['[data-ui="job-title"]', "h1"],
       company: [],
+      location: ['[data-ui="job-location"]'],
       description: ['[data-ui="job-description"]', '[data-ui="job-breakdown"]'],
+    },
+    {
+      // A single-page app: the server scraper only gets a bot challenge
+      host: /(^|\.)theprotocol\.it$/,
+      title: ['[data-test="text-offerTitle"]'],
+      company: ['[data-test="text-offerEmployer"]'],
+      location: ['[data-test="text-primaryLocation"]'],
+      description: [{
+        all: ['REQUIREMENTS', 'PROJECT', 'WORKSTYLE', 'PROGRESS_AND_BENEFITS', 'ABOUT_US']
+          .map((section) => `[data-test="${section}"]`)
+          .join(", "),
+      }],
     },
   ];
 
+  // Sentence-length text runs: job descriptions are made of them, while site
+  // chrome (menus, buttons, tags) is short labels
+  function proseLength(root) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const length = clean(node.nodeValue).length;
+      if (length < 30) continue;
+      if (node.parentElement?.closest("nav, header, footer, aside, [role=navigation], script, style")) continue;
+      total += length;
+    }
+    return total;
+  }
+
   // Career sites without markup we know: the element holding the most paragraph
-  // and bullet text, widened to its parent while that only adds headings, not site chrome
+  // and bullet text, widened to its parent while that adds headings or more
+  // prose (boards that split the description into sections), not site chrome
   function densestTextBlock() {
     const scores = new Map();
     document.querySelectorAll("p, li").forEach((element) => {
@@ -210,28 +275,87 @@ export function extractJob() {
     });
     if (!best) return "";
     let text = blockText(best);
-    for (let step = 0; step < 3; step++) {
+    let prose = proseLength(best);
+    for (let step = 0; step < 6; step++) {
       const parent = best.parentElement;
       if (!parent || parent === document.body) break;
       const addsChrome = [...parent.querySelectorAll("nav, header, footer, aside")]
         .some((element) => !best.contains(element));
       if (addsChrome) break;
       const parentText = blockText(parent);
-      if (parentText.length > text.length * 1.6) break;
+      const parentProse = proseLength(parent);
+      const addedMostlyProse = parentProse - prose >= (parentText.length - text.length) * 0.5;
+      if (parentText.length > text.length * 1.6 && !addedMostlyProse) break;
       best = parent;
       text = parentText;
+      prose = parentProse;
     }
     return text;
   }
 
+  const OUTSIDE_CONTENT = "nav, header, footer, aside, [role=navigation], [role=banner], [role=contentinfo]";
+
+  // Generic pages: the first short text in the page content matching a selector.
+  // Searches <main> first so "similar jobs" lists after it can't win.
+  function contentText(selectors, maxLength) {
+    const roots = [document.querySelector("main, [role=main]"), document.body].filter(Boolean);
+    for (const root of roots) {
+      for (const element of root.querySelectorAll(selectors)) {
+        if (element.closest(OUTSIDE_CONTENT)) continue;
+        const text = withoutLabel(visibleText(element)).replace(/^(location|lokalizacja|standort|lieu)\s*:\s*/i, "");
+        if (text.length >= 2 && text.length <= maxLength) return text;
+      }
+    }
+    return "";
+  }
+
+  const pageTitle = clean(document.title);
+  const ogTitle = clean(document.querySelector('meta[property="og:title"]')?.getAttribute("content"));
+  const siteName = clean(document.querySelector('meta[property="og:site_name"]')?.getAttribute("content"));
+  const hostWord = location.hostname.replace(/^www\./, "");
+
+  // "Account Manager - Careers at Airbnb", "Frontend Engineer | theprotocol.it"
+  function withoutSiteSuffix(text) {
+    let value = text;
+    for (let step = 0; step < 3; step++) {
+      const next = value.replace(/ [|\-–—] ([^|\-–—]+)$/, (whole, tail) => {
+        const suffix = tail.trim().toLowerCase();
+        const isSite = /\b(careers?|jobs?|praca|stellenangebote|emplois?)\b/.test(suffix)
+          || suffix === siteName.toLowerCase()
+          || suffix === hostWord.toLowerCase();
+        return isSite ? "" : whole;
+      });
+      if (next === value) break;
+      value = next;
+    }
+    return value.trim();
+  }
+
+  // "Job Application for AI Engineer at GitLab", "Engineer (K/M), ASTEK Polska - Praca w IT"
+  function companyAfterTitle(title) {
+    if (!title) return "";
+    for (const text of [ogTitle, pageTitle]) {
+      const index = text.indexOf(title);
+      if (index < 0) continue;
+      const rest = text.slice(index + title.length);
+      const match = rest.match(/^\s*(?:,| at | @ | [|\-–—] )\s*([^,|\-–—]+)/i);
+      const company = match ? match[1].trim() : "";
+      if (company && company.toLowerCase() !== siteName.toLowerCase() && !company.includes(hostWord)) {
+        return company.replace(/^(careers|jobs) (at|@) /i, "");
+      }
+    }
+    return "";
+  }
+
   const url = location.href;
   const host = location.hostname;
-  const result = { url, title: "", company: "", description: "", source: "none" };
+  const result = { url, title: "", company: "", location: "", description: "", source: "none" };
 
   const site = SITES.find((candidate) => candidate.host.test(host));
   if (site) {
     result.title = firstText(site.title);
-    result.company = firstText(site.company);
+    result.company = withoutLabel(firstText(site.company));
+    result.location = firstText(site.location);
     result.description = firstBlock(site.description);
     if (result.description) result.source = "site";
   }
@@ -240,6 +364,7 @@ export function extractJob() {
   if (structured) {
     result.title = result.title || structured.title;
     result.company = result.company || structured.company;
+    result.location = result.location || structured.location;
     if (!result.description && structured.description.length >= MIN_DESCRIPTION_CHARS) {
       result.description = structured.description;
       result.source = "json-ld";
@@ -247,21 +372,21 @@ export function extractJob() {
   }
 
   if (!result.title) {
-    // Page titles often end in " - Careers at Airbnb" or " | Jobs"
-    result.title = (
-      clean(document.querySelector('meta[property="og:title"]')?.getAttribute("content"))
-      || clean(document.title)
-    ).replace(/ [|\-–] (careers|jobs)\b.*$/i, "");
+    // The page heading, when the tab title confirms it's the job and not the site name
+    const heading = [...document.querySelectorAll("h1")]
+      .filter((element) => !element.closest(OUTSIDE_CONTENT))
+      .map(visibleText)
+      .find((text) => text.length >= 3 && text.length <= 150);
+    const confirmed = heading && (pageTitle.includes(heading) || ogTitle.includes(heading));
+    result.title = confirmed ? heading : withoutSiteSuffix(ogTitle || pageTitle) || heading || "";
   }
   if (!result.company) {
-    // "Job Application for AI Engineer at GitLab"
-    const pageTitle = clean(document.title);
-    const marker = result.title ? `${result.title} at ` : "";
-    const index = marker ? pageTitle.indexOf(marker) : -1;
-    result.company = index >= 0
-      ? pageTitle.slice(index + marker.length).split(/ [|\-–] /)[0].trim()
-      : clean(document.querySelector('meta[property="og:site_name"]')?.getAttribute("content"))
-        .replace(/^(careers|jobs) (at|@) /i, "");
+    result.company = companyAfterTitle(result.title)
+      || contentText('[itemprop="hiringOrganization"], [data-testid*="company" i], [data-test*="employer" i], [data-test*="company" i], [class*="company-name" i], [class*="companyName"]', 80)
+      || siteName.replace(/^(careers|jobs) (at|@) /i, "");
+  }
+  if (!result.location) {
+    result.location = contentText('[itemprop="jobLocation"], [data-testid*="location" i], [data-test*="location" i], [data-ui*="location" i], [class*="job-location" i], [class*="jobLocation"], [class*="location" i]', 80);
   }
 
   if (!result.description) {

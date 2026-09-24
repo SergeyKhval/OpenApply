@@ -46,13 +46,60 @@ export function canonicalJobUrl(href) {
 }
 
 /**
- * "Save to OpenApply": the landing page parses the link, then the app asks
- * signed-out users to sign up with the job pending.
+ * "Save to OpenApply" when the popup couldn't read the page: the landing page
+ * parses the link on the server, then the app asks signed-out users to sign up
+ * with the job pending.
  * @param {string} jobUrl canonical posting URL
  */
 export function saveUrl(jobUrl) {
   const params = new URLSearchParams({ url: jobUrl, ...UTM, utm_medium: "save" });
   return `${SITE_ORIGIN}/save?${params}`;
+}
+
+// Same limits as shared/extensionJob.ts, which decodes the payload on /save
+export const JOB_LIMITS = { url: 2000, title: 300, company: 300, location: 300, description: 15000 };
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  // In chunks: spreading a long array into fromCharCode overflows the stack
+  for (let start = 0; start < bytes.length; start += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
+ * The job as a URL-fragment value: base64url(deflate(JSON)).
+ * @param {{ url: string, title: string, company: string, location: string, description: string }} job
+ * @returns {Promise<string>}
+ */
+export async function encodeJob(job) {
+  const payload = { v: 1 };
+  for (const [key, limit] of Object.entries(JOB_LIMITS)) {
+    payload[key] = String(job[key] ?? "").trim().slice(0, limit);
+  }
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(bytes);
+      controller.close();
+    },
+  }).pipeThrough(new CompressionStream("deflate"));
+  const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
+  return bytesToBase64Url(compressed);
+}
+
+/**
+ * "Save to OpenApply" with the job the popup read: /save creates the
+ * application from the fragment, which the browser never sends to a server,
+ * so nothing is scraped and login-gated pages work.
+ * @param {{ url: string, title: string, company: string, location: string, description: string }} job
+ * @returns {Promise<string>}
+ */
+export async function saveJobUrl(job) {
+  const query = new URLSearchParams({ ...UTM, utm_medium: "save" });
+  const fragment = new URLSearchParams({ job: await encodeJob(job) });
+  return `${SITE_ORIGIN}/save?${query}#${fragment}`;
 }
 
 /**

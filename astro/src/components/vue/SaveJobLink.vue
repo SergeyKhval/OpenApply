@@ -34,6 +34,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { submitJobLink } from "../../lib/submitJobLink";
+import { savePendingToolApplication } from "../../lib/pendingToolApplication";
+import { decodeExtensionJob, EXTENSION_JOB_PARAM, type ExtensionJob } from "../../../../shared/extensionJob";
 
 const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
 
@@ -85,8 +87,49 @@ async function save() {
   window.location.replace(result.redirectUrl);
 }
 
-onMounted(() => {
-  jobUrl.value = readJobUrl(window.location.search);
+// The extension read the job from the page: hand it to the app as a pending
+// application, with no server scrape. The app creates it at once for a
+// signed-in user, or right after signup.
+function saveFromExtension(job: ExtensionJob): boolean {
+  jobUrl.value = job.url;
+  const saved = savePendingToolApplication({
+    source: "extension",
+    companyName: job.company,
+    position: job.title,
+    location: job.location,
+    jobDescription: job.description,
+    jobDescriptionLink: job.url,
+    technologies: [],
+  });
+  if (!saved) return false;
+  trackEvent("extension_save_started", { job_host: jobHost.value, mode: "extracted" });
+
+  const params = new URLSearchParams({ from: "extension" });
+  new URLSearchParams(window.location.search).forEach((value, key) => {
+    if (key.startsWith("utm_")) params.set(key, value);
+  });
+  // Replace, so Back from the app doesn't land here and save again
+  window.location.replace(`${spaBase}/?${params}`);
+  return true;
+}
+
+onMounted(async () => {
+  const { hash } = window.location;
+  const fromExtension = new URLSearchParams(hash.slice(1)).has(EXTENSION_JOB_PARAM);
+  const extensionJob = fromExtension ? await decodeExtensionJob(hash) : null;
+  if (fromExtension) {
+    // The job is in memory now; keep it out of history and bookmarks
+    history.replaceState(history.state, "", window.location.pathname + window.location.search);
+  }
+  if (extensionJob && saveFromExtension(extensionJob)) return;
+
+  // Storage blocked: the link still works through the server parser
+  jobUrl.value = extensionJob?.url ?? readJobUrl(window.location.search);
+  if (fromExtension && !jobUrl.value) {
+    errorMessage.value = "We couldn't read the job the extension sent. Open the posting and click Save again.";
+    trackEvent("extension_save_failed", { reason: "bad_payload" });
+    return;
+  }
   save();
 });
 </script>

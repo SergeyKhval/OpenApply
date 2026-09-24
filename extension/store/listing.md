@@ -17,7 +17,7 @@ Save any job posting to your OpenApply tracker in one click, or check how your r
 Found a job worth applying to? Click OpenApply in your toolbar.
 
 SAVE TO OPENAPPLY
-One click adds the job to your free OpenApply tracker. We read the posting for you: company, role, description and tech stack. No copy and paste. Not signed up yet? You create a free account and the job is waiting for you.
+One click adds the job to your free OpenApply tracker. The extension reads the posting right in your browser, so it works on single-page job boards and on pages behind a login: role, company, location and the full description, which you can fix before saving. No copy and paste. Not signed up yet? You create a free account and the job is waiting for you.
 
 CHECK MY RESUME MATCH
 One click opens our free resume match checker with the job description already filled in. You get:
@@ -80,7 +80,7 @@ Used with activeTab to run a single read-only function in the current tab, after
 
 **Data usage**: tick these, and nothing else
 
-- [x] Website content: the job posting's text, title and address, only from the tab the user clicks the extension on, and only sent when the user clicks Save or Check my resume match.
+- [x] Website content: the job posting's title, company, location, description and address, only from the tab the user clicks the extension on, and only sent to openapply.app when the user clicks Save or Check my resume match.
 
 Leave unticked: personally identifiable information, health, financial and payment, authentication, personal communications, location, web history, user activity.
 
