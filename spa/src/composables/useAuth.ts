@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithCustomToken,
   signInWithPopup,
   signOut,
   type User,
@@ -13,7 +14,8 @@ import {
 } from "firebase/auth";
 import { computed, type Ref } from "vue";
 import { collection, doc } from "firebase/firestore";
-import { db } from "@/firebase/config.ts";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/firebase/config.ts";
 import { identifyUser, resetUser, trackEvent } from "@/analytics";
 
 type BillingProfile = {
@@ -33,6 +35,8 @@ type AuthResult<T = User> =
 
 type LogoutResult = { success: true } | { success: false; error: string };
 
+type AuthSource = "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
+
 // Firebase's raw error messages ("Firebase: Password should be at least 6
 // characters (auth/weak-password).") are not something to show a user.
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -45,6 +49,22 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/too-many-requests": "Too many attempts. Wait a moment and try again.",
   "auth/popup-closed-by-user": "The Google sign-in window was closed before finishing.",
 };
+
+// Messages the sign-in code functions write for people to read
+const CALLABLE_ERRORS_WITH_USER_MESSAGES = new Set([
+  "functions/invalid-argument",
+  "functions/resource-exhausted",
+  "functions/permission-denied",
+  "functions/internal",
+]);
+
+function friendlyCallableError(error: unknown): { message: string; code?: string } {
+  const { code, message } = (error ?? {}) as { code?: string; message?: string };
+  if (code && message && CALLABLE_ERRORS_WITH_USER_MESSAGES.has(code)) {
+    return { message, code };
+  }
+  return { message: "Something went wrong. Try again.", code };
+}
 
 function friendlyAuthError(error: unknown): { message: string; code?: string } {
   const code = (error as { code?: string })?.code;
@@ -92,7 +112,7 @@ export function useAuth() {
         password,
       );
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
-      trackEvent("login_completed", { source: options?.source ?? "direct" });
+      trackEvent("login_completed", { source: options?.source ?? "direct", method: "password" });
       return { success: true, user: result.user };
     } catch (error) {
       const { message, code } = friendlyAuthError(error);
@@ -114,7 +134,7 @@ export function useAuth() {
         password,
       );
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
-      trackEvent("signup_completed", { source: options?.source ?? "direct" });
+      trackEvent("signup_completed", { source: options?.source ?? "direct", method: "password" });
       return { success: true, user: result.user };
     } catch (error) {
       const { message, code } = friendlyAuthError(error);
@@ -133,11 +153,46 @@ export function useAuth() {
       const isNewUser = getAdditionalUserInfo(result)?.isNewUser ?? false;
       identifyUser(result.user.uid, { email: result.user.email, authMethod: "google" });
       const source = options?.source ?? "direct";
-      trackEvent(isNewUser ? "signup_completed" : "login_completed", { source });
+      trackEvent(isNewUser ? "signup_completed" : "login_completed", { source, method: "google" });
       return { success: true, user: result.user };
     } catch (error) {
       const { message, code } = friendlyAuthError(error);
       return { success: false, error: message, code };
+    }
+  };
+
+  const sendSignInCode = async (email: string): Promise<LogoutResult> => {
+    try {
+      await httpsCallable(functions, "sendSignInCode")({ email });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: friendlyCallableError(error).message };
+    }
+  };
+
+  const verifySignInCode = async (
+    email: string,
+    code: string,
+    options?: { source?: AuthSource },
+  ): Promise<AuthResult> => {
+    if (!auth) return { success: false, error: "Auth not initialized" };
+
+    try {
+      const verify = httpsCallable<{ email: string; code: string }, { token: string; isNewUser: boolean }>(
+        functions,
+        "verifySignInCode",
+      );
+      const { data } = await verify({ email, code });
+      const result = await signInWithCustomToken(auth, data.token);
+      identifyUser(result.user.uid, { email: result.user.email, authMethod: "email_code" });
+      trackEvent(data.isNewUser ? "signup_completed" : "login_completed", {
+        source: options?.source ?? "direct",
+        method: "email_code",
+      });
+      return { success: true, user: result.user };
+    } catch (error) {
+      const { message, code: errorCode } = friendlyCallableError(error);
+      return { success: false, error: message, code: errorCode };
     }
   };
 
@@ -172,6 +227,8 @@ export function useAuth() {
     login,
     register,
     loginWithGoogle,
+    sendSignInCode,
+    verifySignInCode,
     logout,
     resetPassword,
   };
