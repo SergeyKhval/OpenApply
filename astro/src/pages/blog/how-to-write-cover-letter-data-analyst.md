@@ -103,3 +103,7 @@ End with something that references their specific situation or your specific int
 That's a conversation starter, not a farewell. It makes the recruiter want to get on a call to find out what that cleaner way is.
 
 That's the actual goal of a cover letter. not to get the job, but to get the call.
+
+---
+
+Want the keywords real data analyst postings are actually asking for right now? See [resume keywords for data analysts](/resume-keywords/data-analyst?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=how-to-write-cover-letter-data-analyst), built from current job postings, with how to prove each one.

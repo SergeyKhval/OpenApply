@@ -115,6 +115,8 @@ A strong PM cover letter takes time. But it's the kind of time investment that g
 
 ---
 
+Want the keywords real PM postings are actually asking for right now? See [resume keywords for product managers](/resume-keywords/product-manager?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=how-to-write-cover-letter-product-manager), built from current job postings, with how to prove each one.
+
 ## Write Your Cover Letter in Seconds
 
 Crafting a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/app/) generates personalized, job-specific cover letters from your resume and the job description, in one click. Stop staring at a blank page and start applying faster.
