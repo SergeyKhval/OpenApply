@@ -1,12 +1,15 @@
 <template>
   <div class="w-full max-w-xl mx-auto">
-    <form @submit.prevent="handleSubmit" class="flex gap-2">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-2 sm:flex-row">
       <input
         v-model="jobUrl"
         type="url"
         required
+        aria-label="Job posting link"
+        autocomplete="off"
+        inputmode="url"
         placeholder="https://jobs.example.com/senior-engineer..."
-        class="flex-1 h-11 rounded-md border border-border/60 bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="min-w-0 flex-1 h-11 rounded-md border border-border/60 bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         :disabled="isSubmitting"
       />
       <button
@@ -14,11 +17,11 @@
         :disabled="isSubmitting"
         class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-primary/40"
       >
-        {{ isSubmitting ? "Parsing..." : "Parse Job" }}
+        {{ isSubmitting ? "Parsing…" : "Track this job" }}
       </button>
     </form>
 
-    <p v-if="errorMessage" class="text-destructive text-sm mt-2 text-center">
+    <p v-if="errorMessage" role="alert" class="text-destructive text-sm mt-2 text-center">
       {{ errorMessage }}
     </p>
 

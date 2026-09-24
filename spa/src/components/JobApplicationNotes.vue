@@ -12,7 +12,7 @@
         class="text-muted-foreground flex flex-col items-center gap-2 text-center"
       >
         <PhNoteBlank size="64" />
-        It feels a little empty here... Maybe add a note?
+        It feels a little empty here… Maybe add a note?
       </p>
     </CardContent>
     <CardFooter>
@@ -22,7 +22,7 @@
       >
         <Textarea
           v-model="newNoteText"
-          placeholder="Recruiter was a real pain...
+          placeholder="Recruiter was a real pain…
 Ctrl+Enter to save"
           @keydown.ctrl.enter="addNote()"
         />

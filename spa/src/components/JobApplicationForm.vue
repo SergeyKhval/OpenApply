@@ -1,5 +1,5 @@
 <template>
-  <form class="flex flex-col gap-6" @submit.prevent="handleSubmit">
+  <form class="flex flex-col gap-6" novalidate @submit.prevent="handleSubmit">
     <Alert v-if="parsingFailed" variant="default">
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
@@ -13,8 +13,13 @@
         id="company"
         v-model="formData.companyName"
         placeholder="e.g., Google"
-        required
+        :aria-invalid="v$.companyName.$dirty && v$.companyName.$invalid"
+        aria-describedby="company-error"
+        :class="v$.companyName.$dirty && v$.companyName.$invalid && 'border-destructive'"
       />
+      <p v-if="v$.companyName.$dirty && v$.companyName.$invalid" id="company-error" role="alert" class="text-xs text-destructive">
+        Enter the company name
+      </p>
     </div>
 
     <div class="flex flex-col gap-2">
@@ -23,19 +28,26 @@
         id="position"
         v-model="formData.position"
         placeholder="e.g., Senior Software Engineer"
-        required
+        :aria-invalid="v$.position.$dirty && v$.position.$invalid"
+        aria-describedby="position-error"
+        :class="v$.position.$dirty && v$.position.$invalid && 'border-destructive'"
       />
+      <p v-if="v$.position.$dirty && v$.position.$invalid" id="position-error" role="alert" class="text-xs text-destructive">
+        Enter the position
+      </p>
     </div>
 
     <div class="flex flex-col gap-2">
-      <Label for="job-description">Job Description</Label>
+      <Label for="job-description">Job Description (optional)</Label>
       <Textarea
         id="job-description"
         v-model="formData.jobDescription"
-        placeholder="Job description is used for tailored cover letters, resume scoring etc. Make sure to include key details."
+        placeholder="Paste the job description here."
         class="max-h-50"
-        required
       />
+      <p class="text-xs text-muted-foreground">
+        Add it later for resume scoring and cover letters.
+      </p>
     </div>
 
     <div class="flex flex-col gap-2">
@@ -127,6 +139,8 @@ import {
   PhX,
   PhInfo,
 } from "@phosphor-icons/vue";
+import { useVuelidate } from "@vuelidate/core";
+import { required } from "@vuelidate/validators";
 import { useJobApplications } from "@/composables/useJobApplications";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -204,9 +218,18 @@ function getInitialForm() {
 
 const formData = reactive(getInitialForm());
 
+const v$ = useVuelidate(
+  {
+    companyName: { required },
+    position: { required },
+  },
+  formData,
+);
+
 const resetForm = () => {
   Object.assign(formData, getInitialForm());
   error.value = null;
+  v$.value.$reset();
 };
 
 const clearTechnologies = () => {
@@ -214,6 +237,9 @@ const clearTechnologies = () => {
 };
 
 const handleSubmit = async () => {
+  v$.value.$touch();
+  if (v$.value.$invalid) return;
+
   isSubmitting.value = true;
   error.value = null;
 

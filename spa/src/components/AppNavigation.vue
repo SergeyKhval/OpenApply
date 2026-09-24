@@ -31,14 +31,15 @@
             </TooltipTrigger>
             <TooltipContent>
               <p class="text-center">
-                Coins are used for AI features,<br />
-                e.g. cover letter generation
+                <template v-if="isOnFreeCredits">Free coins to try AI features,<br />e.g. cover letter generation</template>
+                <template v-else>Coins are used for AI features,<br />e.g. cover letter generation</template>
               </p>
             </TooltipContent>
           </Tooltip>
+          <span v-if="isOnFreeCredits" class="text-xs text-muted-foreground">free</span>
         </div>
         <Dialog>
-          <DialogTrigger as-child>
+          <DialogTrigger v-if="!isOnFreeCredits" as-child>
             <Button size="sm">Top up</Button>
           </DialogTrigger>
           <DialogScrollContent class="md:min-w-200">
@@ -118,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth.ts";
 import {
@@ -183,6 +185,14 @@ const navLinks = [
 ];
 
 const { startCheckout, isProcessing } = useCreditsCheckout();
+
+// A brand-new user who hasn't bought anything yet is still on their welcome
+// grant; asking them to pay before they've tried any AI feature is a
+// worse first impression than just showing what they have to try with.
+const isOnFreeCredits = computed(() => {
+  const billing = userProfile.value?.billingProfile;
+  return !!billing && billing.lifetimeCreditsPurchased === 0 && billing.currentBalance > 0;
+});
 
 const handleLogout = async () => {
   const result = await logout();
