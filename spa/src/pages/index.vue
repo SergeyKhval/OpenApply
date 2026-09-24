@@ -9,7 +9,7 @@
         class="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin"
         aria-hidden="true"
       />
-      <p class="text-lg font-semibold text-foreground">Loading...</p>
+      <p class="text-lg font-semibold text-foreground">Loading…</p>
     </div>
 
     <!-- Unauthenticated: split layout -->
@@ -109,7 +109,7 @@
               aria-hidden="true"
             />
             <h2 class="text-2xl font-bold text-foreground">
-              Analyzing your job listing...
+              Analyzing your job listing…
             </h2>
             <p class="text-muted-foreground">
               We're extracting the company, role, and details. Sign up to save
@@ -183,7 +183,7 @@
             aria-hidden="true"
           />
           <p class="text-sm text-foreground">
-            Analyzing your job listing... Sign up to save results.
+            Analyzing your job listing… Sign up to save results.
           </p>
         </template>
         <template v-else-if="isParsed">

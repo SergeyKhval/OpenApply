@@ -90,7 +90,7 @@ const computedEmploymentType = computed<"full-time" | "part-time" | undefined>((
 });
 
 async function onSaved(applicationId: string) {
-  await router.push(`/dashboard/applications/${applicationId}`);
+  await router.push(`/dashboard/applications/${applicationId}?created=1`);
 }
 </script>
 

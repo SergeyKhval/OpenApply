@@ -27,8 +27,12 @@
             <label
               class="inline-flex items-center gap-2 h-11 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground hover:bg-muted cursor-pointer has-[:disabled]:opacity-60 has-[:disabled]:pointer-events-none"
             >
-              <i :class="isReadingPdf ? 'ph ph-circle-notch animate-spin' : 'ph ph-file-pdf'" aria-hidden="true"></i>
-              {{ isReadingPdf ? "Reading PDF..." : "Upload PDF" }}
+              <i
+                :class="isReadingPdf ? 'ph ph-circle-notch animate-spin' : 'ph ph-upload-simple'"
+                class="text-base"
+                aria-hidden="true"
+              ></i>
+              {{ isReadingPdf ? "Reading PDF…" : "Upload PDF" }}
               <input
                 type="file"
                 accept="application/pdf,.pdf"
@@ -107,7 +111,11 @@
       </div>
     </form>
 
-    <div v-else class="flex flex-col gap-6 pb-20 md:pb-0" aria-live="polite">
+    <div v-else class="flex flex-col gap-6 pb-20 md:pb-0">
+      <!-- A full aria-live region would read the entire report aloud; announce
+           a one-line summary instead. -->
+      <p class="sr-only" aria-live="polite">{{ resultSummary }}</p>
+
       <!-- Score + verdict -->
       <div class="rounded-lg border border-border/60 bg-card/80 p-6 flex flex-col sm:flex-row items-center gap-6">
         <div class="relative h-32 w-32 shrink-0">
@@ -179,10 +187,11 @@
             <i
               :class="REQUIREMENT_TONES[requirement.status].icon"
               class="ph text-lg shrink-0 mt-0.5"
-              :aria-label="requirement.status"
+              aria-hidden="true"
             ></i>
             <div class="min-w-0 flex-1">
               <p class="text-sm text-foreground">
+                <span class="sr-only">{{ REQUIREMENT_TONES[requirement.status].label }}:</span>
                 {{ requirement.requirement }}
                 <span
                   v-if="requirement.importance === 'must-have'"
@@ -310,16 +319,16 @@ const RESUME_STORAGE_KEY = "oa-tool-resume";
 // Opt-in: kept across tabs so the browser extension's "Check my match" needs no re-paste
 const SAVED_RESUME_STORAGE_KEY = "oa-tool-resume-saved";
 const LOADING_MESSAGES = [
-  "Reading your resume...",
-  "Reading the job description...",
-  "Checking each requirement...",
-  "Looking for evidence...",
-  "Being honest with you...",
+  "Reading your resume…",
+  "Reading the job description…",
+  "Checking each requirement…",
+  "Looking for evidence…",
+  "Being honest with you…",
 ];
-const REQUIREMENT_TONES: Record<RequirementStatus, { icon: string }> = {
-  matched: { icon: "ph-check-circle text-emerald-400" },
-  partial: { icon: "ph-circle-half text-amber-400" },
-  missing: { icon: "ph-x-circle text-rose-400" },
+const REQUIREMENT_TONES: Record<RequirementStatus, { icon: string; label: string }> = {
+  matched: { icon: "ph-check-circle text-emerald-400", label: "Matched" },
+  partial: { icon: "ph-circle-half text-amber-400", label: "Partially matched" },
+  missing: { icon: "ph-x-circle text-rose-400", label: "Missing" },
 };
 
 const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
@@ -365,6 +374,13 @@ const mustHaveSummary = computed(() => {
   return partial > 0
     ? `${matched} of ${total} must-haves met, ${partial} partly`
     : `${matched} of ${total} must-haves met`;
+});
+
+// Announced to screen readers once a result is ready, instead of reading
+// the entire report aloud.
+const resultSummary = computed(() => {
+  if (!analysis.value) return "";
+  return `Match score ${analysis.value.matchScore}, ${mustHaveSummary.value}.`;
 });
 
 const scoreTone = computed(() => {

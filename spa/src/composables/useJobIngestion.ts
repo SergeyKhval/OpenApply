@@ -51,6 +51,24 @@ const COMPLETED_STATUSES: JobIngestionStatus[] = [
 
 const JOB_ID_PATTERN = /^[a-zA-Z0-9]{10,30}$/;
 
+// Maps a callable Cloud Function failure to plain language; never shows a
+// raw Firebase code like "internal" or "deadline-exceeded" to the user.
+export function friendlyRequestError(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? "";
+  const message = err instanceof Error ? err.message : "";
+
+  if (code === "functions/invalid-argument" && message) {
+    return message;
+  }
+  if (code === "functions/deadline-exceeded") {
+    return "That took too long. Enter the details yourself instead.";
+  }
+  if (code === "functions/unavailable" || message.includes("network") || message.includes("fetch")) {
+    return "Looks like the internet gremlins got in the way. Check your connection, or enter the details yourself.";
+  }
+  return "That job page wasn't cooperating. Enter the details yourself instead.";
+}
+
 export function isValidJobId(value: unknown): value is string {
   return typeof value === "string" && JOB_ID_PATTERN.test(value);
 }
@@ -147,19 +165,12 @@ export const useJobIngestion = () => {
     try {
       await execute(url);
     } catch (err) {
-      requestError.value =
-        err instanceof Error ? err.message : String(err ?? "Unknown error");
+      requestError.value = friendlyRequestError(err);
       return;
     }
 
     if (error.value) {
-      const errValue = error.value;
-      requestError.value =
-        errValue instanceof Error
-          ? errValue.message
-          : typeof errValue === "string"
-            ? errValue
-            : "Unable to start job ingestion.";
+      requestError.value = friendlyRequestError(error.value);
       return;
     }
     // @ts-expect-error id is present on data here

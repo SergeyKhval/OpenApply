@@ -57,7 +57,7 @@ const faqs = [
   },
   {
     question: "Can I use the prompt myself?",
-    answer: "Please do. The full prompt is below. Paste it into ChatGPT, Claude, or Gemini with your resume and the job description.",
+    answer: "Please do. The full prompt is above. Paste it into ChatGPT, Claude, or Gemini with your resume and the job description.",
   },
 ];
 
@@ -97,12 +97,13 @@ const jsonLd = {
   keywords="resume job description match, resume match score, resume keyword checker, ATS resume checker free, tailor resume to job description, resume vs job description"
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
+  includeMonoFont
 >
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="bg-background text-foreground antialiased">
     <Header showHashLinks={false} currentPath={currentPath} />
 
-    <main>
+    <main id="main">
       <section class="relative overflow-hidden">
         <div class="absolute inset-0 bg-linear-to-br from-primary/15 via-background to-secondary/20"></div>
         <div class="pointer-events-none absolute -left-32 top-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl"></div>

@@ -66,50 +66,54 @@
             Restore?
           </Button>
         </h3>
-        <div v-else class="text-lg flex gap-2 mb-3">
-          <span
-            v-for="(status, index) in statusBar"
-            :key="status.name"
-            class="flex items-center gap-2"
-            :class="
-              status.isActive ? 'text-foreground' : 'text-muted-foreground'
-            "
+        <div v-else class="mb-3">
+          <!-- Mobile: a real dropdown instead of a wrapping row of tiny text links -->
+          <Select
+            :model-value="application.status"
+            @update:model-value="(value) => updateJobApplicationStatus(value as JobStatus)"
           >
-            <Tooltip>
+            <SelectTrigger class="sm:hidden w-full max-w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="status in statusBar" :key="status.status" :value="status.status">
+                {{ status.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <!-- Desktop/tablet: segmented control -->
+          <div class="hidden sm:inline-flex rounded-md border border-border overflow-hidden">
+            <Tooltip v-for="(status, index) in statusBar" :key="status.name">
               <TooltipTrigger as-child>
                 <button
-                  class="hover:no-underline cursor-pointer text-xs lg:text-base"
-                  :class="{ underline: !status.isActive }"
+                  type="button"
+                  class="px-3 py-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors inline-flex items-center gap-1"
+                  :class="[
+                    index > 0 && 'border-l border-border',
+                    status.status === application.status
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : status.isActive
+                        ? 'text-foreground hover:bg-muted'
+                        : 'text-muted-foreground hover:bg-muted',
+                  ]"
                   @click="updateJobApplicationStatus(status.status)"
                 >
                   {{ status.name }}
+                  <span
+                    v-if="application.status === 'hired' && status.status === 'hired'"
+                    class="inline-flex items-center"
+                  >
+                    <PhFire size="14" class="text-amber-400" />
+                    <PhHandsClapping size="14" />
+                  </span>
                 </button>
               </TooltipTrigger>
               <TooltipContent :side-offset="-5">
                 <span>Update status to {{ status.name }}</span>
               </TooltipContent>
             </Tooltip>
-
-            <PhCaretRight
-              v-if="index + 1 < statusBar.length"
-              :class="
-                status.isCaretActive
-                  ? 'text-foreground'
-                  : 'text-foreground-muted'
-              "
-              size="16"
-            />
-
-            <span
-              class="flex"
-              v-if="
-                application.status === 'hired' && index + 1 === statusBar.length
-              "
-            >
-              <PhFire size="20" class="text-amber-400" />
-              <PhHandsClapping size="20" class="text-foreground" />
-            </span>
-          </span>
+          </div>
         </div>
 
         <div
@@ -127,12 +131,28 @@
         </div>
       </div>
 
+      <Alert v-if="showJustCreatedPrompt" class="flex items-center justify-between">
+        <PhCheckCircle class="size-4 text-emerald-500" />
+        <AlertDescription class="flex items-center gap-3 flex-wrap">
+          <span>Saved to your tracker. Have you applied yet?</span>
+          <div class="flex gap-2 shrink-0">
+            <Button size="sm" @click="markCreatedApplied">
+              <PhCheck />
+              I've applied
+            </Button>
+            <Button size="sm" variant="outline" @click="dismissJustCreatedPrompt">
+              Not yet
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+
       <Alert
         v-if="resumes.length === 0 && !isResumeBannerDismissed && !application?.toolMatch"
-        class="flex items-center justify-between"
+        class="flex flex-col sm:flex-row sm:items-center justify-between"
       >
         <PhUploadSimple class="size-4" />
-        <AlertDescription class="flex items-center gap-3">
+        <AlertDescription class="flex flex-col sm:flex-row sm:items-center gap-3">
           <span
             ><strong>See how you stack up.</strong> Upload a resume to get an AI
             match score and tailored fixes for this role.</span
@@ -144,7 +164,8 @@
         <Button
           variant="ghost"
           size="icon"
-          class="size-7 shrink-0"
+          class="size-7 shrink-0 self-end sm:self-auto"
+          aria-label="Dismiss"
           @click="dismissResumeBanner"
         >
           <PhX class="size-4" />
@@ -193,6 +214,8 @@ import {
 import {
   PhArrowSquareOut,
   PhCaretRight,
+  PhCheck,
+  PhCheckCircle,
   PhClockClockwise,
   PhFire,
   PhHandsClapping,
@@ -208,6 +231,13 @@ import JobApplicationInterviews from "@/components/JobApplicationInterviews.vue"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useResumes } from "@/composables/useResumes";
 import { useResumeUpload } from "@/composables/useResumeUpload";
 import { restoreJobApplication } from "@/firebase/restoreJobApplication.ts";
@@ -242,6 +272,25 @@ const isResumeBannerDismissed = ref(
 function dismissResumeBanner() {
   isResumeBannerDismissed.value = true;
   localStorage.setItem("dismiss-resume-banner", "true");
+}
+
+// Shown once right after a manual/link-parse save (?created=1); the tool
+// handoff has its own success moment on ToolMatchCard instead.
+const justCreatedDismissed = ref(false);
+const showJustCreatedPrompt = computed(
+  () =>
+    route.query.created === "1" &&
+    !justCreatedDismissed.value &&
+    !application.value?.toolMatch,
+);
+
+function dismissJustCreatedPrompt() {
+  justCreatedDismissed.value = true;
+}
+
+async function markCreatedApplied() {
+  await updateJobApplicationStatus("applied");
+  justCreatedDismissed.value = true;
 }
 
 const statusBar = computed(() => {

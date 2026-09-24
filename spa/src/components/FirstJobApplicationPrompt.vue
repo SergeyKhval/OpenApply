@@ -26,9 +26,11 @@
         v-model="jobDescriptionLink"
         type="url"
         inputmode="url"
-        autofocus
+        :autofocus="shouldAutofocus"
         aria-label="Job posting link"
-        placeholder="https://jobs.example.com/senior-engineer"
+        :aria-invalid="showError"
+        aria-describedby="job-link-error"
+        placeholder="https://jobs.example.com/senior-engineer…"
         :class="['sm:flex-1', showError && 'border-destructive']"
       />
       <Button type="submit">
@@ -36,7 +38,7 @@
         Add job
       </Button>
     </form>
-    <p v-if="showError" class="-mt-4 text-xs text-destructive">
+    <p v-if="showError" id="job-link-error" role="alert" class="-mt-4 text-xs text-destructive">
       Paste a full link, starting with https://
     </p>
 
@@ -70,6 +72,11 @@ const route = useRoute();
 const jobDescriptionLink = ref("");
 const submitted = ref(false);
 
+// Autofocus is desktop-only: on mobile it pops the keyboard open over the
+// explanation before the user has read it.
+const shouldAutofocus =
+  typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+
 function isHttpUrl(value: string): boolean {
   try {
     return ["http:", "https:"].includes(new URL(value).protocol);
@@ -78,8 +85,16 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
+// People paste links without a scheme ("linkedin.com/jobs/view/..."); treat
+// that as https:// instead of showing an error.
+function normalizeUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || /^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 const showError = computed(
-  () => submitted.value && !isHttpUrl(jobDescriptionLink.value.trim()),
+  () => submitted.value && !isHttpUrl(normalizeUrl(jobDescriptionLink.value)),
 );
 
 function openAddDialog(extraQuery: Record<string, string>) {
@@ -90,7 +105,7 @@ function openAddDialog(extraQuery: Record<string, string>) {
 
 function handleSubmit() {
   submitted.value = true;
-  const link = jobDescriptionLink.value.trim();
+  const link = normalizeUrl(jobDescriptionLink.value);
   if (!isHttpUrl(link)) return;
 
   openAddDialog({ "job-link": link });
