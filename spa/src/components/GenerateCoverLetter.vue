@@ -10,26 +10,13 @@
       </DialogHeader>
 
       <div class="py-4 space-y-4">
-        <AvailableCoins
-          :current-balance="currentBalance"
-          cost-text="10 coins per cover letter"
-        />
+        <AiChecksLeft v-if="allowance && canUseAi" :allowance="allowance" />
 
-        <div v-if="!hasSufficientCredits" class="space-y-6">
-          <div
-            class="rounded-lg border border-border bg-muted/10 p-6 space-y-2"
-          >
-            <p class="text-lg font-semibold">Add more coins to continue</p>
-            <p class="text-sm text-muted-foreground">
-              You need at least {{ requiredCredits }} coins to generate a cover
-              letter. Choose a pack below to keep going.
-            </p>
-          </div>
-          <CreditPackOptions
-            :loading="generatingStripeLink"
-            @purchase="startCheckout"
-          />
-        </div>
+        <AiLimitReached
+          v-if="allowance && !canUseAi"
+          :allowance="allowance"
+          source="cover_letter"
+        />
 
         <!-- Loading State -->
         <div v-if="isProcessing" class="flex items-center flex-col py-8">
@@ -41,7 +28,7 @@
           </p>
         </div>
 
-        <div v-else-if="hasSufficientCredits" class="space-y-6">
+        <div v-else-if="canUseAi" class="space-y-6">
           <Empty v-if="!hasResumes">
             <EmptyIcon>
               <PhFile :size="32" />
@@ -156,7 +143,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
-import AvailableCoins from "@/components/AvailableCoins.vue";
+import AiChecksLeft from "@/components/AiChecksLeft.vue";
+import AiLimitReached from "@/components/AiLimitReached.vue";
 import { useCoverLetters } from "@/composables/useCoverLetters";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { useResumes } from "@/composables/useResumes";
@@ -167,9 +155,7 @@ import {
   EmptyIcon,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { useAuth } from "@/composables/useAuth";
-import { useCreditsCheckout } from "@/composables/useCreditsCheckout";
-import CreditPackOptions from "@/components/CreditPackOptions.vue";
+import { useAiAllowance } from "@/composables/useAiAllowance";
 import { omit } from "lodash";
 import { useRoute, useRouter } from "vue-router";
 import ResumeSelect from "@/components/inputs/ResumeSelect.vue";
@@ -268,29 +254,19 @@ watch(resumes, (newResumes) => {
   }
 });
 
-const { userProfile } = useAuth();
-const { startCheckout, isProcessing: generatingStripeLink } =
-  useCreditsCheckout();
-
-const requiredCredits = 10;
+const { allowance, canUseAi } = useAiAllowance();
 
 const hasJobApplications = computed(
   () => (jobApplications.value?.length ?? 0) > 0,
 );
 const hasResumes = computed(() => (resumes.value?.length ?? 0) > 0);
-const currentBalance = computed(
-  () => userProfile.value?.billingProfile?.currentBalance ?? 0,
-);
-const hasSufficientCredits = computed(
-  () => currentBalance.value >= requiredCredits,
-);
 
 const canGenerate = computed(() =>
   Boolean(selectedJobApplicationId.value && selectedResumeId.value),
 );
 
 const canSubmit = computed(
-  () => canGenerate.value && hasSufficientCredits.value,
+  () => canGenerate.value && canUseAi.value,
 );
 
 const handleGenerateCoverLetter = async () => {
@@ -309,9 +285,7 @@ const handleGenerateCoverLetter = async () => {
   if (result.success) {
     await updateDialogOpenState(false);
   } else {
-    if (result.code !== "insufficient-credits") {
-      errorMessage.value = result.error || "Failed to generate cover letter";
-    }
+    errorMessage.value = result.error || "Failed to generate cover letter";
   }
 };
 
