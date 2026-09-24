@@ -8,6 +8,7 @@ export type JobStatus =
   | "offered"
   | "hired"
   | "rejected"
+  | "withdrew"
   | "archived";
 
 export type JobApplication = {
