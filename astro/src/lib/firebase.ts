@@ -27,8 +27,12 @@ export async function getApp(): Promise<FirebaseApp> {
   return app;
 }
 
+// Signs in anonymously only when nobody is signed in. The app at /app shares this
+// origin and its session, so wait for the saved session to load first:
+// signing in anonymously over it would sign the user out of the app.
 export async function getFirebaseAuth(): Promise<Auth> {
   if (auth) {
+    await auth.authStateReady();
     if (!auth.currentUser) {
       const { signInAnonymously } = await import("firebase/auth");
       await signInAnonymously(auth);
@@ -50,6 +54,7 @@ export async function getFirebaseAuth(): Promise<Auth> {
     console.log("🔧 Connected to Auth emulator");
   }
 
+  await auth.authStateReady();
   if (!auth.currentUser) {
     await signInAnonymously(auth);
   }

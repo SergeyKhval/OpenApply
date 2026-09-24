@@ -31,10 +31,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import {
-  getFirebaseAuth,
-  getFirebaseFunctions,
-} from "../../lib/firebase";
+import { submitJobLink } from "../../lib/submitJobLink";
 
 const jobUrl = ref("");
 const isSubmitting = ref(false);
@@ -54,52 +51,14 @@ async function handleSubmit() {
 
   trackEvent("lp_job_parse_started");
 
-  try {
-    // Initialize Firebase auth (anonymous sign-in)
-    const auth = await getFirebaseAuth();
-    const currentUser = auth.currentUser;
-
-    if (!currentUser) {
-      errorMessage.value = "Hmm, we can't reach our servers. Check your internet and give it another shot.";
-      isSubmitting.value = false;
-      return;
-    }
-
-    // Check if user is already authenticated (non-anonymous)
-    const isAuthenticated = !currentUser.isAnonymous;
-
-    // Call the jobs Cloud Function
-    const fns = await getFirebaseFunctions();
-    const { httpsCallable } = await import("firebase/functions");
-    const callable = httpsCallable<{ url: string }, { id: string }>(fns, "jobs");
-    const result = await callable({ url: jobUrl.value });
-    const jobId = result.data.id;
-
-    if (!jobId) {
-      errorMessage.value = "Well, that's awkward. We sent the request but got nothing useful back. Try again?";
-      isSubmitting.value = false;
-      return;
-    }
-
-    const encodedJobId = encodeURIComponent(jobId);
-
-    // Redirect based on auth state
-    if (isAuthenticated) {
-      trackEvent("lp_auth_skipped");
-      window.location.href = `${spaBase}/dashboard/applications/new?job=${encodedJobId}&from=lp`;
-    } else {
-      window.location.href = `${spaBase}/?job=${encodedJobId}&from=lp`;
-    }
-  } catch (err) {
-    const rawMessage = err instanceof Error ? err.message : "";
-    if (rawMessage.includes("network") || rawMessage.includes("fetch")) {
-      errorMessage.value = "Looks like the internet gremlins got in the way. Check your connection and try again.";
-    } else if (rawMessage.includes("INVALID_ARGUMENT") || rawMessage.includes("invalid")) {
-      errorMessage.value = "That URL doesn't look like a job listing we can work with. Double-check the link?";
-    } else {
-      errorMessage.value = "Something went sideways on our end. Give it another try. If it keeps happening, this site might just not like us.";
-    }
+  const result = await submitJobLink(jobUrl.value);
+  if (!result.ok) {
+    errorMessage.value = result.errorMessage;
     isSubmitting.value = false;
+    return;
   }
+
+  if (result.signedIn) trackEvent("lp_auth_skipped");
+  window.location.href = result.redirectUrl;
 }
 </script>
