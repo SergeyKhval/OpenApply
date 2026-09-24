@@ -1,0 +1,92 @@
+<template>
+  <div class="w-full max-w-md mx-auto text-center flex flex-col items-center gap-4">
+    <template v-if="!errorMessage">
+      <div
+        class="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin"
+        aria-hidden="true"
+      />
+      <h1 class="text-2xl font-bold text-foreground">Saving this job to OpenApply...</h1>
+      <p v-if="jobHost" class="text-sm text-muted-foreground">{{ jobHost }}</p>
+    </template>
+    <template v-else>
+      <h1 class="text-2xl font-bold text-foreground">We couldn't save that job</h1>
+      <p role="alert" class="text-muted-foreground">{{ errorMessage }}</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button
+          v-if="jobUrl"
+          type="button"
+          class="inline-flex items-center justify-center h-11 rounded-md px-6 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+          @click="save"
+        >
+          Try again
+        </button>
+        <a
+          :href="`${spaBase}/`"
+          class="inline-flex items-center justify-center h-11 rounded-md px-6 text-sm font-medium border border-border hover:bg-muted"
+        >
+          Open OpenApply
+        </a>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { submitJobLink } from "../../lib/submitJobLink";
+
+const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
+
+const jobUrl = ref<string | null>(null);
+const errorMessage = ref<string | null>(null);
+
+const jobHost = computed(() => {
+  if (!jobUrl.value) return "";
+  try {
+    return new URL(jobUrl.value).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+});
+
+function trackEvent(eventName: string, properties: Record<string, unknown> = {}) {
+  if (typeof window !== "undefined" && (window as any).posthog) {
+    (window as any).posthog.capture(eventName, properties);
+  }
+}
+
+// Only real web pages; anything else would just fail to parse later
+function readJobUrl(search: string): string | null {
+  const raw = new URLSearchParams(search).get("url");
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+async function save() {
+  if (!jobUrl.value) {
+    errorMessage.value = "There's no job link here. Open a job posting and click Save in the extension.";
+    return;
+  }
+  errorMessage.value = null;
+  trackEvent("extension_save_started", { job_host: jobHost.value });
+
+  const result = await submitJobLink(jobUrl.value);
+  if (!result.ok) {
+    errorMessage.value = result.errorMessage;
+    trackEvent("extension_save_failed", { job_host: jobHost.value });
+    return;
+  }
+  // Replace, so Back from the app doesn't land here and save again
+  window.location.replace(result.redirectUrl);
+}
+
+onMounted(() => {
+  jobUrl.value = readJobUrl(window.location.search);
+  save();
+});
+</script>

@@ -2,3 +2,4 @@ packages:
   - functions
   - spa
   - astro
+  - extension

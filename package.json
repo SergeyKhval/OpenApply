@@ -32,7 +32,8 @@
     "build": "pnpm run build:spa && pnpm run build:astro && pnpm run build:functions",
     "emulate": "firebase emulators:start --import=./emulator-data --export-on-exit",
     "deploy:functions": "firebase deploy --only functions",
-    "test": "pnpm --filter openapply-spa test && pnpm --filter openapply-functions test"
+    "test": "pnpm --filter openapply-spa test && pnpm --filter openapply-functions test && pnpm --filter openapply-extension test",
+    "build:extension": "pnpm --filter openapply-extension zip"
   },
   "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
 }

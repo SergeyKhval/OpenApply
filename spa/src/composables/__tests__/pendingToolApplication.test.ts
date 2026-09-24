@@ -76,6 +76,19 @@ describe("pendingToolApplication", () => {
       });
     });
 
+    it("keeps the posting link from the browser extension", () => {
+      const input = toJobApplicationInput({
+        ...pending,
+        jobDescriptionLink: "https://boards.greenhouse.io/acme/jobs/1",
+      });
+      expect(input.jobDescriptionLink).toBe("https://boards.greenhouse.io/acme/jobs/1");
+    });
+
+    it("drops a posting link that isn't a web URL", () => {
+      const input = toJobApplicationInput({ ...pending, jobDescriptionLink: "javascript:alert(1)" });
+      expect(input).not.toHaveProperty("jobDescriptionLink");
+    });
+
     it("fills required fields the job description didn't state", () => {
       const input = toJobApplicationInput({ ...pending, companyName: "", position: "" });
       expect(input.companyName).toBe("Unknown company");
