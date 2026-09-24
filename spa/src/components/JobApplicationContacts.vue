@@ -36,7 +36,7 @@
                     {{ contact.firstName }} {{ contact.lastName }}
                   </template>
                 </p>
-                <p class="text-gray-500 text-sm">{{ contact.position }}</p>
+                <p class="text-muted-foreground text-sm">{{ contact.position }}</p>
               </div>
 
               <div class="flex items-center">

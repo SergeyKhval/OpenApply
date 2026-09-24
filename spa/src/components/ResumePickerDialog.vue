@@ -65,7 +65,7 @@
                       v-if="resume.status === 'parsed'"
                       class="flex items-center gap-1 text-muted-foreground font-normal mb-2"
                     >
-                      <PhEnvelopeSimple class="text-emerald-500" />
+                      <PhEnvelopeSimple class="text-success" />
                       Ready for cover letters
                     </p>
                   </div>

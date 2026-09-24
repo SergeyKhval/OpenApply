@@ -6,8 +6,10 @@ import App from "./App.vue";
 import router from "./router";
 import firebaseApp from "./firebase/config";
 import { captureFirstTouchInBrowser } from "../../shared/acquisition";
+import { watchSystemTheme } from "./lib/theme";
 
 captureFirstTouchInBrowser();
+watchSystemTheme();
 
 const vueApp = createApp(App);
 const pinia = createPinia();

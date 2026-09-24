@@ -3,6 +3,7 @@ import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator, type Firestore } from "firebase/firestore";
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator, type Functions } from "firebase/functions";
+import { emulatorPorts } from "./emulatorPorts";
 
 type FirebaseConfig = {
   apiKey: string;
@@ -40,21 +41,22 @@ if (import.meta.env.DEV && !import.meta.env.VITE_USE_PRODUCTION_FIREBASE) {
   );
 
   if (!isEmulatorInitialized) {
+    const ports = emulatorPorts(import.meta.env);
     try {
       // Connect to Auth emulator
-      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+      connectAuthEmulator(auth, `http://localhost:${ports.auth}`, { disableWarnings: true });
       console.log('🔧 Connected to Auth emulator');
 
       // Connect to Firestore emulator
-      connectFirestoreEmulator(db, 'localhost', 8080);
+      connectFirestoreEmulator(db, 'localhost', ports.firestore);
       console.log('🔧 Connected to Firestore emulator');
 
       // Connect to Storage emulator
-      connectStorageEmulator(storage, 'localhost', 9199);
+      connectStorageEmulator(storage, 'localhost', ports.storage);
       console.log('🔧 Connected to Storage emulator');
 
       // Connect to Functions emulator
-      connectFunctionsEmulator(functions, 'localhost', 5001);
+      connectFunctionsEmulator(functions, 'localhost', ports.functions);
       console.log('🔧 Connected to Functions emulator');
     } catch (error) {
       console.warn('Failed to connect to Firebase emulators:', error);
