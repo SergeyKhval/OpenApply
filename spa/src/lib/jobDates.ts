@@ -53,8 +53,12 @@ export function stageSinceLabel(job: JobApplication, now: Date) {
   const reason = closedReason(job.status);
   const name = reason ? CLOSED_REASON_LABELS[reason] : STAGE_LABELS[stage];
   if (!since) return name;
-  const ago = daysAgoLabel(since, now);
-  return stage === "interviewing" && ago !== "today" ? `${name} since ${ago}` : `${name} ${ago}`;
+  // Interviewing is ongoing: "for 3 days", not "3 days ago"
+  if (stage === "interviewing") {
+    const days = daysBetween(since, now);
+    return days >= 2 ? `${name} for ${days} days` : `${name} since ${daysAgoLabel(since, now)}`;
+  }
+  return `${name} ${daysAgoLabel(since, now)}`;
 }
 
 // "Follow up today" (due or overdue), "Follow up Mon" this week, "Follow up 12 Oct" later

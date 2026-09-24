@@ -43,6 +43,8 @@ type EventMap = {
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };
+  next_up_action: { kind: "follow-up" | "interview" | "stale-saved"; action: "draft" | "done" | "snooze" | "applied" | "let_go" | "open" };
+  follow_up_copied: { applicationId?: string };
 };
 
 type EventName = keyof EventMap;

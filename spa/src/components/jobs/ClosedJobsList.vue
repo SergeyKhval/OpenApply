@@ -1,3 +1,4 @@
+<!-- Closed jobs, grouped by reason. Reopen one from its card menu. -->
 <template>
   <div>
     <PageHeader>
@@ -8,81 +9,52 @@
         <PhCaretLeft />
         Jobs
       </RouterLink>
-      <h2 class="text-2xl font-semibold text-foreground whitespace-nowrap">
-        Archived
-      </h2>
-      <AppSearch v-model="search" />
+      <h1 class="text-2xl font-extrabold whitespace-nowrap">Closed</h1>
     </PageHeader>
 
-    <div
-      v-if="filteredApplications.length > 0"
-      class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 px-6 pb-6"
-    >
-      <JobApplicationCard
-        v-for="application in filteredApplications"
-        :key="application.id"
-        :application="application"
-      />
-    </div>
+    <div class="flex flex-col gap-8 px-4 pb-10 lg:px-6">
+      <section v-for="group in groups" :key="group.reason" class="flex flex-col gap-3">
+        <h2 class="flex items-baseline gap-2 text-lg font-bold">
+          {{ CLOSED_REASON_LABELS[group.reason] }}
+          <span class="font-sans text-[15px] font-normal text-muted-foreground">{{ group.jobs.length }}</span>
+        </h2>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <JobCard v-for="job in group.jobs" :key="job.id" :job="job" :now="now" />
+        </div>
+      </section>
 
-    <div v-else class="px-6">
-      <template v-if="archivedApplications.length === 0">
-        <Empty class="py-12">
-          <EmptyIcon>
-            <PhArchive :size="32" />
-          </EmptyIcon>
-          <div class="space-y-2">
-            <EmptyTitle>Archive is empty</EmptyTitle>
-            <EmptyDescription>
-              Applications that you archive will appear here
-            </EmptyDescription>
-          </div>
-        </Empty>
-      </template>
-      <template v-else>
+      <Empty v-if="!groups.length" class="py-12">
         <EmptyIcon>
-          <PhMagnifyingGlass :size="32" />
+          <PhArchive :size="32" />
         </EmptyIcon>
         <div class="space-y-2">
-          <EmptyTitle>No results found</EmptyTitle>
-          <EmptyDescription> Try adjusting your search terms </EmptyDescription>
+          <EmptyTitle>Nothing closed yet</EmptyTitle>
+          <EmptyDescription>
+            Jobs you close as hired, rejected, withdrew or archived appear here.
+          </EmptyDescription>
         </div>
-      </template>
+      </Empty>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { PhArchive, PhCaretLeft, PhMagnifyingGlass } from "@phosphor-icons/vue";
+import { computed } from "vue";
+import { PhArchive, PhCaretLeft } from "@phosphor-icons/vue";
 import PageHeader from "@/components/PageHeader.vue";
-import JobApplicationCard from "@/components/JobApplicationCard.vue";
+import JobCard from "@/components/jobs/JobCard.vue";
+import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyIcon,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import AppSearch from "@/components/AppSearch.vue";
+import { CLOSED_REASON_LABELS, CLOSED_REASONS, closedReason } from "@/lib/stages";
+
+const { now } = defineProps<{ now: Date }>();
 
 const { jobApplications } = useJobApplicationsData();
 
-const archivedApplications = computed(() =>
-  (jobApplications.value ?? []).filter(
-    (application) => application.status === "archived",
-  ),
+const groups = computed(() =>
+  CLOSED_REASONS.map((reason) => ({
+    reason,
+    jobs: (jobApplications.value ?? []).filter((job) => closedReason(job.status) === reason),
+  })).filter((group) => group.jobs.length),
 );
-
-const search = ref("");
-const filteredApplications = computed(() => {
-  const searchTerm = search.value.trim().toLowerCase();
-  if (!searchTerm) return archivedApplications.value;
-
-  return archivedApplications.value.filter(
-    (app) =>
-      app.companyName.toLowerCase().includes(searchTerm) ||
-      app.position.toLowerCase().includes(searchTerm),
-  );
-});
 </script>

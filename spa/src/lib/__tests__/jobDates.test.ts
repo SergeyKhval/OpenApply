@@ -32,6 +32,8 @@ describe("stageSinceLabel", () => {
     expect(stageSinceLabel(job("draft", { createdAt: ts(day(-6)) }), NOW)).toBe("Saved 6 days ago");
     expect(stageSinceLabel(job("applied", { appliedAt: ts(day(-8)) }), NOW)).toBe("Applied 8 days ago");
     expect(stageSinceLabel(job("interviewing", { interviewedAt: day(-1) }), NOW)).toBe("Interviewing since yesterday");
+    expect(stageSinceLabel(job("interviewing", { interviewedAt: day(-3) }), NOW)).toBe("Interviewing for 3 days");
+    expect(stageSinceLabel(job("interviewing", { interviewedAt: day(0) }), NOW)).toBe("Interviewing since today");
     expect(stageSinceLabel(job("offered", { offeredAt: ts(day(0)) }), NOW)).toBe("Offer today");
   });
 
