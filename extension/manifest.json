@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "OpenApply: Save Jobs and Check Resume Match",
+  "name": "OpenApply Job Application Tracker: Save Jobs & Check Resume Match",
   "short_name": "OpenApply",
   "version": "1.1.1",
-  "description": "Save any job posting to your OpenApply tracker in one click, or check how your resume matches it. Free and open source.",
+  "description": "One click saves any job to your free job tracker and checks your resume match. Works on LinkedIn, Indeed and more.",
   "homepage_url": "https://openapply.app",
   "action": {
     "default_title": "Save this job to OpenApply",

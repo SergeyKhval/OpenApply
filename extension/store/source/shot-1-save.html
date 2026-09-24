@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+<div class="canvas">
+  <div class="hero">
+    <h1>Save any job in one click. Edit before you save.</h1>
+    <p>Reads the title, company, location and description right in your browser.</p>
+  </div>
+  <div class="brand"><img src="icon128.png" alt="" /> OpenApply</div>
+
+  <div class="stage">
+    <div class="page-top">
+      <div class="logo"></div>
+      <div class="company">Northwind Labs</div>
+    </div>
+    <div class="page-body">
+      <p class="job-title-lg">Senior Frontend Engineer</p>
+      <p class="job-meta-lg">Remote, Europe &middot; Full-time &middot; Engineering</p>
+      <div class="apply-btn">Apply for this job</div>
+      <p>Northwind Labs builds scheduling software for 3,000 independent clinics. Our web app is used all day by front-desk staff, so speed, accessibility and reliability matter more than anything flashy.</p>
+      <h3>What you'll do</h3>
+      <ul>
+        <li>Own the booking calendar, our most used screen, from design to release</li>
+        <li>Build accessible components in Vue 3 and TypeScript for our design system</li>
+        <li>Improve performance on low-end hardware: faster loads, fewer re-renders</li>
+        <li>Mentor two mid-level engineers and review their code</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="popup-wrap"><iframe src="popup/popup-form.html"></iframe></div>
+</div>
+<script>
+  const ifr = document.querySelector('.popup-wrap iframe');
+  ifr.addEventListener('load', () => {
+    ifr.style.height = ifr.contentDocument.documentElement.scrollHeight + 'px';
+  });
+</script>
+</body>
+</html>

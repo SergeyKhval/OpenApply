@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenApply</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="brand">
+      <img src="icon32.png" alt="" width="20" height="20" />
+      <span>OpenApply</span>
+    </header>
+
+    <section id="job" class="job" aria-live="polite" hidden>
+      <p class="job-loading">Reading this page...</p>
+    </section>
+
+    <form id="job-form" class="job job-form">
+      <label class="field">
+        <span>Job title</span>
+        <input id="field-title" name="title" type="text" maxlength="300" autocomplete="off" value="Senior Frontend Engineer" />
+      </label>
+      <label class="field">
+        <span>Company</span>
+        <input id="field-company" name="company" type="text" maxlength="300" autocomplete="off" value="Northwind Labs" />
+      </label>
+      <label class="field">
+        <span>Location</span>
+        <input id="field-location" name="location" type="text" maxlength="300" autocomplete="off" value="Remote, Europe" />
+      </label>
+      <p id="description-note" class="job-meta">Job description: 2,847 characters from northwindlabs.example</p>
+    </form>
+
+    <div class="actions">
+      <button id="save" type="button" class="button primary">
+        Save to OpenApply
+      </button>
+      <button id="match" type="button" class="button secondary">
+        Check my resume match
+      </button>
+      <p id="hint" class="hint" hidden></p>
+    </div>
+
+    <footer class="footer">
+      Nothing leaves this page until you click.
+      <a href="https://openapply.app/privacy#browser-extension" target="_blank" rel="noopener">Privacy</a>
+    </footer>
+  </body>
+</html>
