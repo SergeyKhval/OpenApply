@@ -1,3 +1,5 @@
+<!-- Signed-in layout shared by Jobs, Documents and Settings: sidebar on
+     desktop, drawer on mobile, page content in the router view. -->
 <template>
   <div class="flex h-screen bg-background">
     <div class="hidden w-64 bg-sidebar border-r border-sidebar-border lg:block">
@@ -30,8 +32,3 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const drawerNavigationStore = useDrawerNavigationStore();
 </script>
-
-<route lang="yaml">
-meta:
-  requiresAuth: true
-</route>

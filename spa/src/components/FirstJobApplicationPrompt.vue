@@ -52,7 +52,7 @@
         Enter details manually
       </button>
       or
-      <RouterLink to="/dashboard/file-import" class="text-primary hover:underline">
+      <RouterLink to="/settings/import-export" class="text-primary hover:underline">
         import a spreadsheet
       </RouterLink>
     </p>

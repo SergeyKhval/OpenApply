@@ -18,7 +18,7 @@
         Via link or manually
       </DropdownMenuItem>
       <DropdownMenuItem>
-        <RouterLink to="/dashboard/file-import" class="flex items-center gap-2">
+        <RouterLink to="/settings/import-export" class="flex items-center gap-2">
           <PhFileCsv />
           Import from CSV
         </RouterLink></DropdownMenuItem

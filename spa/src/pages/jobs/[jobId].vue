@@ -5,7 +5,7 @@
         class="text-2xl font-semibold whitespace-nowrap capitalize flex items-center gap-2 grow"
       >
         <RouterLink
-          to="/dashboard/applications"
+          to="/jobs"
           class="lg:text-muted-foreground hover:underline hover:text-foreground"
           >Applications</RouterLink
         >
@@ -253,10 +253,10 @@ import JobApplicationDescription from "@/components/JobApplicationDescription.vu
 import ToolMatchCard from "@/components/ToolMatchCard.vue";
 
 type ApplicationPageProps = {
-  applicationId: string;
+  jobId: string;
 };
 
-const { applicationId } = defineProps<ApplicationPageProps>();
+const { jobId: applicationId } = defineProps<ApplicationPageProps>();
 const route = useRoute();
 
 const { data: application } = useDocument<JobApplication>(

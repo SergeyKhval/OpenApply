@@ -30,7 +30,7 @@ export function usePostAuthRedirect() {
           // The extension's job gets the same "Saved. Have you applied?" prompt
           // as a manual save; the tool's has its own on the match card
           const query = created.source === "extension" ? "created=1" : "from=tool";
-          router.push(`/dashboard/applications/${created.id}?${query}`);
+          router.push(`/jobs/${created.id}?${query}`);
         } else {
           redirectToDefault();
         }
@@ -46,9 +46,9 @@ export function usePostAuthRedirect() {
     } else if (pendingJobId.value) {
       const params = new URLSearchParams({ job: pendingJobId.value });
       if (fromLp.value) params.set("from", "lp");
-      router.push(`/dashboard/applications/new?${params}`);
+      router.push(`/jobs/new?${params}`);
     } else {
-      router.push("/dashboard/applications");
+      router.push("/jobs");
     }
   }
 

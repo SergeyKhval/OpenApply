@@ -1,8 +1,15 @@
 <template>
   <div>
     <PageHeader>
+      <RouterLink
+        to="/jobs"
+        class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+      >
+        <PhCaretLeft />
+        Jobs
+      </RouterLink>
       <h2 class="text-2xl font-semibold text-foreground whitespace-nowrap">
-        Archive
+        Archived
       </h2>
       <AppSearch v-model="search" />
     </PageHeader>
@@ -47,7 +54,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { PhArchive, PhMagnifyingGlass } from "@phosphor-icons/vue";
+import { PhArchive, PhCaretLeft, PhMagnifyingGlass } from "@phosphor-icons/vue";
 import PageHeader from "@/components/PageHeader.vue";
 import JobApplicationCard from "@/components/JobApplicationCard.vue";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
@@ -79,8 +86,3 @@ const filteredApplications = computed(() => {
   );
 });
 </script>
-
-<route lang="yaml">
-meta:
-  requiresAuth: true
-</route>

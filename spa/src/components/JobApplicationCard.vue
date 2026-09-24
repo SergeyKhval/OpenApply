@@ -15,7 +15,7 @@
         <div class="min-w-0 flex-1 overflow-hidden">
           <CardTitle class="truncate">
             <RouterLink
-              :to="`/dashboard/applications/${application.id}`"
+              :to="`/jobs/${application.id}`"
               class="underline hover:no-underline text-lg"
             >
               {{ application.companyName }}

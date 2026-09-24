@@ -1,5 +1,7 @@
 <template>
-  <div class="h-full flex flex-col">
+  <!-- /jobs?stage=closed: archived jobs (old /dashboard/archive) until the board lands -->
+  <ClosedJobsList v-if="showClosed" />
+  <div v-else class="h-full flex flex-col">
     <PageHeader>
       <div class="flex items-center w-full gap-6">
         <h2 class="text-2xl font-semibold whitespace-nowrap">Applications</h2>
@@ -25,6 +27,12 @@
         >
           {{ option.label }}
         </Button>
+        <Button variant="ghost" size="sm" as-child>
+          <RouterLink :to="{ path: '/jobs', query: { stage: 'closed' } }">
+            <PhArchive />
+            Archived
+          </RouterLink>
+        </Button>
       </div>
 
       <div class="flex-1 overflow-y-auto">
@@ -36,6 +44,9 @@
 
 <script setup lang="ts">
 import { ref, computed, provide } from "vue";
+import { useRoute } from "vue-router";
+import { PhArchive } from "@phosphor-icons/vue";
+import ClosedJobsList from "@/components/jobs/ClosedJobsList.vue";
 import { SearchSymbol } from "@/constants/symbols.ts";
 import PageHeader from "@/components/PageHeader.vue";
 import JobApplicationsList from "@/components/JobApplicationsList.vue";
@@ -46,6 +57,8 @@ import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vu
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 
 const { jobApplications } = useJobApplicationsData();
+const route = useRoute();
+const showClosed = computed(() => route.query.stage === "closed");
 
 const search = ref("");
 const statusFilter = ref<JobStatus | "all">("all");

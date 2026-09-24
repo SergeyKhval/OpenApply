@@ -340,7 +340,7 @@ async function importJobApplications() {
     importingJobs.value = false;
   }
 
-  await router.push("/dashboard/applications");
+  await router.push("/jobs");
 }
 </script>
 
