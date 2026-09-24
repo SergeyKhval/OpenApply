@@ -81,6 +81,6 @@ In a competitive job market, an AI resume review is one of the faster ways to cl
 
 ## See How Your Resume Stacks Up
 
-Not sure if your resume matches the job? [OpenApply](https://openapply.app/app/) analyzes your resume against any job description and tells you exactly what to improve, keywords, skills gaps, and formatting issues. Get actionable feedback in seconds.
+Not sure if your resume matches the job? Try the [free resume vs job description match checker](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=ai-resume-review-what-to-expect), no signup needed. It scores the match, marks every requirement matched, partial, or missing with the line from your resume that proves it, lists the keywords you're missing, and shows what a parser actually reads from your PDF.
 
-[Check your resume match →](https://openapply.app/app/)
+[Check your resume match →](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=ai-resume-review-what-to-expect)

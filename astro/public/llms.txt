@@ -1,0 +1,22 @@
+# OpenApply
+
+> OpenApply is a free, open-source (MIT) job application tracker. Paste a job posting link and it fills in the company, role, and description; track status, notes, contacts, and interviews in one place. It also ships a free, no-signup tool that checks a resume against a job description.
+
+OpenApply is not affiliated with Faria's OpenApply, a school admissions platform at openapply.com. This site is openapply.app, a job search tool for individual job seekers.
+
+## Tools
+
+- [Resume vs job description match checker](https://openapply.app/tools/resume-job-match): Free, no signup. Paste a resume and a job description and get a match score, every requirement marked matched, partial, or missing with the resume line that proves it, the ATS keywords that are missing, and what a parser actually reads from an uploaded PDF. It never rewrites the resume or invents experience; every match must be backed by a quote from the resume text. The full prompt used is shown on the page.
+
+## Product
+
+- [Homepage](https://openapply.app/): Paste a job link to create a tracked application with company, role, and description filled in automatically. Track status, notes, contacts, and interviews. AI resume review and cover letter generation are pay-as-you-go; tracking itself is free.
+- [App (sign in required)](https://openapply.app/app/): The job application tracker itself.
+
+## Source
+
+- [GitHub repository](https://github.com/SergeyKhval/OpenApply): MIT-licensed source. Vue 3 + Vite SPA, Astro marketing site, Firebase (Auth, Firestore, Functions), Google Genkit with Gemini for AI features. Self-hostable with your own Firebase project and Gemini API key.
+
+## Blog
+
+- [Blog index](https://openapply.app/blog): Job search, resume, and interview advice, including ATS optimization and AI resume review guides.
