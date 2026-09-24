@@ -134,6 +134,15 @@ export function describeClientIp(rawRequest: {
 }
 
 /**
+ * Optional secret for hashClientKey. Read from the environment at runtime
+ * rather than declared with defineString: a declared param missing from the
+ * deploy dotenv file fails a non-interactive `firebase deploy`, default or not.
+ */
+export function rateLimitHashKey(): string | undefined {
+  return process.env.RATE_LIMIT_HASH_KEY || undefined;
+}
+
+/**
  * Hashes a client identifier so raw IPs are never stored. Uses HMAC-SHA256
  * keyed with a secret, since a plain hash of an IP is reversible by brute
  * force (the IPv4 space is small enough to enumerate). Falls back to the
@@ -144,7 +153,7 @@ export function hashClientKey(value: string, secret?: string): string {
   const input = `openapply-match-tool:${value}`;
   if (!secret) {
     console.warn(
-      "hashClientKey: RATE_LIMIT_HASH_KEY is not set; falling back to unsalted SHA-256, which is reversible by brute force. Set the RATE_LIMIT_HASH_KEY param to fix this.",
+      "hashClientKey: RATE_LIMIT_HASH_KEY is not set; falling back to unsalted SHA-256, which is reversible by brute force. Set RATE_LIMIT_HASH_KEY in the functions env to fix this.",
     );
     return createHash("sha256").update(input).digest("hex").slice(0, 32);
   }

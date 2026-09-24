@@ -5,7 +5,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import { Resend } from "resend";
-import { getClientIp, hashClientKey } from "./lib/matchTool";
+import { getClientIp, hashClientKey, rateLimitHashKey } from "./lib/matchTool";
 import {
   CODE_TTL_MS,
   INVALID_CODE_MESSAGE,
@@ -22,7 +22,6 @@ import {
 } from "./lib/signInCode";
 
 const RESEND_API_KEY = defineString("RESEND_API_KEY");
-const RATE_LIMIT_HASH_KEY = defineString("RATE_LIMIT_HASH_KEY", { default: "" });
 
 const FROM_EMAIL = "OpenApply <sergey@openapply.app>";
 // Counters only need to outlive their window; a Firestore TTL policy on
@@ -40,11 +39,11 @@ type StoredCode = {
 
 // Doc ids are keyed hashes so raw emails and IPs never land in Firestore
 function emailKey(email: string) {
-  return hashClientKey(`signin-email:${email}`, RATE_LIMIT_HASH_KEY.value() || undefined);
+  return hashClientKey(`signin-email:${email}`, rateLimitHashKey());
 }
 
 function ipKey(ip: string | null) {
-  return hashClientKey(`signin-ip:${ip ?? "unknown"}`, RATE_LIMIT_HASH_KEY.value() || undefined);
+  return hashClientKey(`signin-ip:${ip ?? "unknown"}`, rateLimitHashKey());
 }
 
 function codeRef(email: string) {
