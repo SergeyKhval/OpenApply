@@ -22,7 +22,14 @@
 
       <div class="text-center text-sm text-muted-foreground mb-4">or</div>
 
-      <form @submit.prevent="handleLogin" class="space-y-4">
+      <EmailCodeForm
+        v-if="!usePassword"
+        id-prefix="signin"
+        :source="source"
+        @signed-in="redirect()"
+      />
+
+      <form v-else @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <Label for="signin-email" class="block text-sm font-medium mb-1">Email</Label>
           <Input
@@ -66,7 +73,17 @@
         </Button>
       </form>
 
-      <Alert v-if="error" variant="destructive" class="mt-4">
+      <p class="mt-4 text-center text-sm">
+        <button
+          type="button"
+          class="text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+          @click="togglePassword"
+        >
+          {{ usePassword ? "Email me a code instead" : "Use a password instead" }}
+        </button>
+      </p>
+
+      <Alert v-if="error" variant="destructive" class="mt-4" role="alert">
         <AlertDescription>
           {{ error }}
           <button
@@ -104,6 +121,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import EmailCodeForm from "@/components/EmailCodeForm.vue";
 
 type SignInFormProps = {
   pendingJob?: boolean;
@@ -121,6 +139,9 @@ const emit = defineEmits<SignInFormEmits>();
 const { redirect } = usePostAuthRedirect();
 const { login, loginWithGoogle, resetPassword } = useAuth();
 
+// Accounts made before code sign-in keep their password as a fallback in
+// case the code email is slow or lands in spam
+const usePassword = ref(false);
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
@@ -129,6 +150,12 @@ const error = ref("");
 const errorCode = ref<string | undefined>(undefined);
 const resettingPassword = ref(false);
 const resetSent = ref(false);
+
+const togglePassword = () => {
+  usePassword.value = !usePassword.value;
+  error.value = "";
+  errorCode.value = undefined;
+};
 
 const handleLogin = async () => {
   loading.value = true;

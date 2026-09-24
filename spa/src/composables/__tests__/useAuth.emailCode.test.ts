@@ -21,7 +21,6 @@ vi.mock("firebase/functions", () => ({
 const mockSignInWithCustomToken = vi.fn();
 vi.mock("firebase/auth", () => ({
   signInWithCustomToken: (...args: unknown[]) => mockSignInWithCustomToken(...args),
-  createUserWithEmailAndPassword: vi.fn(),
   getAdditionalUserInfo: vi.fn(),
   GoogleAuthProvider: vi.fn(),
   sendPasswordResetEmail: vi.fn(),

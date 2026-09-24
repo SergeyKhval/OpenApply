@@ -1,7 +1,6 @@
 import { useCurrentUser, useDocument, useFirebaseAuth } from "vuefire";
 import {
   type Auth,
-  createUserWithEmailAndPassword,
   getAdditionalUserInfo,
   GoogleAuthProvider,
   sendPasswordResetEmail,
@@ -120,28 +119,6 @@ export function useAuth() {
     }
   };
 
-  const register = async (
-    email: string,
-    password: string,
-    options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
-  ): Promise<AuthResult> => {
-    if (!auth) return { success: false, error: "Auth not initialized" };
-
-    try {
-      const result: UserCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      identifyUser(result.user.uid, { email: result.user.email, authMethod: "email" });
-      trackEvent("signup_completed", { source: options?.source ?? "direct", method: "password" });
-      return { success: true, user: result.user };
-    } catch (error) {
-      const { message, code } = friendlyAuthError(error);
-      return { success: false, error: message, code };
-    }
-  };
-
   const loginWithGoogle = async (
     options?: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" },
   ): Promise<AuthResult> => {
@@ -225,7 +202,6 @@ export function useAuth() {
     user,
     userProfile,
     login,
-    register,
     loginWithGoogle,
     sendSignInCode,
     verifySignInCode,
