@@ -205,7 +205,7 @@ Return:
   50-69: meets some must-haves, with noticeable gaps.
   0-49: missing several must-haves (years of experience, core skills, required credentials).
 - verdict: 2 to 3 plain sentences on why a screener would pass on this resume for this job, or why it would get through. Name the biggest gap.
-- requirements: the 6 to 10 most important requirements from the job description, must-haves first. For each: status "matched", "partial", or "missing"; importance "must-have" or "nice-to-have" based on how the job description phrases it; evidence: for matched or partial, quote the exact resume line that proves it (short, verbatim); for missing, an empty string.
+- requirements: the 6 to 10 most important requirements from the job description, must-haves first. For each: status "matched", "partial", or "missing"; importance "must-have" or "nice-to-have" based on how the job description phrases it; evidence: for matched or partial, quote the exact resume line that proves it (short, verbatim), but only when that line directly states the requirement in words. Never infer an unstated attribute from context, such as reading a language or nationality from a city, address, or university name (a line like "TU Munich" or "Berlin, Germany" is not evidence of German language skills). If nothing in the resume directly states the requirement, set status to "missing" and evidence to an empty string, even if related context appears nearby.
 - missingKeywords: up to 10 skills, tools, or terms from the job description that do not appear in the resume at all.
 - fixes: exactly 3 places to close the most important gaps, most impactful first. Prefer gaps the resume undersells: where an existing line already hints at the requirement but does not say it plainly (for example React work when the job accepts "a similar modern framework", or a design system that may have covered accessibility). Each has the gap, where: the exact existing resume line it relates to (verbatim) or the section name, and action: one specific instruction about that line, such as which term from the job description to name explicitly or which result to quantify. State it as a pointer, never as a rewritten line. For a hard gap with no related evidence, say plainly that it is a gap and how to address it honestly (for example in the cover letter).
 - technologies: up to 10 technologies or tools named in the job description.
@@ -217,4 +217,36 @@ ${resumeText}
 <job_description>
 ${jobDescription}
 </job_description>`;
+}
+
+export type MatchToolRequirement = {
+  requirement: string;
+  status: "matched" | "partial" | "missing";
+  importance: "must-have" | "nice-to-have";
+  evidence: string;
+};
+
+function normalizeForMatch(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Defense-in-depth backstop for the tool's "never invents evidence" promise:
+ * downgrades any requirement whose evidence is not an actual quote from the
+ * resume, regardless of whether the model followed the prompt's instructions.
+ * This cannot catch a quote that IS verbatim in the resume but does not
+ * itself prove the requirement (that's the prompt-level rule above) — only
+ * text the model invented outright.
+ */
+export function sanitizeRequirementEvidence(
+  resumeText: string,
+  requirements: MatchToolRequirement[],
+): MatchToolRequirement[] {
+  const normalizedResume = normalizeForMatch(resumeText);
+  return requirements.map((requirement) => {
+    if (!requirement.evidence) return requirement;
+    const isVerbatim = normalizedResume.includes(normalizeForMatch(requirement.evidence));
+    if (isVerbatim) return requirement;
+    return { ...requirement, status: "missing" as const, evidence: "" };
+  });
 }

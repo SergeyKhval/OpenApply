@@ -138,6 +138,14 @@
           </p>
           <h2 v-if="jobLabel" class="text-xl font-bold text-foreground">{{ jobLabel }}</h2>
           <p class="text-muted-foreground">{{ analysis.verdict }}</p>
+          <a
+            :href="ctaHref"
+            class="inline-flex items-center gap-1.5 self-center sm:self-start text-sm font-semibold text-primary hover:underline"
+            @click="saveAndTrackCta('score_card')"
+          >
+            Save this job to my tracker
+            <i class="ph ph-arrow-right" aria-hidden="true"></i>
+          </a>
         </div>
       </div>
 
@@ -342,17 +350,31 @@ const jobLabel = computed(() => {
   return position || companyName;
 });
 
-const mustHaveSummary = computed(() => {
+const mustHaveStats = computed(() => {
   const mustHaves = analysis.value?.requirements.filter(
     (requirement) => requirement.importance === "must-have",
   ) ?? [];
-  const met = mustHaves.filter((requirement) => requirement.status === "matched").length;
-  return `${met} of ${mustHaves.length} must-haves clearly met`;
+  const matched = mustHaves.filter((requirement) => requirement.status === "matched").length;
+  const partial = mustHaves.filter((requirement) => requirement.status === "partial").length;
+  return { matched, partial, total: mustHaves.length };
+});
+
+const mustHaveSummary = computed(() => {
+  const { matched, partial, total } = mustHaveStats.value;
+  if (total === 0) return "";
+  return partial > 0
+    ? `${matched} of ${total} must-haves met, ${partial} partly`
+    : `${matched} of ${total} must-haves met`;
 });
 
 const scoreTone = computed(() => {
   const score = analysis.value?.matchScore ?? 0;
-  if (score >= 75) return { label: "Strong match", text: "text-emerald-400", stroke: "stroke-emerald-400" };
+  const { matched, total } = mustHaveStats.value;
+  // Never call it a "strong" match on the score alone: most must-haves also
+  // need to be fully (not partially) met, or the label contradicts the count
+  // right next to it.
+  const strongEligible = total === 0 || matched / total >= 0.8;
+  if (score >= 75 && strongEligible) return { label: "Strong match", text: "text-emerald-400", stroke: "stroke-emerald-400" };
   if (score >= 55) return { label: "Possible, with gaps", text: "text-amber-400", stroke: "stroke-amber-400" };
   return { label: "Long shot as it stands", text: "text-rose-400", stroke: "stroke-rose-400" };
 });
@@ -601,6 +623,10 @@ async function handleSubmit() {
     submittedJobDescription.value = jobDescription.value.trim();
     analysis.value = result.data.analysis;
     rememberResume(resumeText.value);
+    // Collapse the static hero above this island into a single line so the
+    // score lands in the first mobile viewport (the hero markup lives in
+    // resume-job-match.astro, outside this component, for SEO)
+    window.dispatchEvent(new CustomEvent("oa:tool-result", { detail: { label: jobLabel.value } }));
     trackEvent("tool_used", {
       match_score: result.data.analysis.matchScore,
       parse_status: result.data.analysis.parseCheck.status,
@@ -627,6 +653,7 @@ function startOver() {
   prefilledFromExtension.value = false;
   errorMessage.value = null;
   trackEvent("tool_restarted");
+  window.dispatchEvent(new CustomEvent("oa:tool-reset"));
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 

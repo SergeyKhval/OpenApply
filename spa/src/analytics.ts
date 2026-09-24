@@ -37,7 +37,6 @@ type EventMap = {
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };
-  school_admissions_redirect_clicked: { location: "sign_in" };
 };
 
 type EventName = keyof EventMap;

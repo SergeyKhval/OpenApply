@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   getAdditionalUserInfo,
   GoogleAuthProvider,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -28,9 +29,27 @@ type UserProfileWithBilling<T = Record<string, unknown>> =
 
 type AuthResult<T = User> =
   | { success: true; user: T }
-  | { success: false; error: string };
+  | { success: false; error: string; code?: string };
 
 type LogoutResult = { success: true } | { success: false; error: string };
+
+// Firebase's raw error messages ("Firebase: Password should be at least 6
+// characters (auth/weak-password).") are not something to show a user.
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  "auth/weak-password": "Use at least 6 characters.",
+  "auth/email-already-in-use": "You already have an account.",
+  "auth/invalid-credential": "Email or password is wrong.",
+  "auth/wrong-password": "Email or password is wrong.",
+  "auth/user-not-found": "Email or password is wrong.",
+  "auth/invalid-email": "That doesn't look like a valid email address.",
+  "auth/too-many-requests": "Too many attempts. Wait a moment and try again.",
+  "auth/popup-closed-by-user": "The Google sign-in window was closed before finishing.",
+};
+
+function friendlyAuthError(error: unknown): { message: string; code?: string } {
+  const code = (error as { code?: string })?.code;
+  return { message: (code && AUTH_ERROR_MESSAGES[code]) || "Something went wrong. Try again.", code };
+}
 
 export function useAuth() {
   const auth = useFirebaseAuth() as Auth | null;
@@ -76,8 +95,8 @@ export function useAuth() {
       trackEvent("login_completed", { source: options?.source ?? "direct" });
       return { success: true, user: result.user };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { success: false, error: message };
+      const { message, code } = friendlyAuthError(error);
+      return { success: false, error: message, code };
     }
   };
 
@@ -98,8 +117,8 @@ export function useAuth() {
       trackEvent("signup_completed", { source: options?.source ?? "direct" });
       return { success: true, user: result.user };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { success: false, error: message };
+      const { message, code } = friendlyAuthError(error);
+      return { success: false, error: message, code };
     }
   };
 
@@ -117,8 +136,8 @@ export function useAuth() {
       trackEvent(isNewUser ? "signup_completed" : "login_completed", { source });
       return { success: true, user: result.user };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { success: false, error: message };
+      const { message, code } = friendlyAuthError(error);
+      return { success: false, error: message, code };
     }
   };
 
@@ -135,6 +154,18 @@ export function useAuth() {
     }
   };
 
+  const resetPassword = async (email: string): Promise<LogoutResult> => {
+    if (!auth) return { success: false, error: "Auth not initialized" };
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error) {
+      const { message } = friendlyAuthError(error);
+      return { success: false, error: message };
+    }
+  };
+
   return {
     user,
     userProfile,
@@ -142,5 +173,6 @@ export function useAuth() {
     register,
     loginWithGoogle,
     logout,
+    resetPassword,
   };
 }

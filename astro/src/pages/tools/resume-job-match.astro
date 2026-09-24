@@ -107,7 +107,7 @@ const jsonLd = {
         <div class="absolute inset-0 bg-linear-to-br from-primary/15 via-background to-secondary/20"></div>
         <div class="pointer-events-none absolute -left-32 top-24 h-64 w-64 rounded-full bg-primary/30 blur-3xl"></div>
         <div class="container mx-auto px-4 pt-12 pb-16 lg:pt-16 relative z-10 max-w-6xl">
-          <div class="text-center max-w-3xl mx-auto mb-10">
+          <div id="tool-hero-full" class="text-center max-w-3xl mx-auto mb-10">
             <p class="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-5">
               Free tool · No signup
             </p>
@@ -121,6 +121,9 @@ const jsonLd = {
               It never rewrites your resume or makes anything up.
             </p>
           </div>
+          <p id="tool-hero-collapsed" class="hidden text-center text-lg font-semibold text-foreground mb-6">
+            Your result<span id="tool-hero-collapsed-label"></span>
+          </p>
 
           <ResumeMatchTool client:load />
         </div>
@@ -212,5 +215,22 @@ const jsonLd = {
   }
   footerCta?.addEventListener('click', () => {
     posthog()?.capture('tool_cta_clicked', { tool: 'resume_job_match', cta: 'footer_signup' });
+  });
+
+  // Collapse the hero to a single line once the tool has a result, so the
+  // score lands in the first mobile viewport instead of below the intro
+  // copy. Dispatched by ResumeMatchTool.vue on submit / start over.
+  window.addEventListener('oa:tool-result', (event) => {
+    const label = (event as CustomEvent<{ label?: string }>).detail?.label;
+    document.getElementById('tool-hero-full')?.classList.add('hidden');
+    const collapsed = document.getElementById('tool-hero-collapsed');
+    const collapsedLabel = document.getElementById('tool-hero-collapsed-label');
+    if (collapsedLabel) collapsedLabel.textContent = label ? ` for ${label}` : '';
+    collapsed?.classList.remove('hidden');
+  });
+
+  window.addEventListener('oa:tool-reset', () => {
+    document.getElementById('tool-hero-full')?.classList.remove('hidden');
+    document.getElementById('tool-hero-collapsed')?.classList.add('hidden');
   });
 </script>
