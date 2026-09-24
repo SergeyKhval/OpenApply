@@ -256,9 +256,31 @@ export function extractJob() {
     return total;
   }
 
-  // Career sites without markup we know: the element holding the most paragraph
-  // and bullet text, widened to its parent while that adds headings or more
-  // prose (boards that split the description into sections), not site chrome
+  // Whether text holds all of part and adds to it mostly after it: the sections
+  // a site rule or JSON-LD missed (requirements, benefits), not a job list or
+  // page header before it. Whitespace aside.
+  function extendsText(text, part) {
+    const whole = clean(text);
+    const piece = clean(part);
+    const start = whole.indexOf(piece.slice(0, 150));
+    const end = whole.indexOf(piece.slice(-150), start);
+    if (start < 0 || end < 0) return false;
+    const before = start;
+    const after = whole.length - (end + Math.min(150, piece.length));
+    return before <= 200 && after > before;
+  }
+
+  // Text outside links: "similar jobs" and "jobs at other companies" lists are
+  // links, a job description is prose
+  function unlinkedLength(element) {
+    const linked = [...element.querySelectorAll("a")]
+      .reduce((total, link) => total + clean(link.textContent).length, 0);
+    return Math.max(0, clean(element.textContent).length - linked);
+  }
+
+  // Any page: the element holding the most paragraph and bullet text, widened
+  // to its parent while that adds headings or more prose (boards that split
+  // the description into sections), not site chrome
   function densestTextBlock() {
     const scores = new Map();
     document.querySelectorAll("p, li").forEach((element) => {
@@ -267,7 +289,7 @@ export function extractJob() {
         ? element.parentElement?.parentElement
         : element.parentElement;
       if (!container) return;
-      scores.set(container, (scores.get(container) || 0) + clean(element.textContent).length);
+      scores.set(container, (scores.get(container) || 0) + unlinkedLength(element));
     });
     let best = null;
     let bestScore = 0;
@@ -393,9 +415,20 @@ export function extractJob() {
     result.location = contentText('[itemprop="jobLocation"], [data-testid*="location" i], [data-test*="location" i], [data-ui*="location" i], [class*="job-location" i], [class*="jobLocation"], [class*="location" i]', 80);
   }
 
+  // Site rules and JSON-LD can miss sections (requirements in a block of their
+  // own, a JSON-LD summary of the posting). The page's own block wins when it
+  // holds the same text and clearly more.
+  const pageBlock = densestTextBlock();
+  if (result.description
+    && pageBlock.length >= result.description.length * 1.3
+    && extendsText(pageBlock, result.description)) {
+    result.description = pageBlock;
+    result.source = "page";
+  }
+
   if (!result.description) {
     const main = document.querySelector("main, [role=main], article");
-    const candidates = [densestTextBlock(), main ? blockText(main) : ""];
+    const candidates = [pageBlock, main ? blockText(main) : ""];
     const text = candidates.find((candidate) => candidate.length >= MIN_DESCRIPTION_CHARS);
     if (text) {
       result.description = text;

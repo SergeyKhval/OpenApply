@@ -11,8 +11,9 @@ const source = readFileSync(join(here, "../src/extract.js"), "utf8")
 
 // Runs the extractor inside a page built from a saved fixture, the way
 // chrome.scripting.executeScript runs it in the real tab
-function extractFrom(fixture, { select, withoutJsonLd = false, url: pageUrl } = {}) {
+function extractFrom(fixture, { select, withoutJsonLd = false, withoutSiteRules = false, extractor = source, url: pageUrl } = {}) {
   let html = readFileSync(join(here, `fixtures/${fixture}.html`), "utf8");
+  const code = withoutSiteRules ? extractor.replace("SITES.find(", "[].find(") : extractor;
   if (withoutJsonLd) html = html.replace(/<script[^>]*ld\+json[^>]*>[\s\S]*?<\/script>/g, "");
   const url = pageUrl ?? html.match(/Captured (\S+)/)[1];
   const dom = new JSDOM(html, { url, runScripts: "outside-only" });
@@ -21,7 +22,7 @@ function extractFrom(fixture, { select, withoutJsonLd = false, url: pageUrl } = 
     range.selectNodeContents(dom.window.document.querySelector(select));
     dom.window.getSelection().addRange(range);
   }
-  return dom.window.eval(`${source}; extractJob()`);
+  return dom.window.eval(`${code}; extractJob()`);
 }
 
 describe("extractJob on captured job pages", () => {
@@ -67,6 +68,47 @@ describe("extractJob on captured job pages", () => {
       expect(title).toBe("(Senior) Data Engineer with AI - Freelance");
       expect(company).toBe("Netguru");
     }
+  });
+
+  // Any job page, not just the boards we have rules for: every real capture read
+  // with no site rules and no JSON-LD
+  it.each([
+    ["greenhouse", "GitLab is the intelligent orchestration platform", 8000],
+    ["lever", "We design Spotify’s consumer experience", 5000],
+    ["ashby", "Ramp is building the smart infrastructure", 4000],
+    ["workable", "More about Hugging Face", 5000],
+    ["workable-netguru", "3+ years of hands-on Snowflake experience", 2500],
+    ["linkedin", "Circle (NYSE: CRCL)", 4000],
+    ["airbnb", "Airbnb was born in 2007", 5000],
+    ["theprotocol", "Rozwój i utrzymanie aplikacji webowych", 3000],
+  ])("reads the whole job on %s from the page alone", (fixture, snippet, minChars) => {
+    const job = extractFrom(fixture, { withoutSiteRules: true, withoutJsonLd: true });
+    expect(job.source).toBe("page");
+    expect(job.description).toContain(snippet);
+    expect(job.description.length).toBeGreaterThan(minChars);
+  });
+
+  it("ignores lists of job links when finding the description", () => {
+    // LinkedIn's public page has "Regions Bank jobs", "Medpace jobs" link lists
+    const { description } = extractFrom("linkedin", { withoutSiteRules: true, withoutJsonLd: true });
+    expect(description).not.toContain("Regions Bank jobs");
+  });
+
+  it("adds the sections a site rule misses from the page", () => {
+    // Workable's rule as it was: the description section only, no requirements or benefits
+    const extractor = source.replace(/\{ all: '\[data-ui="job-description"\][^}]*\},/, `'[data-ui="job-description"]',`);
+    expect(extractor).not.toBe(source);
+    const { description, source: sourceKind } = extractFrom("workable-netguru", { extractor });
+    expect(sourceKind).toBe("page");
+    expect(description).toContain("Netguru is a trusted partner");
+    expect(description).toContain("3+ years of hands-on Snowflake experience");
+    expect(description).toContain("100% remote work;");
+  });
+
+  it("keeps a site rule's text when the page adds a job list before it", () => {
+    const { description, source: sourceKind } = extractFrom("linkedin-signed-in-synthetic");
+    expect(sourceKind).toBe("site");
+    expect(description).not.toContain("Other job card");
   });
 
   it("reads every section of a theprotocol.it offer, not just the first", () => {
