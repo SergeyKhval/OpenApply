@@ -1,0 +1,240 @@
+---
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+
+const { frontmatter } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const pageTitle = `${frontmatter.title} | OpenApply`;
+const pageDescription = frontmatter.description || frontmatter.title;
+const canonicalUrl = new URL(currentPath, Astro.site || 'https://openapply.app').href;
+const ogImage = 'https://openapply.app/og-image.png';
+const publishedTime = frontmatter.pubDate ? new Date(frontmatter.pubDate).toISOString() : undefined;
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": frontmatter.title,
+  "description": pageDescription,
+  "image": ogImage,
+  "datePublished": publishedTime,
+  "articleSection": "Resume Keywords",
+  "author": {
+    "@type": "Organization",
+    "name": "OpenApply"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenApply",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://openapply.app/favicon.ico"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalUrl
+  },
+  ...(frontmatter.tags && frontmatter.tags.length > 0 && {
+    "keywords": frontmatter.tags.join(", ")
+  })
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://openapply.app" },
+    { "@type": "ListItem", "position": 2, "name": "Resume Keywords", "item": "https://openapply.app/resume-keywords" },
+    { "@type": "ListItem", "position": 3, "name": frontmatter.title, "item": canonicalUrl }
+  ]
+};
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Resume Keywords", url: "/resume-keywords" },
+  { name: frontmatter.title, url: currentPath }
+];
+
+const toolHref = frontmatter.role
+  ? `/tools/resume-job-match?role=${encodeURIComponent(frontmatter.role)}&utm_source=seo&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-keywords-${frontmatter.slug}`
+  : `/tools/resume-job-match?utm_source=seo&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-keywords-${frontmatter.slug}`;
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={ogImage}
+  ogType="article"
+  canonicalUrl={canonicalUrl}
+  publishedTime={publishedTime}
+  articleTags={frontmatter.tags}
+  keywords={frontmatter.tags ? frontmatter.tags.join(", ") : undefined}
+>
+  <Header showHashLinks={false} currentPath={currentPath} />
+
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
+  <main class="min-h-screen bg-background">
+    <article class="container mx-auto px-4 py-12 max-w-4xl">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <header class="mb-10 border-b border-border pb-8">
+        <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          {frontmatter.title}
+        </h1>
+        {frontmatter.description && (
+          <p class="text-lg text-muted-foreground">{frontmatter.description}</p>
+        )}
+        <div class="flex flex-wrap gap-4 text-sm text-muted-foreground mt-4">
+          {frontmatter.pubDate && (
+            <time datetime={frontmatter.pubDate}>
+              Reviewed {new Date(frontmatter.pubDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+              })}
+            </time>
+          )}
+        </div>
+        {frontmatter.tags && frontmatter.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mt-4">
+            {frontmatter.tags.map((tag: string) => (
+              <span class="px-3 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <div class="rounded-lg border border-primary/30 bg-primary/5 p-6 mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+        <p class="text-foreground font-medium">
+          Have a real job posting for this role? Check your resume against it in about 15 seconds, free.
+        </p>
+        <a
+          href={toolHref}
+          class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Check your resume match &rarr;
+        </a>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <slot />
+      </div>
+
+      <div class="mt-12 p-6 border border-border rounded-lg bg-secondary/30 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+        <p class="text-foreground font-medium">
+          Not sure your resume matches a specific posting? Get an honest match score and the exact
+          lines to fix.
+        </p>
+        <a href={toolHref} class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90">
+          Check your resume match &rarr;
+        </a>
+      </div>
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .prose {
+    color: var(--foreground);
+  }
+
+  .prose :global(h1),
+  .prose :global(h2),
+  .prose :global(h3),
+  .prose :global(h4),
+  .prose :global(h5),
+  .prose :global(h6) {
+    color: var(--foreground);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.875em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5em;
+    margin-top: 2.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .prose :global(h3) {
+    font-size: 1.5em;
+    margin-top: 2em;
+  }
+
+  .prose :global(p) {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    line-height: 1.75;
+  }
+
+  .prose :global(a) {
+    color: var(--primary);
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+
+  .prose :global(a:hover) {
+    color: var(--secondary);
+  }
+
+  .prose :global(strong) {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+  }
+
+  .prose :global(li) {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.75;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5em;
+    margin-bottom: 2em;
+    font-size: 0.95em;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.6em 0.9em;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose :global(th) {
+    background-color: var(--muted);
+    font-weight: 600;
+  }
+
+  .prose :global(blockquote) {
+    border-left: 4px solid var(--primary);
+    padding-left: 1em;
+    font-style: italic;
+    color: var(--muted-foreground);
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .prose :global(hr) {
+    border-color: var(--border);
+    margin-top: 3em;
+    margin-bottom: 3em;
+  }
+</style>

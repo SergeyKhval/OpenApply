@@ -72,6 +72,8 @@ Product Management is a results-oriented field, so demonstrating your past succe
 
 ---
 
+Want the exact keywords real product manager postings are asking for right now, with counts and how to prove each one? See [resume keywords for product managers](/resume-keywords/product-manager?utm_source=seo&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resumes-product-manager).
+
 ## Check Your Resume Match Score
 
 Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.

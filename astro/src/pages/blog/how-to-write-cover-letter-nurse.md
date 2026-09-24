@@ -115,6 +115,8 @@ Restate your interest. Thank them for their time. Tell them how to reach you and
 
 ---
 
+Want the keywords real RN postings are actually asking for right now? See [resume keywords for registered nurses](/resume-keywords/nurse?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=how-to-write-cover-letter-nurse), built from current job postings, with how to prove each one.
+
 ## Write Your Cover Letter in Seconds
 
 Crafting a tailored cover letter for every application is exhausting. [OpenApply](https://openapply.app/app/) generates personalized, job-specific cover letters from your resume and the job description, in one click. Stop staring at a blank page and start applying faster.

@@ -78,6 +78,8 @@ For software engineers, a portfolio is not optional; it's crucial. Recruiters wa
 
 ---
 
+Want the exact keywords real software engineer postings are asking for right now, with counts and how to prove each one? See [resume keywords for software engineers](/resume-keywords/software-engineer?utm_source=seo&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resumes-software-engineer).
+
 ## Check Your Resume Match Score
 
 Not sure if your resume matches the job? [OpenApply](https://openapply.app/?utm_source=seo&utm_medium=resume-guide&utm_campaign=resumes) analyzes your resume against any job description and shows you exactly what to improve, skills gaps, missing keywords, and formatting issues.

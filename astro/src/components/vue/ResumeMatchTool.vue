@@ -1,5 +1,11 @@
 <template>
   <div class="w-full">
+    <p
+      v-if="!analysis && roleParam"
+      class="mb-4 text-sm text-muted-foreground text-center"
+    >
+      Checking a resume for a <span class="font-semibold text-foreground">{{ roleParam }}</span> role? Paste it in below.
+    </p>
     <form
       v-if="!analysis"
       class="flex flex-col gap-6"
@@ -352,6 +358,12 @@ const parseTone = computed(() => {
     text: "text-emerald-300",
     box: "border-emerald-400/30 bg-emerald-500/5",
   };
+});
+
+// Set by ?role= on internal links (e.g. resume-keywords pages) so the tool can greet the visitor by role
+const roleParam = computed(() => {
+  const incoming = new URLSearchParams(pageSearch.value);
+  return incoming.get("role") ?? "";
 });
 
 // Carry incoming UTM params into signup so attribution survives the tool

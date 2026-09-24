@@ -15,21 +15,17 @@ type PostModule = {
   };
 }
 
-const posts = Object.values(import.meta.glob<PostModule>('./resumes/*.md', { eager: true }))
-  .sort((a, b) => {
-    const dateA = a.frontmatter.pubDate ? new Date(a.frontmatter.pubDate).getTime() : 0;
-    const dateB = b.frontmatter.pubDate ? new Date(b.frontmatter.pubDate).getTime() : 0;
-    return dateB - dateA;
-  });
+const posts = Object.values(import.meta.glob<PostModule>('./resume-keywords/*.md', { eager: true }))
+  .sort((a, b) => a.frontmatter.role.localeCompare(b.frontmatter.role));
 const currentPath = Astro.url.pathname;
 
-const pageTitle = "Resume Guides by Job Title | OpenApply";
-const pageDescription = "Resume guides for every job title. Key skills, ATS keywords, and role-specific tips to land more interviews.";
-const canonicalUrl = new URL('/resumes', Astro.site || 'https://openapply.app').href;
+const pageTitle = "Resume Keywords by Job Title | OpenApply";
+const pageDescription = "The must-have and nice-to-have keywords real employers list for each role, pulled from current job postings, plus how to prove each one on your resume.";
+const canonicalUrl = new URL('/resume-keywords', Astro.site || 'https://openapply.app').href;
 
 const breadcrumbItems = [
   { name: "Home", url: "/" },
-  { name: "Resumes", url: "/resumes" }
+  { name: "Resume Keywords", url: "/resume-keywords" }
 ];
 ---
 
@@ -45,15 +41,17 @@ const breadcrumbItems = [
     <div class="container mx-auto px-4 py-12 max-w-4xl">
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">Resume Guides</h1>
+      <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">Resume Keywords by Role</h1>
       <p class="text-lg text-muted-foreground mb-4 max-w-3xl">
-        Browse resume guides for specific job titles. Each includes key skills, ATS keywords,
-        and actionable tips for your role.
+        We read through real, currently-listed job postings for each role below and pulled out the
+        keywords that actually show up, split into must-haves (nearly every posting requires them)
+        and nice-to-haves (some postings ask for them, others don't). Each page also says how to
+        show that keyword on your resume with real evidence, not just by dropping the word in.
       </p>
       <p class="text-sm text-muted-foreground mb-12 max-w-3xl">
-        Want counts and sourcing behind the keywords? See
-        <a href="/resume-keywords" class="text-primary underline hover:text-primary/80">resume keywords by role</a>,
-        built from real, currently open job postings.
+        Keyword lists go stale. Once you have an actual job posting, use the
+        <a href="/tools/resume-job-match?utm_source=seo&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-keywords-hub" class="text-primary underline hover:text-primary/80">free resume match checker</a>
+        to compare your resume against that specific posting instead of a general list.
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -83,7 +81,7 @@ const breadcrumbItems = [
       </div>
 
       {posts.length === 0 && (
-        <p class="text-muted-foreground text-center py-12">Resume guides coming soon!</p>
+        <p class="text-muted-foreground text-center py-12">Resume keyword guides coming soon!</p>
       )}
     </div>
   </main>

@@ -101,6 +101,8 @@ For frequent job changes: startup implosions and layoffs are self-explanatory wi
 
 ---
 
+Want the exact keywords real software engineer postings are asking for right now, with counts and how to prove each one? See [resume keywords for software engineers](/resume-keywords/software-engineer?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-software-engineer).
+
 ## See How Your Resume Stacks Up
 
 Not sure if your resume matches the job? Try the [free resume vs job description match checker](https://openapply.app/tools/resume-job-match?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=resume-tips-software-engineer), no signup needed. It marks every requirement matched, partial, or missing with the exact line from your resume as proof, and lists the ATS keywords you're missing.

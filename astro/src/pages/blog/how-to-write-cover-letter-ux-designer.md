@@ -100,3 +100,7 @@ End with something that references the role or the company's actual design situa
 That's an invitation to a conversation. It signals genuine interest in a way that generic enthusiasm never does. It's also a question a hiring manager might actually want to answer, which makes them more likely to create the opportunity to do it.
 
 That's the goal of the cover letter: not to get the offer, but to get the conversation.
+
+---
+
+Want the keywords real UX designer postings are actually asking for right now? See [resume keywords for UX designers](/resume-keywords/ux-designer?utm_source=blog&utm_medium=internal_link&utm_campaign=sprint-2609&utm_content=how-to-write-cover-letter-ux-designer), built from current job postings, with how to prove each one.
