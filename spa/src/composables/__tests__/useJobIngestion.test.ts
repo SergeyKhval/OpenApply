@@ -22,7 +22,8 @@ vi.mock("@/analytics", () => ({
   trackEvent: vi.fn(),
 }));
 
-import { friendlyRequestError } from "../useJobIngestion";
+import { friendlyRequestError, jobDescriptionOf, jobLinkOf } from "../useJobIngestion";
+import type { JobSnapshot } from "../useJobIngestion";
 
 describe("friendlyRequestError", () => {
   it("passes through a safe invalid-argument message", () => {
@@ -54,5 +55,25 @@ describe("friendlyRequestError", () => {
   it("falls back to a generic message for an unknown error shape", () => {
     expect(friendlyRequestError("not an Error instance")).toContain("Enter the details yourself");
     expect(friendlyRequestError(undefined)).toContain("Enter the details yourself");
+  });
+});
+
+describe("pasted jobs", () => {
+  const pasted: JobSnapshot = {
+    status: "parse-failed",
+    source: "paste",
+    content: "The full pasted posting",
+    postingLink: "https://www.linkedin.com/jobs/view/4012345678/",
+  };
+
+  it("keeps the posting link and the paste when the parse fails", () => {
+    expect(jobLinkOf(pasted)).toBe("https://www.linkedin.com/jobs/view/4012345678/");
+    expect(jobDescriptionOf(pasted)).toBe("The full pasted posting");
+  });
+
+  it("prefers the parsed description, and never shows a scraped page's raw HTML", () => {
+    expect(jobDescriptionOf({ ...pasted, status: "parsed", parsedData: { description: "Parsed" } })).toBe("Parsed");
+    expect(jobDescriptionOf({ status: "parse-failed", content: "<html>…</html>", jobDescriptionLink: "https://x.com/j" })).toBe("");
+    expect(jobLinkOf({ status: "parsed", jobDescriptionLink: "https://x.com/j" })).toBe("https://x.com/j");
   });
 });

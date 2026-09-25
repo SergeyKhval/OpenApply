@@ -6,8 +6,10 @@
         <DialogDescription>
           {{
             viewMode === "link"
-              ? "Start by adding a link to the job description page"
-              : "Start by creating a new job application"
+              ? "Paste a link to the posting, or the job description itself"
+              : viewMode === "paste"
+                ? "Paste the job description and we'll pull out the company and role"
+                : "Start by creating a new job application"
           }}
         </DialogDescription>
       </DialogHeader>
@@ -30,7 +32,7 @@
           <form
             v-if="viewMode === 'link'"
             class="flex flex-col gap-4"
-            @submit.prevent="handleSubmit"
+            @submit.prevent="handleSubmit()"
           >
             <Alert v-if="ingestionError" variant="destructive">
               <PhWarningCircle />
@@ -39,30 +41,37 @@
               </AlertDescription>
             </Alert>
             <div class="flex flex-col gap-2">
-              <Label for="jobLink">Job Description Link</Label>
+              <Label for="jobLink">Job link or description</Label>
               <div>
                 <Input
                   id="jobLink"
-                  v-model="jobDescriptionLink"
-                  type="url"
-                  placeholder="https://..."
-                  :class="
-                    v$.jobDescriptionLink.$dirty &&
-                    v$.jobDescriptionLink.$invalid &&
-                    'border-destructive'
-                  "
+                  v-model="jobLinkInput"
+                  type="text"
+                  inputmode="url"
+                  autocomplete="off"
+                  placeholder="https://… or paste the description"
+                  :aria-invalid="!!linkInputError"
+                  aria-describedby="job-link-error"
+                  :class="linkInputError && 'border-destructive'"
+                  @paste="onLinkPaste"
                 />
                 <p
-                  v-if="
-                    v$.jobDescriptionLink.$dirty &&
-                    v$.jobDescriptionLink.$invalid
-                  "
+                  v-if="linkInputError"
+                  id="job-link-error"
+                  role="alert"
                   class="text-destructive text-xs mt-1"
                 >
-                  Provide a valid URL
+                  {{ linkInputError }}
                 </p>
                 <p class="mt-1 text-muted-foreground text-sm">
-                  We never share your jobs with 3rd parties
+                  LinkedIn or Indeed?
+                  <button
+                    type="button"
+                    class="cursor-pointer font-semibold text-secondary-foreground hover:underline"
+                    @click="openPasteView()"
+                  >
+                    Paste the description instead
+                  </button>
                 </p>
               </div>
             </div>
@@ -79,6 +88,60 @@
               >
                 <PhPencilSimple />
                 I don't have a link
+              </Button>
+            </DialogFooter>
+          </form>
+
+          <form
+            v-else-if="viewMode === 'paste'"
+            class="flex flex-col gap-4"
+            @submit.prevent="handlePasteSubmit"
+          >
+            <Alert v-if="ingestionError" variant="destructive">
+              <PhWarningCircle />
+              <AlertDescription>
+                {{ ingestionError }}
+              </AlertDescription>
+            </Alert>
+            <Alert v-else-if="blockedBoard">
+              <PhInfo class="text-muted-foreground" />
+              <AlertDescription>
+                {{ blockedBoardMessage(blockedBoard) }}
+              </AlertDescription>
+            </Alert>
+            <div class="flex flex-col gap-2">
+              <Label for="jobDescriptionText">Job description</Label>
+              <Textarea
+                id="jobDescriptionText"
+                ref="descriptionField"
+                v-model="pastedDescription"
+                :maxlength="MAX_DESCRIPTION_CHARS"
+                placeholder="Paste the whole posting: title, company, responsibilities, requirements"
+                :aria-invalid="!!pasteError"
+                aria-describedby="job-description-error"
+                class="min-h-40 max-h-72"
+              />
+              <p
+                v-if="pasteError"
+                id="job-description-error"
+                role="alert"
+                class="text-destructive text-xs"
+              >
+                {{ pasteError }}
+              </p>
+              <p v-if="keptLink" class="break-all text-muted-foreground text-sm">
+                Link kept: {{ keptLink }}
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" :disabled="isProcessing">
+                <PhSkipForward />
+                Continue
+              </Button>
+              <Button type="button" variant="outline" @click="backToLink()">
+                <PhLink />
+                Use a link instead
               </Button>
             </DialogFooter>
           </form>
@@ -100,12 +163,16 @@
               :company-logo-url="
                 latestSnapshot?.parsedData?.companyLogoUrl || ''
               "
-              :job-description-link="
-                latestSnapshot?.jobDescriptionLink || jobDescriptionLink || ''
-              "
-              :job-description="latestSnapshot?.parsedData?.description || ''"
+              :job-description-link="jobLinkOf(latestSnapshot) || keptLink || ''"
+              :job-description="jobDescriptionOf(latestSnapshot)"
               :job-id="latestSnapshot?.id || ''"
               :parsing-failed="hasParsingFailure"
+              :parsing-failed-notice="
+                isPastedJob(latestSnapshot)
+                  ? 'We couldn\'t spot everything in that text. Fill in anything that\'s missing.'
+                  : undefined
+              "
+              :from-paste="isPastedJob(latestSnapshot)"
               @saved="onJobApplicationSaved"
               @back="handleBack"
             />
@@ -117,17 +184,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import omit from "lodash/omit";
 import {
+  PhInfo,
+  PhLink,
   PhPencilSimple,
   PhSkipForward,
   PhSpinner,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
-import { useVuelidate } from "@vuelidate/core";
-import { required, url } from "@vuelidate/validators";
 import {
   Dialog,
   DialogDescription,
@@ -139,10 +206,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import JobApplicationForm from "@/components/JobApplicationForm.vue";
 import MessageRotator from "@/components/MessageRotator.vue";
-import { useJobIngestion } from "@/composables/useJobIngestion.ts";
+import {
+  isPastedJob,
+  jobDescriptionOf,
+  jobLinkOf,
+  useJobIngestion,
+} from "@/composables/useJobIngestion.ts";
+import {
+  MAX_DESCRIPTION_CHARS,
+  blockedBoardMessage,
+  blockedJobBoard,
+  classifyJobInput,
+  looksLikeDescription,
+  type BlockedJobBoard,
+} from "@/lib/jobInput";
+import { trackEvent, type JobInputSurface } from "@/analytics";
 
 type AddJobApplicationProps = { isOpen: boolean };
 
@@ -151,8 +233,16 @@ const { isOpen } = defineProps<AddJobApplicationProps>();
 const router = useRouter();
 const route = useRoute();
 
-const viewMode = ref<"link" | "form">("link");
-const jobDescriptionLink = ref("");
+const viewMode = ref<"link" | "paste" | "form">("link");
+// The link field also takes a pasted description
+const jobLinkInput = ref("");
+const linkInputError = ref<string | null>(null);
+const pastedDescription = ref("");
+const pasteError = ref<string | null>(null);
+// A LinkedIn/Indeed link stays on the job while its description is pasted
+const keptLink = ref<string | null>(null);
+const blockedBoard = ref<BlockedJobBoard | null>(null);
+const descriptionField = useTemplateRef<InstanceType<typeof Textarea>>("descriptionField");
 
 const {
   start: startIngestion,
@@ -161,13 +251,6 @@ const {
   errorMessage: ingestionError,
   latestSnapshot,
 } = useJobIngestion();
-
-const v$ = useVuelidate(
-  {
-    jobDescriptionLink: { required, url },
-  },
-  { jobDescriptionLink },
-);
 
 // Set when the user gives up on a slow parse, so a late result can't pull
 // them out of the manual form.
@@ -222,18 +305,89 @@ watch(ingestionStatus, (state) => {
   if (isParseAbandoned.value) return;
   if (state === "ready") {
     viewMode.value = "form";
-  } else if (state === "error") {
-    viewMode.value = "link";
   }
+  // On "error" the view stays put so the alert shows next to what was sent
 });
 
-const handleSubmit = async () => {
-  v$.value.$touch();
-  if (v$.value.$invalid) return;
+async function handleSubmit(surface: JobInputSurface = "add_dialog") {
+  linkInputError.value = null;
+  const input = classifyJobInput(jobLinkInput.value);
 
+  if (input.kind === "empty" || input.kind === "too-short") {
+    linkInputError.value = "Paste a full link, or the whole job description";
+    return;
+  }
+
+  if (input.kind === "text") {
+    await submitDescription(input.text, surface);
+    return;
+  }
+
+  const board = blockedJobBoard(input.url);
+  if (board) {
+    // Don't make them wait on a scrape that is going to fail
+    trackEvent("job_board_shortcut_shown", { board, surface });
+    openPasteView({ link: input.url, board });
+    return;
+  }
+
+  trackEvent("job_input_submitted", { input: "link", surface });
   isParseAbandoned.value = false;
-  await startIngestion(jobDescriptionLink.value);
-};
+  await startIngestion(input.url);
+}
+
+async function handlePasteSubmit() {
+  pasteError.value = null;
+  const input = classifyJobInput(pastedDescription.value);
+  if (input.kind !== "text") {
+    pasteError.value = input.kind === "link"
+      ? "That's a link. Paste the job description itself."
+      : "That's too short to be a job description. Paste the whole posting.";
+    return;
+  }
+  await submitDescription(input.text, "add_dialog");
+}
+
+async function submitDescription(text: string, surface: JobInputSurface) {
+  trackEvent("job_input_submitted", {
+    input: "text",
+    surface,
+    ...(blockedBoard.value ? { board: blockedBoard.value } : {}),
+  });
+  pastedDescription.value = text;
+  viewMode.value = "paste";
+  isParseAbandoned.value = false;
+  await startIngestion(keptLink.value ? { text, url: keptLink.value } : { text });
+}
+
+function onLinkPaste(event: ClipboardEvent) {
+  const pasted = event.clipboardData?.getData("text") ?? "";
+  if (!looksLikeDescription(pasted)) return;
+  // A one-line input would flatten the description; move it to the text box
+  event.preventDefault();
+  openPasteView({ text: pasted.trim() });
+}
+
+async function openPasteView(
+  { link = null, board = null, text = "" }: { link?: string | null; board?: BlockedJobBoard | null; text?: string } = {},
+) {
+  resetIngestion();
+  keptLink.value = link;
+  blockedBoard.value = board;
+  pastedDescription.value = text;
+  pasteError.value = null;
+  viewMode.value = "paste";
+  await nextTick();
+  (descriptionField.value?.$el as HTMLTextAreaElement | undefined)?.focus();
+}
+
+function backToLink() {
+  resetIngestion();
+  keptLink.value = null;
+  blockedBoard.value = null;
+  pasteError.value = null;
+  viewMode.value = "link";
+}
 
 function abandonParse() {
   isParseAbandoned.value = true;
@@ -252,15 +406,20 @@ async function onJobApplicationSaved(id: string) {
 }
 
 function handleBack() {
-  viewMode.value = "link";
+  // Back from the form returns to wherever the job came from
+  viewMode.value = isPastedJob(latestSnapshot.value) ? "paste" : "link";
   resetIngestion();
 }
 
 function resetForm() {
   isParseAbandoned.value = false;
   viewMode.value = "link";
-  jobDescriptionLink.value = "";
-  v$.value.$reset();
+  jobLinkInput.value = "";
+  linkInputError.value = null;
+  pastedDescription.value = "";
+  pasteError.value = null;
+  keptLink.value = null;
+  blockedBoard.value = null;
   resetIngestion();
 }
 
@@ -284,8 +443,8 @@ watch(
 
     if (typeof prefilledLink === "string" && prefilledLink) {
       await router.replace({ query: omit(route.query, "job-link") });
-      jobDescriptionLink.value = prefilledLink;
-      await handleSubmit();
+      jobLinkInput.value = prefilledLink;
+      await handleSubmit("first_run");
     } else if (addMode === "manual") {
       await router.replace({ query: omit(route.query, "add-mode") });
       handleManualEntry();

@@ -117,4 +117,47 @@ describe("jobs", () => {
       createdAt: "mock-timestamp",
     });
   });
+
+  describe("pasted descriptions", () => {
+    const description = "Senior Frontend Engineer at Acme. ".repeat(10);
+
+    it("creates a doc ready for the parser, skipping the scrape and the link cache", async () => {
+      mockAdd.mockResolvedValueOnce({ id: "pasted-doc-id" });
+
+      const result = await callJobs({ text: `  ${description}  ` });
+      expect(result).toEqual({ id: "pasted-doc-id" });
+      expect(mockWhere).not.toHaveBeenCalled();
+      expect(mockAdd).toHaveBeenCalledWith({
+        source: "paste",
+        status: "scrapped",
+        content: description.trim(),
+        createdAt: "mock-timestamp",
+      });
+    });
+
+    it("keeps the posting's canonical link outside the cached field", async () => {
+      mockAdd.mockResolvedValueOnce({ id: "pasted-doc-id" });
+
+      await callJobs({
+        text: description,
+        url: "https://www.linkedin.com/jobs/view/senior-frontend-engineer-at-acme-4012345678/?trk=abc",
+      });
+      const saved = mockAdd.mock.calls[0]?.[0];
+      expect(saved.postingLink).toBe("https://www.linkedin.com/jobs/view/4012345678/");
+      expect(saved).not.toHaveProperty("jobDescriptionLink");
+    });
+
+    it("rejects text too short to be a posting", async () => {
+      await expect(callJobs({ text: "Frontend engineer" })).rejects.toThrow("too short");
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    it("rejects text past the size cap", async () => {
+      await expect(callJobs({ text: "a".repeat(20001) })).rejects.toThrow("longer than any job description");
+    });
+
+    it("rejects an invalid link alongside the text", async () => {
+      await expect(callJobs({ text: description, url: "linkedin" })).rejects.toThrow("Invalid URL format");
+    });
+  });
 });

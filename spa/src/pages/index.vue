@@ -156,6 +156,14 @@
           </template>
 
           <!-- Failed -->
+          <template v-else-if="parseFailed && isPastedJob(jobSnapshot)">
+            <h2 class="text-2xl font-bold text-foreground">
+              Your description is saved
+            </h2>
+            <p class="text-muted-foreground">
+              We couldn't spot the company or role in it. Sign up and fill those in
+            </p>
+          </template>
           <template v-else-if="parseFailed">
             <h2 class="text-2xl font-bold text-foreground">
               This job page played hard to get
@@ -245,7 +253,7 @@ import {
   readPendingToolApplication,
 } from "@/composables/pendingToolApplication";
 import ResumeScore from "@/components/ResumeScore.vue";
-import { isJobParsing, isJobParseFailed } from "@/composables/useJobIngestion";
+import { isJobParsing, isJobParseFailed, isPastedJob } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
 import { trackEvent } from "@/analytics";
 

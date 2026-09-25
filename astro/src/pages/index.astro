@@ -89,7 +89,7 @@ const faqs = [
   },
   {
     question: 'How does paste-a-link work?',
-    answer: 'Paste a URL from any job board and we scrape the page to fill in the company, role, and description automatically. Works with most popular boards. If a site is tricky, you can always add details manually.',
+    answer: 'Paste a link to a public careers page and we read the page to fill in the company, role, and description. LinkedIn and Indeed block that, so for their jobs paste the description itself into the same box and we pull the company and role out of it. You can always add details by hand.',
   },
   {
     question: 'Can it write cover letters?',
@@ -184,13 +184,12 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
           <div class="flex flex-col gap-2 lg:max-w-[560px]">
             {hasExtension && (
               <label for="hero-job-link" class="hidden text-[14.5px] text-soft-foreground chromium:block">
-                No extension? Paste a job link instead.
+                No extension? Paste a job link or description instead.
               </label>
             )}
             <JobLinkInput
               client:visible
               inputId="hero-job-link"
-              placeholder="https://jobs.lever.co/company/…"
               secondaryOnChromium={hasExtension}
             />
           </div>

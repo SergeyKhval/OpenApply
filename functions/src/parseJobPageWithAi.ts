@@ -101,12 +101,16 @@ export const parseJobPageWithAi = onDocumentWritten(
       // Extract the parsed job data
       const parsedJob: Job = result.output as Job;
 
+      const isPasted = data.source === "paste";
+
       // Detect empty parse results (e.g. Cloudflare block pages)
       if (!parsedJob?.companyName && !parsedJob?.position && !parsedJob?.description) {
         console.error(`Job ${docId}: AI returned empty fields, likely blocked content`);
         await db.collection("jobs").doc(docId).update({
           status: "parse-failed",
-          errorMessage: "Looks like this site didn't want us reading that page. You can still add the job details manually.",
+          errorMessage: isPasted
+            ? "We couldn't spot the company or role in that text. Fill them in below."
+            : "Looks like this site didn't want us reading that page. You can still add the job details manually.",
           updatedAt: FieldValue.serverTimestamp(),
         });
         return;
@@ -115,7 +119,9 @@ export const parseJobPageWithAi = onDocumentWritten(
       // Update the document with parsed data
       await db.collection("jobs").doc(docId).update({
         status: "parsed",
-        parsedData: parsedJob,
+        // The visitor's own paste is the description; the model only
+        // extracts the fields around it
+        parsedData: isPasted ? { ...parsedJob, description: data.content } : parsedJob,
         updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (error) {

@@ -3,8 +3,10 @@
     <Alert v-if="parsingFailed" variant="default">
       <PhInfo class="text-muted-foreground" />
       <AlertDescription>
-        This job page wasn't exactly cooperating. Some details couldn't be
-        extracted, so fill in anything that's missing.
+        {{
+          parsingFailedNotice ??
+            "This job page wasn't exactly cooperating. Some details couldn't be extracted, so fill in anything that's missing."
+        }}
       </AlertDescription>
     </Alert>
     <div class="flex flex-col gap-2">
@@ -173,8 +175,11 @@ type JobApplicationFormProps = {
   jobDescriptionLink?: string;
   jobDescription?: string;
   parsingFailed?: boolean;
+  parsingFailedNotice?: string;
   variant?: "dialog" | "page";
   analyticsSource?: "landing_page_parse";
+  // The job came from a pasted description, not a link
+  fromPaste?: boolean;
 };
 type JobApplicationFormEmits = {
   (event: "saved", id: string): void;
@@ -192,8 +197,10 @@ const {
   jobDescriptionLink = "",
   jobDescription = "",
   parsingFailed = false,
+  parsingFailedNotice,
   variant = "dialog",
   analyticsSource,
+  fromPaste = false,
 } = defineProps<JobApplicationFormProps>();
 const emit = defineEmits<JobApplicationFormEmits>();
 
@@ -244,7 +251,7 @@ const handleSubmit = async () => {
   error.value = null;
 
   // @ts-expect-error formData completely complies with type from receiving function
-  const result = await addJobApplication(formData, { source: analyticsSource });
+  const result = await addJobApplication(formData, { source: analyticsSource, fromPaste });
 
   if (result.success) {
     resetForm();

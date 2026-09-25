@@ -82,6 +82,8 @@ export const scrapeJobLink = onDocumentCreated(
     }
 
     const data = snapshot.data();
+    // Pasted descriptions arrive already "scrapped"; there is no page to load
+    if (data.status !== "pending") return;
     const url = data.jobDescriptionLink;
 
     // Helper function to update document with error

@@ -24,6 +24,11 @@ export type JobSnapshot = {
   id?: string;
   status: JobIngestionStatus;
   jobDescriptionLink?: string;
+  // Set on jobs made from a pasted description: the text itself is `content`,
+  // and the posting's link, if given, is `postingLink`
+  source?: "paste";
+  postingLink?: string;
+  content?: string;
   parsedData?: {
     companyName?: string;
     position?: string;
@@ -80,6 +85,21 @@ export function isJobParsing(snapshot: JobSnapshot | null | undefined, jobId: st
   return PROCESSING_STATUSES.includes(snapshot.status);
 }
 
+export function isPastedJob(snapshot: JobSnapshot | null | undefined): boolean {
+  return snapshot?.source === "paste";
+}
+
+export function jobLinkOf(snapshot: JobSnapshot | null | undefined): string {
+  return snapshot?.jobDescriptionLink || snapshot?.postingLink || "";
+}
+
+// The description to prefill: what the parser found, or for a pasted job
+// whose parse failed, the paste itself
+export function jobDescriptionOf(snapshot: JobSnapshot | null | undefined): string {
+  if (snapshot?.parsedData?.description) return snapshot.parsedData.description;
+  return isPastedJob(snapshot) && typeof snapshot?.content === "string" ? snapshot.content : "";
+}
+
 export function isJobParseFailed(snapshot: JobSnapshot | null | undefined): boolean {
   if (!snapshot) return false;
   return (
@@ -88,8 +108,11 @@ export function isJobParseFailed(snapshot: JobSnapshot | null | undefined): bool
   );
 }
 
+// A link to scrape, or a pasted description with the posting's link if known
+export type JobRequest = { url: string } | { text: string; url?: string };
+
 export const useJobIngestion = () => {
-  const callable = httpsCallable<{ url: string }, { id: string }>(
+  const callable = httpsCallable<JobRequest, { id: string }>(
     functions,
     "jobs",
   );
@@ -140,12 +163,12 @@ export const useJobIngestion = () => {
     return "waiting";
   });
 
-  const execute = async (url: string) => {
+  const execute = async (request: JobRequest) => {
     isFetching.value = true;
     error.value = undefined;
 
     try {
-      const result = await callable({ url });
+      const result = await callable(request);
       data.value = result.data;
       return result.data;
     } catch (err) {
@@ -156,32 +179,34 @@ export const useJobIngestion = () => {
     }
   };
 
-  const start = async (url: string) => {
+  // Resolves to the new job's id, or null when the request failed
+  const start = async (request: string | JobRequest): Promise<string | null> => {
     requestError.value = null;
     jobId.value = null;
     latestSnapshot.value = undefined;
     data.value = undefined;
 
     try {
-      await execute(url);
+      await execute(typeof request === "string" ? { url: request } : request);
     } catch (err) {
       requestError.value = friendlyRequestError(err);
-      return;
+      return null;
     }
 
     if (error.value) {
       requestError.value = friendlyRequestError(error.value);
-      return;
+      return null;
     }
     // @ts-expect-error id is present on data here
     const id = data.value?.id;
 
     if (!id) {
       requestError.value = "Unable to start job ingestion.";
-      return;
+      return null;
     }
 
     jobId.value = id;
+    return id;
   };
 
   const reset = () => {
