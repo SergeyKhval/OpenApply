@@ -7,6 +7,7 @@ import { firestore } from "firebase-admin";
 import { assertAiAllowance, chargeAiCheck } from "./lib/aiUsage";
 import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration, validateJobApplicationForGeneration } from "./lib/validation";
+import { parseCoverLetterStyle, promptVersion, styleInstructions, type CoverLetterStyle } from "./lib/coverLetterStyle";
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -20,6 +21,8 @@ defineString("GEMINI_API_KEY");
 interface GenerateCoverLetterRequest {
   jobApplicationId: string;
   resumeId: string;
+  length?: string;
+  tone?: string;
 }
 
 interface GenerateCoverLetterResponse {
@@ -75,6 +78,7 @@ async function fetchAndValidateResume(resumeId: string, userId: string) {
 async function buildCoverLetterPrompt(
   jobApplication: firestore.DocumentData,
   resume: firestore.DocumentData,
+  style: CoverLetterStyle,
 ): Promise<string> {
   const promptTemplates = db.collection("promptTemplates").doc("coverLetter");
   const promptTemplateDoc = await promptTemplates.get();
@@ -89,14 +93,15 @@ async function buildCoverLetterPrompt(
     .replace("{{ companyName }}", jobApplication.companyName)
     .replace("{{ position }}", jobApplication.position)
     .replace("{{ resumeText }}", resume.text)
-    .replace("{{ jobDescription }}", jobApplication.jobDescription);
+    .replace("{{ jobDescription }}", jobApplication.jobDescription) + styleInstructions(style);
 }
 
 async function generateCoverLetterWithAI(
   jobApplication: firestore.DocumentData,
   resume: firestore.DocumentData,
+  style: CoverLetterStyle,
 ): Promise<string> {
-  const prompt = await buildCoverLetterPrompt(jobApplication, resume);
+  const prompt = await buildCoverLetterPrompt(jobApplication, resume, style);
   const result = await ai.generate({ prompt });
   return result.text.trim();
 }
@@ -141,6 +146,7 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
         "jobApplicationId and resumeId are required",
       );
     }
+    const style = parseCoverLetterStyle(request.data);
 
     try {
       await assertAiAllowance(userId);
@@ -154,6 +160,7 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
       const coverLetterBody = await generateCoverLetterWithAI(
         jobApplication,
         resume,
+        style,
       );
 
       const coverLetterRef = db.collection("coverLetters").doc();
@@ -173,10 +180,11 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
           resumeId,
           body: coverLetterBody,
           createdAt: FieldValue.serverTimestamp(),
+          style,
           modelMetadata: {
             model: "gemini-2.5-flash",
             temperature: 0.7,
-            prompt: "cover-letter-v1",
+            prompt: promptVersion(style),
           },
         });
 
@@ -200,6 +208,8 @@ export const regenerateCoverLetter = onCall<{
   coverLetterId: string;
   jobApplicationId: string;
   resumeId: string;
+  length?: string;
+  tone?: string;
 }>(async (request) => {
   const userId = validateAuth(request);
   const { coverLetterId, jobApplicationId, resumeId } = request.data;
@@ -210,6 +220,7 @@ export const regenerateCoverLetter = onCall<{
       "coverLetterId, jobApplicationId and resumeId are required",
     );
   }
+  const style = parseCoverLetterStyle(request.data);
 
   try {
     await assertAiAllowance(userId);
@@ -238,7 +249,7 @@ export const regenerateCoverLetter = onCall<{
     );
     const resume = await fetchAndValidateResume(resumeId, userId);
 
-    const newBody = await generateCoverLetterWithAI(jobApplication, resume);
+    const newBody = await generateCoverLetterWithAI(jobApplication, resume, style);
 
     const coverLetterRef = db.collection("coverLetters").doc(coverLetterId);
 
@@ -246,10 +257,11 @@ export const regenerateCoverLetter = onCall<{
       transaction.update(coverLetterRef, {
         body: newBody,
         updatedAt: FieldValue.serverTimestamp(),
+        style,
         modelMetadata: {
           model: "gemini-2.5-flash",
           temperature: 0.7,
-          prompt: "cover-letter-v1",
+          prompt: promptVersion(style),
         },
       });
     });

@@ -126,6 +126,7 @@ export type CoverLetter = {
   body: string;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  style?: { length: "short" | "standard"; tone: "plain" | "warm" };
   modelMetadata?: {
     model: string;
     prompt: string;

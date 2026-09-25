@@ -14,6 +14,8 @@ import { db, functions } from "@/firebase/config";
 import type { CoverLetter } from "@/types";
 import { trackEvent } from "@/analytics";
 
+export type CoverLetterStyle = { length: "short" | "standard"; tone: "plain" | "warm" };
+
 type CoverLetterActionError = {
   success: false;
   error: string;
@@ -94,6 +96,7 @@ export function useCoverLetters() {
   const generateCoverLetter = async (
     jobApplicationId: string,
     resumeId: string,
+    style?: CoverLetterStyle,
   ): Promise<GenerateCoverLetterResult> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -104,6 +107,7 @@ export function useCoverLetters() {
       const result = await generateFunction({
         jobApplicationId,
         resumeId,
+        ...style,
       });
 
       const data = result.data as { coverLetterId: string; body: string };
@@ -144,6 +148,7 @@ export function useCoverLetters() {
     coverLetterId: string,
     jobApplicationId: string,
     resumeId: string,
+    style?: CoverLetterStyle,
   ): Promise<RegenerateCoverLetterResult> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -158,6 +163,7 @@ export function useCoverLetters() {
         coverLetterId,
         jobApplicationId,
         resumeId,
+        ...style,
       });
 
       const data = result.data as { body: string };

@@ -26,8 +26,7 @@
               v-for="resume in resumes"
               :key="resume.id"
               :resume="resume"
-              :application-id="application.id"
-              :application-has-description="!!application.jobDescription"
+              :application="application"
             />
           </div>
         </div>
