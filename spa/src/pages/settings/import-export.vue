@@ -1,14 +1,24 @@
 <template>
-  <div class="h-full flex flex-col">
-    <PageHeader>
-      <div class="flex items-center w-full gap-6">
-        <h2 class="text-2xl font-semibold whitespace-nowrap">Import jobs</h2>
-      </div>
-    </PageHeader>
+  <SettingsShell>
+    <Card>
+      <CardHeader><CardTitle class="text-lg">Export</CardTitle></CardHeader>
+      <CardContent class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-0.5">
+          <p class="text-[15px] font-semibold">Export all jobs</p>
+          <p class="text-sm text-muted-foreground">A CSV with stages, dates, notes and links. Opens in Excel, Numbers or Google Sheets.</p>
+        </div>
+        <Button variant="outline" size="sm" :disabled="exporting || !jobApplications.length" @click="exportJobs">
+          <Spinner v-if="exporting" />
+          <PhDownloadSimple v-else />
+          Export CSV
+        </Button>
+      </CardContent>
+    </Card>
 
-    <div class="px-6 pb-6">
+    <h2 class="mt-2 text-lg font-bold">Import from a spreadsheet</h2>
+    <div>
       <div v-if="data && data.length">
-        <div class="sticky top-26">
+        <div class="sticky top-22 z-10 bg-background py-2">
           <div
             class="flex flex-col sm:flex-row items-start sm:items-center gap-2"
           >
@@ -192,7 +202,7 @@
         </CardFooter>
       </Card>
     </div>
-  </div>
+  </SettingsShell>
 </template>
 
 <script setup lang="ts">
@@ -201,7 +211,12 @@ import { useRouter } from "vue-router";
 import { useDropZone } from "@vueuse/core";
 import fill from "lodash/fill";
 import PapaParse from "papaparse";
-import PageHeader from "@/components/PageHeader.vue";
+import SettingsShell from "@/components/settings/SettingsShell.vue";
+import { useCurrentUser } from "vuefire";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/firebase/config.ts";
+import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
+import { downloadCsv, jobsToCsv } from "@/lib/exportJobsCsv";
 import { useFileDialog } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
 import {
@@ -214,6 +229,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   PhCaretUpDown,
+  PhDownloadSimple,
   PhFileArrowUp,
   PhFileCsv,
   PhWarning,
@@ -341,6 +357,31 @@ async function importJobApplications() {
   }
 
   await router.push("/jobs");
+}
+
+// Export: every job plus its notes, as one CSV
+const user = useCurrentUser();
+const { jobApplications } = useJobApplicationsData();
+const exporting = ref(false);
+
+async function exportJobs() {
+  if (!user.value) return;
+  exporting.value = true;
+  try {
+    const notes = await getDocs(
+      query(collection(db, "jobApplicationNotes"), where("userId", "==", user.value.uid)),
+    );
+    const notesByJob = new Map<string, string[]>();
+    for (const note of notes.docs) {
+      const { jobApplicationId, text } = note.data() as { jobApplicationId: string; text: string };
+      notesByJob.set(jobApplicationId, [...(notesByJob.get(jobApplicationId) ?? []), text]);
+    }
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadCsv(`openapply-jobs-${stamp}.csv`, jobsToCsv(jobApplications.value ?? [], notesByJob));
+    trackEvent("jobs_exported", { rowCount: jobApplications.value?.length ?? 0 });
+  } finally {
+    exporting.value = false;
+  }
 }
 </script>
 
