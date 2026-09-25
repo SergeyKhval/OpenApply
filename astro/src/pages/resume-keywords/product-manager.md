@@ -7,7 +7,7 @@ author: 'OpenApply Team'
 role: 'Product Manager'
 slug: 'product-manager'
 relatedResumeGuide: '/resumes/product-manager'
-relatedCoverLetter: '/blog/how-to-write-cover-letter-product-manager'
+relatedCoverLetter: '/cover-letters/product-manager'
 tags: ["Resume Keywords", "Product Manager", "ATS"]
 ---
 
