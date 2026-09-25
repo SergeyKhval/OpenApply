@@ -14,7 +14,7 @@
       />
     </div>
 
-    <Button type="submit" :disabled="loading" variant="outline" class="w-full">
+    <Button type="submit" :disabled="loading" variant="outline" size="lg" class="w-full">
       {{ loading ? "Sending…" : "Email me a code" }}
     </Button>
   </form>
@@ -36,11 +36,11 @@
         autocomplete="one-time-code"
         maxlength="7"
         required
-        class="w-full tracking-widest text-lg"
+        class="h-16 w-full text-center font-display text-3xl font-bold tracking-[0.45em]"
       />
     </div>
 
-    <Button type="submit" :disabled="loading" class="w-full">
+    <Button type="submit" :disabled="loading" size="lg" class="w-full">
       {{ loading ? "Checking…" : "Continue" }}
     </Button>
 
