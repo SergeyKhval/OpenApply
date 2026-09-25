@@ -144,15 +144,22 @@ const assertions = {
   // Phosphor stylesheet actually reached the page, so a real computed
   // font-family (not a fallback) is the signal that matters.
   phosphorIcon: () => {
-    const el = document.querySelector('[class*="ph-"]');
-    if (!el) return { pass: false, detail: "no [class*=ph-] element found" };
+    // The regression this guards against (#92) is the Phosphor font not loading.
+    // Prefer a visible icon; a page whose only icon is hidden at this width (the
+    // mobile menu at desktop) is checked on the font alone, and a page with no
+    // font icons passes.
+    const icons = Array.from(document.querySelectorAll('[class*="ph-"]'));
+    if (icons.length === 0) return { pass: true, detail: "no font icons on this page" };
+    const visible = icons.find((node) => {
+      const r = node.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    const el = visible || icons[0];
     const family = getComputedStyle(el, "::before").fontFamily || "";
     const rect = el.getBoundingClientRect();
-    const pass =
-      /phosphor/i.test(family) && rect.width > 0 && rect.height > 0;
     return {
-      pass,
-      detail: `font-family="${family}" rect=${Math.round(rect.width)}x${Math.round(rect.height)}`,
+      pass: /phosphor/i.test(family),
+      detail: `font-family="${family}" rect=${Math.round(rect.width)}x${Math.round(rect.height)}${visible ? "" : " (only hidden icons)"}`,
     };
   },
   // The SPA renders icons as @phosphor-icons/vue SVGs, not the CSS font.
