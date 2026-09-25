@@ -3,6 +3,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import puppeteer, { type Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import { load } from "cheerio";
+import { postingFromHtml } from "./lib/postingDates";
 
 export function cleanHtml(html: string): string {
   const $ = load(html);
@@ -197,6 +198,7 @@ export const scrapeJobLink = onDocumentCreated(
 
       // Extract content with error handling
       let content: string | null = null;
+      let posting: ReturnType<typeof postingFromHtml>;
       try {
         content = await page.content();
 
@@ -204,6 +206,9 @@ export const scrapeJobLink = onDocumentCreated(
           await setFailedStatus("No content extracted from page");
           return;
         }
+
+        // JSON-LD dates live in <script>, which cleanHtml removes
+        posting = postingFromHtml(content);
 
         // Clean up content using extracted helper
         content = cleanHtml(content);
@@ -219,6 +224,7 @@ export const scrapeJobLink = onDocumentCreated(
         await db.collection("jobs").doc(snapshot.id).update({
           status: "scrapped",
           content,
+          ...(posting ? { posting } : {}),
           updatedAt: FieldValue.serverTimestamp(),
         });
       } catch (updateError) {
