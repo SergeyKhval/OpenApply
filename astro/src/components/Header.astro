@@ -1,5 +1,6 @@
 ---
-// Header component with navigation and external links
+import Logo from './Logo.astro';
+
 interface Props {
   currentPath?: string;
 }
@@ -7,73 +8,74 @@ interface Props {
 const { currentPath = '' } = Astro.props;
 const isOnBlogPage = currentPath.startsWith('/blog');
 const isOnResumeMatchPage = currentPath.startsWith('/tools/resume-job-match');
+
+const navLinks = [
+  { href: '/tools/resume-job-match', label: 'Free resume check', active: isOnResumeMatchPage },
+  { href: '/#pricing', label: 'Pricing', active: false },
+  { href: '/blog', label: 'Blog', active: isOnBlogPage },
+];
 ---
 
 <a
   href="#main"
-  class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+  class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
 >
   Skip to content
 </a>
-<header class="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-  <div class="container mx-auto px-4">
-    <div class="flex items-center justify-between h-16 relative">
-      <!-- Logo/Brand -->
-      <a href="/" class="text-2xl font-bold text-foreground z-[60]">
-        OpenApply
+<header class="sticky top-0 z-50 bg-background/90 backdrop-blur-lg">
+  <div class="relative mx-auto flex h-[68px] max-w-[1440px] items-center gap-3 px-5 lg:h-20 lg:px-20">
+    <Logo />
+
+    <!-- Mobile menu toggle (checkbox hack for a CSS-only menu) -->
+    <input type="checkbox" id="mobile-menu-toggle" class="peer hidden" aria-label="Toggle menu" />
+
+    <nav
+      aria-label="Main"
+      class="invisible absolute inset-x-0 top-full flex -translate-y-2 flex-col gap-1 border-b border-border bg-background p-4 opacity-0 transition-all duration-200 peer-checked:visible peer-checked:translate-y-0 peer-checked:opacity-100 lg:visible lg:static lg:ml-10 lg:translate-y-0 lg:flex-row lg:gap-[30px] lg:border-0 lg:bg-transparent lg:p-0 lg:opacity-100"
+    >
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          aria-current={link.active ? 'page' : undefined}
+          class:list={[
+            'rounded-full px-4 py-3 text-[15px] font-medium transition-colors hover:bg-muted hover:text-foreground lg:p-0 lg:hover:bg-transparent',
+            link.active ? 'text-foreground font-semibold' : 'text-soft-foreground',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+      <a
+        href="/app?mode=signup"
+        class="mt-2 inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-[15px] font-semibold text-primary-foreground lg:hidden"
+        onclick="window.posthog?.capture('header_get_started_clicked', { source: 'header_menu' })"
+      >
+        Start free
       </a>
-      
-      <!-- Mobile menu toggle (checkbox hack for CSS-only menu) -->
-      <input type="checkbox" id="mobile-menu-toggle" class="hidden peer" aria-label="Toggle mobile menu" />
-      <label for="mobile-menu-toggle" class="lg:hidden flex flex-col justify-center items-center w-10 h-10 cursor-pointer z-[60] peer-checked:[&>span:nth-child(1)]:rotate-45 peer-checked:[&>span:nth-child(1)]:translate-y-2 peer-checked:[&>span:nth-child(2)]:opacity-0 peer-checked:[&>span:nth-child(3)]:-rotate-45 peer-checked:[&>span:nth-child(3)]:-translate-y-2" aria-label="Menu">
-        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
-        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
-        <span class="w-6 h-0.5 bg-foreground my-[3px] transition-all duration-300 ease-in-out rounded-full"></span>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-1 lg:gap-2">
+      <a
+        href="/app"
+        class="inline-flex h-[34px] items-center rounded-full px-3.5 text-[13.5px] font-semibold text-soft-foreground hover:bg-muted hover:text-foreground lg:h-11 lg:px-5 lg:text-[15px]"
+        onclick="window.posthog?.capture('header_sign_in_clicked', { source: 'header' })"
+      >
+        Sign in
+      </a>
+      <a
+        href="/app?mode=signup"
+        class="hidden h-11 items-center rounded-full border border-input bg-card px-5 text-[15px] font-semibold text-foreground hover:bg-muted lg:inline-flex"
+        onclick="window.posthog?.capture('header_get_started_clicked', { source: 'header' })"
+      >
+        Start free
+      </a>
+      <label
+        for="mobile-menu-toggle"
+        class="grid size-11 cursor-pointer place-items-center rounded-full border border-input bg-card text-foreground lg:hidden"
+        aria-label="Menu"
+      >
+        <i class="ph ph-list text-xl leading-none" aria-hidden="true"></i>
       </label>
-      
-      <!-- Navigation -->
-      <nav class="peer-checked:translate-y-0 -mx-4 peer-checked:opacity-100 peer-checked:visible peer-checked:pointer-events-auto absolute lg:relative top-full left-0 right-0 lg:top-auto bg-background lg:bg-transparent border-b lg:border-0 border-border flex flex-col lg:flex-row items-stretch lg:items-center gap-6 lg:gap-5 p-6 lg:p-0 -translate-y-full lg:translate-y-0 opacity-0 lg:opacity-100 invisible lg:visible pointer-events-none lg:pointer-events-auto transition-all duration-300 ease-in-out">
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6 order-2 lg:order-1">
-          <a href="/tools/resume-job-match" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnResumeMatchPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Free resume check</a>
-          <a href="/#pricing" class="nav-link text-muted-foreground hover:text-foreground transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent">Pricing</a>
-          <a href="/blog" class={`nav-link transition-colors duration-200 py-3 lg:py-0 px-4 lg:px-0 rounded-md hover:bg-muted lg:hover:bg-transparent ${isOnBlogPage ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>Blog</a>
-        </div>
-        
-        <div class="flex items-center gap-3 justify-center order-1 lg:order-2">
-          <!-- Secondary links as small icons -->
-          <a 
-            href="https://github.com/SergeyKhval/OpenApply" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            class="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
-            aria-label="View on GitHub"
-          >
-            <i class="ph ph-github-logo block text-xl leading-none" aria-hidden="true"></i>
-          </a>
-          <!-- Primary auth CTAs -->
-          <a
-            href="/app"
-            class="px-4 py-2 text-sm font-medium text-foreground border border-border rounded-md hover:bg-muted transition-colors duration-200"
-            onclick="window.posthog?.capture('header_sign_in_clicked', { source: 'header' })"
-          >
-            Sign in
-          </a>
-          <a
-            href="/app?mode=signup"
-            class="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200"
-            onclick="window.posthog?.capture('header_get_started_clicked', { source: 'header' })"
-          >
-            Get started
-          </a>
-        </div>
-      </nav>
     </div>
   </div>
 </header>
-
-<style>
-  /* Smooth scroll for anchor links */
-  .nav-link {
-    scroll-behavior: smooth;
-  }
-</style>

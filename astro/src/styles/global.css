@@ -1,3 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../../../shared/theme.css";
+
+/* Set on <html> before paint by the landing when the extension is listed and
+   the visitor is on desktop Chromium (shared/browser.ts). */
+@custom-variant chromium (&:where(.is-desktop-chromium, .is-desktop-chromium *));

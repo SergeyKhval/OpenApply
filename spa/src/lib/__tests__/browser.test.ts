@@ -37,4 +37,10 @@ describe("isDesktopChromium", () => {
     expect(isDesktopChromium({ userAgent: CHROME_MAC, userAgentData: { brands: [], mobile: false } })).toBe(true);
     expect(isDesktopChromium({ userAgent: SAFARI_MAC, userAgentData: { brands: [], mobile: false } })).toBe(false);
   });
+
+  it("still works when its source is inlined on its own, as the landing does before paint", () => {
+    const inlined = new Function("nav", `return (${isDesktopChromium.toString()})(nav);`);
+    expect(inlined({ userAgent: CHROME_MAC })).toBe(true);
+    expect(inlined({ userAgent: FIREFOX })).toBe(false);
+  });
 });
