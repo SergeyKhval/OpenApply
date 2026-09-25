@@ -39,7 +39,7 @@ vi.mock("firebase-functions/v2/https", () => {
 import { createBillingPortalSession } from "../createBillingPortalSession";
 
 const call = createBillingPortalSession as unknown as (req: unknown) => Promise<{ url: string }>;
-const RETURN = "https://openapply.app/app/dashboard/applications";
+const RETURN = "https://openapply.app/app/jobs";
 
 const request = (data: Record<string, unknown> = { return_url: RETURN }, uid: string | null = "user-1") => ({
   auth: uid ? { uid } : undefined,

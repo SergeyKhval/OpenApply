@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockProfileGet = vi.fn();
 const mockSessionsCreate = vi.fn();
-let proPriceId = "price_pro_test";
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
@@ -15,9 +14,7 @@ vi.mock("firebase-admin/firestore", () => ({
 }));
 
 vi.mock("firebase-functions/params", () => ({
-  defineString: (name: string) => ({
-    value: () => (name === "STRIPE_PRO_PRICE_ID" ? proPriceId : "sk_test_key"),
-  }),
+  defineString: () => ({ value: () => "sk_test_key" }),
 }));
 
 vi.mock("stripe", () => ({
@@ -42,8 +39,8 @@ vi.mock("firebase-functions/v2/https", () => {
 import { createStripeCheckoutSession } from "../createStripeCheckoutSession";
 
 const call = createStripeCheckoutSession as unknown as (req: unknown) => Promise<{ url: string }>;
-const SUCCESS = "https://openapply.app/app/dashboard/applications?dialog-name=checkout-success";
-const CANCEL = "https://openapply.app/app/dashboard/applications?dialog-name=checkout-canceled";
+const SUCCESS = "https://openapply.app/app/jobs?dialog-name=checkout-success";
+const CANCEL = "https://openapply.app/app/jobs?dialog-name=checkout-canceled";
 
 const request = (data: Record<string, unknown> = {}, uid: string | null = "user-1") => ({
   auth: uid ? { uid } : undefined,
@@ -58,8 +55,12 @@ const profile = (data: Record<string, unknown> | null) => ({
 describe("createStripeCheckoutSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    proPriceId = "price_pro_test";
+    vi.stubEnv("STRIPE_PRO_PRICE_ID", "price_pro_test");
     mockSessionsCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_test" });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("requires sign-in", async () => {
@@ -74,7 +75,7 @@ describe("createStripeCheckoutSession", () => {
   });
 
   it("says Pro isn't available until the price is configured", async () => {
-    proPriceId = "";
+    vi.stubEnv("STRIPE_PRO_PRICE_ID", "");
     mockProfileGet.mockResolvedValue(profile({ stripeCustomerId: "cus_1" }));
 
     await expect(call(request())).rejects.toMatchObject({
@@ -141,8 +142,8 @@ describe("createStripeCheckoutSession", () => {
 
     expect(mockSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        success_url: "https://openapply.app/app/dashboard/applications?dialog-name=checkout-success",
-        cancel_url: "https://openapply.app/app/dashboard/applications?dialog-name=checkout-canceled",
+        success_url: "https://openapply.app/app/jobs?dialog-name=checkout-success",
+        cancel_url: "https://openapply.app/app/jobs?dialog-name=checkout-canceled",
       }),
     );
   });

@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 
-export const APP_HOME_URL = "https://openapply.app/app/dashboard/applications";
+export const APP_HOME_URL = "https://openapply.app/app/jobs";
 
 const ALLOWED_ORIGINS = new Set([
   "https://openapply.app",

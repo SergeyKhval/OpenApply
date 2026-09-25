@@ -1,26 +1,26 @@
 <template>
-  <div class="rounded-lg border border-border bg-muted/10 p-6 space-y-3">
+  <div class="flex flex-col items-start gap-3 rounded-card bg-secondary p-5">
     <template v-if="allowance.plan === 'free'">
-      <p class="text-lg font-semibold">
+      <p class="text-[17px] font-bold">
         You've used your {{ allowance.limit }} free AI checks this month
       </p>
-      <p class="text-sm text-muted-foreground">
+      <p class="text-[15px] text-soft-foreground">
         They reset on {{ resetDate }}. Or go Pro for 150 AI checks a month.
       </p>
       <Button :disabled="isStartingCheckout" @click="handleUpgrade">
         <Spinner v-if="isStartingCheckout" />
         Go Pro, $9/month
       </Button>
-      <p class="text-xs text-muted-foreground">
+      <p class="text-[13px] text-soft-foreground">
         Cancel anytime. Taxes may apply.
       </p>
     </template>
 
     <template v-else>
-      <p class="text-lg font-semibold">
+      <p class="text-[17px] font-bold">
         You've used this month's {{ allowance.limit }} AI checks
       </p>
-      <p class="text-sm text-muted-foreground">
+      <p class="text-[15px] text-soft-foreground">
         They reset on {{ resetDate }}. Need more?
         <a
           :href="`mailto:${supportEmail}`"

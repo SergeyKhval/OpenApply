@@ -6,16 +6,16 @@
 
         <div class="flex flex-col items-center gap-2 py-4">
           <template v-if="isPro">
-            <PhSealCheck size="96" class="text-green-400" />
+            <PhSealCheck size="96" class="text-success" />
             <p class="text-center text-lg">You now have 150 AI checks a month.</p>
-            <p class="text-center text-muted-foreground">
+            <p class="text-center text-soft-foreground">
               Manage or cancel anytime from your account menu.
             </p>
           </template>
           <template v-else>
             <Spinner class="size-12" />
             <p class="text-center text-lg">Activating your plan…</p>
-            <p class="text-center text-muted-foreground">
+            <p class="text-center text-soft-foreground">
               This usually takes a few seconds.
             </p>
           </template>

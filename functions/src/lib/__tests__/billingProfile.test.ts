@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { safeReturnUrl } from "../billingProfile";
 
-const fallback = "https://openapply.app/app/dashboard/applications";
+const fallback = "https://openapply.app/app/jobs";
 
 describe("safeReturnUrl", () => {
   it.each([
-    "https://openapply.app/app/dashboard/applications?dialog-name=checkout-success",
+    "https://openapply.app/app/jobs?dialog-name=checkout-success",
     "https://www.openapply.app/app/",
     "http://localhost:5173/app/dashboard/applications",
     "http://127.0.0.1:5180/app/",
