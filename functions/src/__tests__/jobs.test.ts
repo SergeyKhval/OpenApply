@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { HOURLY_LIMIT_PER_CLIENT, DAILY_GLOBAL_LIMIT } from "../lib/jobsRateLimit";
+import {
+  DAILY_GLOBAL_LIMIT,
+  HOURLY_LIMIT_PER_ACCOUNT,
+  HOURLY_LIMIT_PER_IP,
+} from "../lib/jobsRateLimit";
 
 const mockGet = vi.fn();
 const mockAdd = vi.fn();
@@ -62,11 +66,26 @@ describe("jobs", () => {
     mockTransactionGet.mockResolvedValue({ data: () => undefined });
   });
 
-  const callJobs = (data: unknown, rawRequestOverride?: Record<string, unknown>) =>
+  const callJobs = (
+    data: unknown,
+    rawRequestOverride?: Record<string, unknown>,
+    authOverride?: Record<string, unknown>,
+  ) =>
     (jobs as unknown as Function)({
       rawRequest: rawRequestOverride ?? { headers: { "x-forwarded-for": "9.9.9.9" } },
+      auth: authOverride,
       data,
     });
+
+  const signedInAuth = (uid: string) => ({
+    uid,
+    token: { firebase: { sign_in_provider: "password" } },
+  });
+
+  const anonymousAuth = (uid: string) => ({
+    uid,
+    token: { firebase: { sign_in_provider: "anonymous" } },
+  });
 
   it("rejects missing URL", async () => {
     await expect(callJobs({})).rejects.toThrow("Missing or invalid URL");
@@ -220,10 +239,10 @@ describe("jobs", () => {
       expect(mockAdd).not.toHaveBeenCalled();
     });
 
-    it("rejects a fresh URL once the caller is over the hourly limit", async () => {
+    it("rejects a fresh URL once an anonymous/signed-out caller is over the IP hourly limit", async () => {
       mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
       mockTransactionGet
-        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_CLIENT }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_IP }) }) // hourly
         .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
         .mockResolvedValueOnce({ data: () => ({ count: 0 }) }); // global
 
@@ -241,6 +260,62 @@ describe("jobs", () => {
       expect(paths.every((path) => path.startsWith("jobRateLimits/"))).toBe(true);
       expect(paths.some((path) => path.startsWith("jobRateLimits/global_"))).toBe(true);
       expect(paths.every((path) => !path.includes("9.9.9.9"))).toBe(true);
+    });
+
+    it("keys a signed-in account by uid, not by IP, and never leaks the raw uid", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockAdd.mockResolvedValueOnce({ id: "new-doc-id" });
+
+      await callJobs(
+        { url: "https://example.com/signed-in-job" },
+        undefined,
+        signedInAuth("real-user-42"),
+      );
+      const paths = mockTransactionSet.mock.calls.map(([ref]) => (ref as { path: string }).path);
+      expect(paths.every((path) => !path.includes("9.9.9.9"))).toBe(true);
+      expect(paths.every((path) => !path.includes("real-user-42"))).toBe(true);
+    });
+
+    it("does not block a signed-in account at the IP tier's hourly count", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockAdd.mockResolvedValueOnce({ id: "new-doc-id" });
+      mockTransactionGet
+        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_IP }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }); // global
+
+      const result = await callJobs(
+        { url: "https://example.com/batch-job" },
+        undefined,
+        signedInAuth("power-user"),
+      );
+      expect(result).toEqual({ id: "new-doc-id" });
+    });
+
+    it("blocks a signed-in account once it reaches the higher account hourly limit", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockTransactionGet
+        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_ACCOUNT }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }); // global
+
+      await expect(
+        callJobs({ url: "https://example.com/over-account-limit" }, undefined, signedInAuth("power-user")),
+      ).rejects.toThrow("this hour");
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    it("treats an anonymous Firebase session the same as no auth: IP tier, not account tier", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockTransactionGet
+        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_IP }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }); // global
+
+      await expect(
+        callJobs({ url: "https://example.com/anon-session" }, undefined, anonymousAuth("anon-1")),
+      ).rejects.toThrow("this hour");
+      expect(mockAdd).not.toHaveBeenCalled();
     });
   });
 });

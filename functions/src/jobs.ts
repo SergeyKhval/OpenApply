@@ -9,7 +9,7 @@ import {
   rateLimitHashKey,
   rateLimitWindows,
 } from "./lib/matchTool";
-import { assertJobsWithinLimits } from "./lib/jobsRateLimit";
+import { assertJobsWithinLimits, type JobsRateLimitTier } from "./lib/jobsRateLimit";
 
 const db = getFirestore();
 
@@ -35,7 +35,7 @@ function isWebUrl(value: string): boolean {
 // A separate collection from the match tool's counters: sharing one would
 // let a client's jobs usage and match-tool usage count against each other,
 // and the global counter's doc id doesn't include the client key at all.
-async function consumeJobsRateLimit(clientKey: string) {
+async function consumeJobsRateLimit(clientKey: string, tier: JobsRateLimitTier) {
   const now = new Date();
   const windows = rateLimitWindows(clientKey, now);
   const refs = {
@@ -52,11 +52,14 @@ async function consumeJobsRateLimit(clientKey: string) {
       transaction.get(refs.global),
     ]);
 
-    assertJobsWithinLimits({
-      hourly: hourly.data()?.count ?? 0,
-      daily: daily.data()?.count ?? 0,
-      global: global.data()?.count ?? 0,
-    });
+    assertJobsWithinLimits(
+      {
+        hourly: hourly.data()?.count ?? 0,
+        daily: daily.data()?.count ?? 0,
+        global: global.data()?.count ?? 0,
+      },
+      tier,
+    );
 
     for (const ref of Object.values(refs)) {
       transaction.set(ref, { count: FieldValue.increment(1), expiresAt }, { merge: true });
@@ -64,7 +67,7 @@ async function consumeJobsRateLimit(clientKey: string) {
   });
 }
 
-async function createPastedJob(text: unknown, url: unknown, clientKey: string) {
+async function createPastedJob(text: unknown, url: unknown, clientKey: string, tier: JobsRateLimitTier) {
   if (typeof text !== "string" || text.trim().length < MIN_PASTED_CHARS) {
     throw new HttpsError("invalid-argument", "That's too short to be a job description. Paste the whole posting.");
   }
@@ -76,7 +79,7 @@ async function createPastedJob(text: unknown, url: unknown, clientKey: string) {
   }
 
   // A paste is never a cache hit (see below), so it always spends quota
-  await consumeJobsRateLimit(clientKey);
+  await consumeJobsRateLimit(clientKey, tier);
 
   try {
     // Pasted jobs are never shared through the link cache: the text is only
@@ -104,19 +107,29 @@ export const jobs = onCall(
         ? (request.data as JobRequestData)
         : { url: undefined, text: undefined };
 
+    // A real signed-in user (not the anonymous session the landing page
+    // tools use) gets the looser account tier, keyed by uid: someone saving
+    // a batch of jobs in one evening is normal. Anonymous and signed-out
+    // callers stay on the tighter, IP-keyed tier, since that's the only
+    // identity a scripted abuser can't rotate for free.
+    const isSignedIn =
+      Boolean(request.auth) && request.auth?.token.firebase?.sign_in_provider !== "anonymous";
+    const tier: JobsRateLimitTier = isSignedIn ? "account" : "ip";
+
     const clientIp = getClientIp(request.rawRequest);
+    const identity = isSignedIn
+      ? `uid:${request.auth!.uid}`
+      : (clientIp ?? `uid:${request.auth?.uid ?? "unknown"}`);
     // Structured, IP-free check that the rate limit key is the real client.
     // No client IP is expected only in the emulator.
     logger.info("jobs client key", {
       ...describeClientIp(request.rawRequest),
-      keyedBy: clientIp ? "ip" : "uid",
+      tier,
+      keyedBy: isSignedIn ? "uid" : clientIp ? "ip" : "uid",
     });
-    const clientKey = hashClientKey(
-      clientIp ?? `uid:${request.auth?.uid ?? "unknown"}`,
-      rateLimitHashKey(),
-    );
+    const clientKey = hashClientKey(identity, rateLimitHashKey());
 
-    if (text !== undefined) return createPastedJob(text, url, clientKey);
+    if (text !== undefined) return createPastedJob(text, url, clientKey, tier);
 
     if (!url || typeof url !== "string") {
       throw new HttpsError("invalid-argument", "Missing or invalid URL");
@@ -145,7 +158,7 @@ export const jobs = onCall(
         }
       }
 
-      await consumeJobsRateLimit(clientKey);
+      await consumeJobsRateLimit(clientKey, tier);
 
       const doc = await db.collection("jobs").add({
         jobDescriptionLink: canonicalUrl,
