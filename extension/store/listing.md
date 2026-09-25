@@ -95,11 +95,13 @@ When the user clicks the toolbar button, the extension reads the job posting in 
 Used with activeTab to run a single read-only function in the current tab, after the user clicks the toolbar button, that extracts the job title, company and description text from the page. It does not modify the page and does not run on any other page.
 ```
 
-**Remote code**: No, I am not using remote code. (All JavaScript ships in the package; the popup only opens openapply.app links in a new tab.)
+**Remote code**: No, I am not using remote code. (All JavaScript ships in the package. The popup opens openapply.app links in a new tab, and fetches JSON data, never code, from openapply.app/api/job-signals.)
 
 **Data usage**: tick these, and nothing else
 
 - [x] Website content: the job posting's title, company, location, description and address, only from the tab the user clicks the extension on, and only sent to openapply.app when the user clicks Save or Check my resume match.
+
+Since 1.2.0, opening the popup also sends openapply.app the first 4 hex characters of a SHA-256 of the posting's job id (shared by many postings) to look up posting signals; the full id, the address and any page content stay on the device, and the matching happens locally. That's not website content or web history, so no extra box; the privacy policy section describes it.
 
 Leave unticked: personally identifiable information, health, financial and payment, authentication, personal communications, location, web history, user activity.
 
@@ -120,4 +122,5 @@ Certify all three:
 ## Notes for review speed
 
 - No host permissions, no content scripts, no background service worker: the listing shows no "read and change your data on all websites" warning.
+- 1.2.0 adds one fetch from the popup to https://openapply.app/api/job-signals?p=<4 hex characters> (CORS, no cookies). No new permission: an extension page can fetch a CORS-enabled URL without host permissions.
 - If a reviewer asks how to test: open any job posting (for example a LinkedIn or Greenhouse job), click the OpenApply toolbar button, click either action.

@@ -8,6 +8,10 @@
   --primary: #6e56cf;
   --primary-foreground: #ffffff;
   --primary-hover: #5f47bf;
+  --signal: #c98314;
+  --signal-text: #7a4f0a;
+  --signal-soft: #fdf3dc;
+  --danger: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,6 +24,10 @@
     --primary: #a48fff;
     --primary-foreground: #0f0f1a;
     --primary-hover: #b8a8ff;
+    --signal: #e8b25a;
+    --signal-text: #f3cf8f;
+    --signal-soft: #342816;
+    --danger: #f08a7e;
   }
 }
 
@@ -171,4 +179,56 @@ body {
 
 .footer a {
   color: var(--primary);
+}
+
+/* Posting signals: amber facts; red only for 3+ reports of being asked to pay */
+.signals {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--signal-soft);
+}
+
+.signals-empty {
+  padding: 0;
+  background: none;
+}
+
+.signal-list {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.signal-list li {
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.signal-list li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+.signal-list li.red::before {
+  background: var(--danger);
+}
+
+.signal-source {
+  display: block;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.report-link {
+  font-size: 12px;
+  color: var(--signal-text);
 }

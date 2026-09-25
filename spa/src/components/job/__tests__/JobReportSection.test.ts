@@ -14,6 +14,7 @@ vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
 vi.mock("firebase/firestore", () => ({ doc: () => ({}) }));
 vi.mock("firebase/functions", () => ({ httpsCallable: (_: unknown, name: string) => (data: unknown) => call(name, data) }));
 vi.mock("@/analytics", () => ({ trackEvent: vi.fn() }));
+vi.mock("vue-router", () => ({ useRoute: () => ({ query: {} }) }));
 
 import JobReportSection from "../JobReportSection.vue";
 

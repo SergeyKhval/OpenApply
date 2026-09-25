@@ -115,3 +115,19 @@ export function matchUrl({ description, url }) {
   if (url) fragment.set("url", url);
   return `${SITE_ORIGIN}/tools/resume-job-match?${query}#${fragment}`;
 }
+
+// The prefix-only lookup behind openapply.app/api/job-signals (functions/src/jobSignalsLookup.ts)
+/** @param {string} prefix 4 hex characters of the job key hash */
+export function signalsLookupUrl(prefix) {
+  return `${SITE_ORIGIN}/api/job-signals?p=${encodeURIComponent(prefix)}`;
+}
+
+/**
+ * Report a posting in the app: it finds the job in the tracker, or offers to save it first.
+ * @param {string} hash job key hash
+ * @param {string} jobUrl
+ */
+export function reportUrl(hash, jobUrl) {
+  const params = new URLSearchParams({ job: hash, url: jobUrl, ...UTM });
+  return `${SITE_ORIGIN}/app/jobs/report?${params}`;
+}

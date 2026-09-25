@@ -1,0 +1,214 @@
+{
+  "_comment": "Same doc, same words: run by spa/src/lib/__tests__/jobSignals.test.ts and extension/test/signs.test.js. now is new Date(...now) in local time.",
+  "now": [
+    2026,
+    8,
+    25,
+    10
+  ],
+  "cases": [
+    {
+      "name": "every rule-based sign",
+      "company": "Workato",
+      "doc": {
+        "signs": {
+          "firstSeenAt": "2026-01-10",
+          "postedAt": "2025-07-27",
+          "postedAtSource": "json-ld",
+          "dateRefreshed": {
+            "from": "2025-07-27",
+            "to": "2026-08-27"
+          },
+          "sameRoleReposted": {
+            "count": 2,
+            "firstSeenAt": "2026-06-02"
+          },
+          "stillListed": {
+            "since": "2026-01-10",
+            "lastListedAt": "2026-09-20"
+          },
+          "openApplication": true
+        }
+      },
+      "lines": [
+        {
+          "type": "still_listed",
+          "text": "Still listed 8 months after it was first saved on OpenApply (Jan 2026)",
+          "source": "Saves and OpenApply's weekly check, last seen listed Sep 20",
+          "tone": "amber"
+        },
+        {
+          "type": "posted",
+          "text": "First posted 14 months ago (Jul 27, 2025)",
+          "source": "The posting's own date (schema.org datePosted)",
+          "tone": "amber"
+        },
+        {
+          "type": "date_refreshed",
+          "text": "Posted date moved from Jul 27, 2025 to Aug 27, 2026",
+          "source": "The posting's own date, read on two different days",
+          "tone": "amber"
+        },
+        {
+          "type": "same_role",
+          "text": "Same title at Workato saved under 2 older job IDs, first in Jun 2026",
+          "source": "Jobs saved on OpenApply",
+          "tone": "amber"
+        },
+        {
+          "type": "open_application",
+          "text": "Open application, not a specific opening",
+          "source": "The job title",
+          "tone": "amber"
+        }
+      ]
+    },
+    {
+      "name": "reports at the threshold, money first and red",
+      "company": "Acme",
+      "doc": {
+        "signs": {
+          "firstSeenAt": "2026-09-01"
+        },
+        "reports": {
+          "no_reply_30d": {
+            "days": [
+              "2026-06-01",
+              "2026-08-02",
+              "2026-09-12"
+            ]
+          },
+          "asked_for_money": {
+            "days": [
+              "2026-09-01",
+              "2026-09-02",
+              "2026-09-20"
+            ]
+          },
+          "filled_still_listed": {
+            "days": [
+              "2026-09-01",
+              "2026-09-02"
+            ]
+          }
+        }
+      },
+      "lines": [
+        {
+          "type": "report_asked_for_money",
+          "text": "3 people reported being asked to pay (for equipment, training or a check) (latest Sep 20)",
+          "source": "Reports from people who saved this job on OpenApply",
+          "tone": "red"
+        },
+        {
+          "type": "report_no_reply_30d",
+          "text": "3 people reported no reply 30+ days after applying (latest Sep 12)",
+          "source": "Reports from people who saved this job on OpenApply",
+          "tone": "amber"
+        }
+      ]
+    },
+    {
+      "name": "reports older than 180 days drop out",
+      "company": "Acme",
+      "doc": {
+        "reports": {
+          "asked_for_money": {
+            "days": [
+              "2026-03-01",
+              "2026-09-01",
+              "2026-09-02"
+            ]
+          }
+        }
+      },
+      "lines": []
+    },
+    {
+      "name": "reports hidden while a review is open",
+      "company": "Acme",
+      "doc": {
+        "reportsHidden": true,
+        "signs": {
+          "firstSeenAt": "2026-09-01",
+          "openApplication": true
+        },
+        "reports": {
+          "asked_for_money": {
+            "days": [
+              "2026-09-01",
+              "2026-09-02",
+              "2026-09-03"
+            ]
+          }
+        }
+      },
+      "lines": [
+        {
+          "type": "open_application",
+          "text": "Open application, not a specific opening",
+          "source": "The job title",
+          "tone": "amber"
+        }
+      ]
+    },
+    {
+      "name": "page-text dates and Reposted stay hidden",
+      "company": "Acme",
+      "doc": {
+        "signs": {
+          "firstSeenAt": "2026-09-01",
+          "postedAt": "2025-01-01",
+          "postedAtSource": "page",
+          "repostedOnPage": true
+        }
+      },
+      "lines": []
+    },
+    {
+      "name": "a posted date under 60 days is not a sign",
+      "company": "Acme",
+      "doc": {
+        "signs": {
+          "firstSeenAt": "2026-09-01",
+          "postedAt": "2026-07-28",
+          "postedAtSource": "json-ld"
+        }
+      },
+      "lines": []
+    },
+    {
+      "name": "hidden by the admin",
+      "company": "Acme",
+      "doc": {
+        "hidden": true,
+        "signs": {
+          "firstSeenAt": "2026-09-01",
+          "openApplication": true
+        }
+      },
+      "lines": []
+    },
+    {
+      "name": "no company name",
+      "company": " ",
+      "doc": {
+        "signs": {
+          "firstSeenAt": "2026-09-01",
+          "sameRoleReposted": {
+            "count": 1,
+            "firstSeenAt": "2026-03-05"
+          }
+        }
+      },
+      "lines": [
+        {
+          "type": "same_role",
+          "text": "Same title at this company saved under 1 older job ID, first in Mar 2026",
+          "source": "Jobs saved on OpenApply",
+          "tone": "amber"
+        }
+      ]
+    }
+  ]
+}
