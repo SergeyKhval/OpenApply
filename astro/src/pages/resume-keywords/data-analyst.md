@@ -7,7 +7,7 @@ author: 'OpenApply Team'
 role: 'Data Analyst'
 slug: 'data-analyst'
 relatedResumeGuide: '/resumes/data-analyst'
-relatedCoverLetter: '/blog/how-to-write-cover-letter-data-analyst'
+relatedCoverLetter: '/cover-letters/data-analyst'
 tags: ["Resume Keywords", "Data Analyst", "ATS"]
 ---
 

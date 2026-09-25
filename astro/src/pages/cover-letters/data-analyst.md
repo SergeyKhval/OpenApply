@@ -62,6 +62,16 @@ Many individuals transition into data analysis from other fields. If you're one 
 
 Explain how you've been proactively building your data analysis skills through online courses, bootcamps, or personal projects. This demonstrates your commitment to the field and your willingness to learn. For example, you could mention a specific project you worked on using Python and Pandas to analyze a publicly available dataset, or highlight a certification you earned in data visualization. In your cover letter, you should clearly articulate your passion for data analysis and your motivation for making the career transition. Companies are often willing to take a chance on candidates who show enthusiasm and a genuine interest in the field, even if they don't have extensive experience. Frame your previous experience as a valuable asset, not a disadvantage, and demonstrate how your unique perspective can bring value to the data analyst role.
 
+## What Gets Data Analyst Applications Rejected
+
+Recruiters filtering analytics roles consistently flag the same problems:
+
+*   **Quantifying nothing.** "Improved reporting efficiency" with no number is meaningless. If you can't put a number on it, use a proxy: "cut the time for X from Y to Z," "reduced the back-and-forth on X from three revision cycles to one."
+*   **Leading with education.** Unless you're a recent grad, your degree is not your strongest asset. The work is. Even a junior analyst with two years of experience should lead with the work.
+*   **Generic enthusiasm.** "I am passionate about data and believe in the power of analytics to drive business decisions" tells the recruiter nothing except that you typed the correct keywords. Passion is implied by applying. Show it through specifics.
+*   **Mismatched scope.** Applying to a Series A startup as a solo analyst and writing about enterprise-scale data infrastructure sounds tone-deaf. Read the job description carefully and calibrate your examples to the company's actual stage.
+*   **Over-indexing on tools.** Five lines listing SQL, Python, Tableau, Power BI, and dbt says nothing about impact. Tools are credentials, not accomplishments, nobody hired an analyst because they knew Tableau. They hired one because the analyst found the insight that moved the needle.
+
 ---
 
 ## Generate Your Own Cover Letter
