@@ -30,6 +30,7 @@ firebase-export-*
 .mcp.json
 
 # Functions
+functions/.env
 functions/.env.*
 functions/.genkit/
 

@@ -3,7 +3,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { defineString } from "firebase-functions/params";
-import { validateCreditBalance } from "./lib/credits";
+import { assertAiAllowance, chargeAiCheck } from "./lib/aiUsage";
 import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration } from "./lib/validation";
 
@@ -14,15 +14,6 @@ const ai = genkit({
   model: googleAI.model("gemini-2.5-flash", { temperature: 0, topK: 1 }),
 });
 const db = getFirestore();
-
-const REQUIRED_CREDITS = 10;
-
-const billingProfileRefForUser = (userId: string) =>
-  db
-    .collection("users")
-    .doc(userId)
-    .collection("billingProfile")
-    .doc("profile");
 
 // Define the schema for the resume and job description match result
 const ResumeJDMatchSchema = z.object({
@@ -92,17 +83,7 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
   }
 
   try {
-    // Validate billing balance
-    const billingProfileRef = billingProfileRefForUser(userId);
-    const billingSnapshot = await billingProfileRef.get();
-
-    if (!billingSnapshot.exists) {
-      throw new HttpsError("failed-precondition", "Billing profile not found");
-    }
-
-    const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
-
-    validateCreditBalance(currentBalance, REQUIRED_CREDITS, "generate an AI resume review");
+    await assertAiAllowance(userId);
 
     // Fetch data
     const [resumeMatchPromptTemplate, resume, jobApplication] =
@@ -147,22 +128,11 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
       },
     });
 
-    // Create match result and deduct credits in a transaction
+    // Save the match and count the AI check in one transaction
     const matchRef = db.collection("resumeJobMatches").doc();
 
     await db.runTransaction(async (transaction) => {
-      const billingSnap = await transaction.get(billingProfileRef);
-
-      if (!billingSnap.exists) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Billing profile not found",
-        );
-      }
-
-      const currentBalance = billingSnap.data()?.currentBalance ?? 0;
-
-      validateCreditBalance(currentBalance, REQUIRED_CREDITS, "generate an AI resume review");
+      await chargeAiCheck(transaction, userId);
 
       transaction.create(matchRef, {
         userId,
@@ -170,11 +140,6 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
         jobApplicationId: applicationId,
         matchResult: result.output,
         createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-
-      transaction.update(billingProfileRef, {
-        currentBalance: FieldValue.increment(-REQUIRED_CREDITS),
         updatedAt: FieldValue.serverTimestamp(),
       });
     });

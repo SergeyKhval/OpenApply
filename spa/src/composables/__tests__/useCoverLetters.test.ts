@@ -62,9 +62,9 @@ describe("normalizeFunctionsError", () => {
     const result = normalizeFunctionsError({
       message: "Error",
       code: "functions/failed-precondition",
-      details: { code: "insufficient-credits" },
+      details: { code: "ai-limit-reached" },
     });
-    expect(result.code).toBe("insufficient-credits");
+    expect(result.code).toBe("ai-limit-reached");
   });
 
   it("details.code takes precedence over top-level code", () => {

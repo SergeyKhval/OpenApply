@@ -4,7 +4,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { genkit } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
 import { firestore } from "firebase-admin";
-import { validateCreditBalance } from "./lib/credits";
+import { assertAiAllowance, chargeAiCheck } from "./lib/aiUsage";
 import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration, validateJobApplicationForGeneration } from "./lib/validation";
 
@@ -14,22 +14,6 @@ const ai = genkit({
 });
 
 const db = getFirestore();
-
-const REQUIRED_CREDITS = 10;
-
-const billingProfileRefForUser = (userId: string) =>
-  db
-    .collection("users")
-    .doc(userId)
-    .collection("billingProfile")
-    .doc("profile");
-
-export const createInsufficientCreditsError = (action: "generate" | "regenerate") =>
-  new HttpsError(
-    "failed-precondition",
-    `You need at least ${REQUIRED_CREDITS} coins to ${action} a cover letter.`,
-    { code: "insufficient-credits" },
-  );
 
 defineString("GEMINI_API_KEY");
 
@@ -48,22 +32,6 @@ export function validateAuth(request: { auth?: { uid: string } }): string {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
   return request.auth.uid;
-}
-
-async function validateBillingBalance(
-  userId: string,
-  action: "generate" | "regenerate",
-): Promise<void> {
-  const billingProfileRef = billingProfileRefForUser(userId);
-  const billingSnapshot = await billingProfileRef.get();
-
-  if (!billingSnapshot.exists) {
-    throw new HttpsError("failed-precondition", "Billing profile not found");
-  }
-
-  const currentBalance = billingSnapshot.data()?.currentBalance ?? 0;
-
-  validateCreditBalance(currentBalance, REQUIRED_CREDITS, `${action} a cover letter`);
 }
 
 async function fetchAndValidateJobApplication(
@@ -133,30 +101,13 @@ async function generateCoverLetterWithAI(
   return result.text.trim();
 }
 
-async function deductCreditsInTransaction(
+async function chargeAndSave(
   userId: string,
-  action: "generate" | "regenerate",
   transactionCallback: (transaction: FirebaseFirestore.Transaction) => void,
 ): Promise<void> {
-  const billingProfileRef = billingProfileRefForUser(userId);
-
   await db.runTransaction(async (transaction) => {
-    const billingSnap = await transaction.get(billingProfileRef);
-
-    if (!billingSnap.exists) {
-      throw new HttpsError("failed-precondition", "Billing profile not found");
-    }
-
-    const currentBalance = billingSnap.data()?.currentBalance ?? 0;
-
-    validateCreditBalance(currentBalance, REQUIRED_CREDITS, `${action} a cover letter`);
-
+    await chargeAiCheck(transaction, userId);
     transactionCallback(transaction);
-
-    transaction.update(billingProfileRef, {
-      currentBalance: FieldValue.increment(-REQUIRED_CREDITS),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
   });
 }
 
@@ -192,7 +143,7 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
     }
 
     try {
-      await validateBillingBalance(userId, "generate");
+      await assertAiAllowance(userId);
 
       const jobApplication = await fetchAndValidateJobApplication(
         jobApplicationId,
@@ -210,7 +161,7 @@ export const generateCoverLetter = onCall<GenerateCoverLetterRequest>(
         .collection("jobApplications")
         .doc(jobApplicationId);
 
-      await deductCreditsInTransaction(userId, "generate", (transaction) => {
+      await chargeAndSave(userId, (transaction) => {
         transaction.create(coverLetterRef, {
           userId,
           jobApplication: {
@@ -261,7 +212,7 @@ export const regenerateCoverLetter = onCall<{
   }
 
   try {
-    await validateBillingBalance(userId, "regenerate");
+    await assertAiAllowance(userId);
 
     // Verify cover letter ownership
     const coverLetterDoc = await db
@@ -291,7 +242,7 @@ export const regenerateCoverLetter = onCall<{
 
     const coverLetterRef = db.collection("coverLetters").doc(coverLetterId);
 
-    await deductCreditsInTransaction(userId, "regenerate", (transaction) => {
+    await chargeAndSave(userId, (transaction) => {
       transaction.update(coverLetterRef, {
         body: newBody,
         updatedAt: FieldValue.serverTimestamp(),

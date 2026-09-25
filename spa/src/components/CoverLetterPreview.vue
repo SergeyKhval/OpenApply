@@ -112,24 +112,15 @@
     </DialogScrollContent>
   </Dialog>
 
-  <Dialog v-model:open="isTopUpModalOpen">
-    <DialogScrollContent class="md:min-w-200">
+  <Dialog v-model:open="isLimitDialogOpen">
+    <DialogScrollContent>
       <DialogHeader>
-        <DialogTitle>Purchase credits</DialogTitle>
-        <DialogDescription>
-          <Alert variant="destructive">
-            <PhWarningCircle />
-            <AlertDescription>
-              You don't have enough coins to regenerate this cover letter. Your
-              current balance is {{ currentBalance }}, but you need
-              {{ requiredCredits }} coins. Please top up your coins to proceed.
-            </AlertDescription>
-          </Alert>
-        </DialogDescription>
+        <DialogTitle>Regenerate cover letter</DialogTitle>
       </DialogHeader>
-      <CreditPackOptions
-        :loading="generatingStripeLink"
-        @purchase="handlePurchase"
+      <AiLimitReached
+        v-if="allowance"
+        :allowance="allowance"
+        source="regenerate_cover_letter"
       />
     </DialogScrollContent>
   </Dialog>
@@ -162,9 +153,8 @@ import { useCoverLetters } from "@/composables/useCoverLetters";
 import type { CoverLetter } from "@/types";
 import { collection, doc, Timestamp } from "firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
-import { useAuth } from "@/composables/useAuth";
-import { useCreditsCheckout } from "@/composables/useCreditsCheckout";
-import CreditPackOptions from "@/components/CreditPackOptions.vue";
+import { useAiAllowance } from "@/composables/useAiAllowance";
+import AiLimitReached from "@/components/AiLimitReached.vue";
 import { useDocument } from "vuefire";
 import { db } from "@/firebase/config.ts";
 import { useRoute, useRouter } from "vue-router";
@@ -195,12 +185,8 @@ const isProcessing = ref(false);
 const processingMessage = ref("");
 const errorMessage = ref("");
 
-const { userProfile } = useAuth();
-const { startCheckout, isProcessing: generatingStripeLink } =
-  useCreditsCheckout();
-
-const requiredCredits = 10;
-const isTopUpModalOpen = ref(false);
+const { allowance, canUseAi } = useAiAllowance();
+const isLimitDialogOpen = ref(false);
 
 const { copy, copied, isSupported } = useClipboard();
 const { updateCoverLetter, regenerateCoverLetter } = useCoverLetters();
@@ -211,14 +197,6 @@ const hasChanges = computed(
 
 const canRegenerate = computed(() =>
   Boolean(coverLetter.value?.jobApplication && coverLetter.value?.resumeId),
-);
-
-const currentBalance = computed(
-  () => userProfile.value?.billingProfile?.currentBalance ?? 0,
-);
-
-const hasSufficientCredits = computed(
-  () => currentBalance.value >= requiredCredits,
 );
 
 const formatDate = (timestamp: Timestamp) =>
@@ -249,8 +227,8 @@ const handleSave = async () => {
 const handleRegenerate = async () => {
   if (!canRegenerate.value || !coverLetter.value) return;
 
-  if (!hasSufficientCredits.value) {
-    isTopUpModalOpen.value = true;
+  if (!canUseAi.value) {
+    isLimitDialogOpen.value = true;
     return;
   }
 
@@ -270,18 +248,10 @@ const handleRegenerate = async () => {
   if (result.success && result.data) {
     localCoverLetterBody.value = result.data.body;
     originalBody.value = result.data.body;
-    //   @ts-expect-error code is present on failure result
-  } else if (result.code === "insufficient-credits") {
-    isTopUpModalOpen.value = true;
   } else {
     // @ts-expect-error error is present on failure result
     errorMessage.value = result.error || "Failed to regenerate cover letter";
   }
-};
-
-const handlePurchase = async (priceId: string) => {
-  await startCheckout(priceId);
-  isTopUpModalOpen.value = false;
 };
 
 // Update local body when prop changes
@@ -306,7 +276,7 @@ watch(
         originalBody.value = coverLetter.value?.body || "";
         isEditMode.value = false;
         errorMessage.value = "";
-        isTopUpModalOpen.value = false;
+        isLimitDialogOpen.value = false;
       }, 200);
     }
   },
