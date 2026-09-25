@@ -230,3 +230,67 @@ describe("extractJob limits", () => {
     expect(job).toMatchObject({ title: "Example", description: "", source: "none" });
   });
 });
+
+// Posting dates feed the ghost-job signals: only this job's own date, never
+// one from a "similar jobs" list on the same page
+describe("extractJob posting dates", () => {
+  const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+
+  it.each([
+    ["ashby", "2026-04-07", undefined],
+    ["lever", "2026-06-23", undefined],
+    ["workable", "2026-09-21", undefined],
+    ["workable-netguru", "2026-09-16", undefined],
+    ["theprotocol", "2026-09-16", "2026-10-16"],
+    ["linkedin", "2026-09-22", "2026-10-31"],
+  ])("%s: datePosted from JSON-LD", (fixture, postedAt, validThrough) => {
+    const expected = { postedAt, postedAtSource: "json-ld" };
+    if (validThrough) expected.validThrough = validThrough;
+    expect(extractFrom(fixture).posting).toEqual(expected);
+  });
+
+  it("reads validThrough from JSON-LD", () => {
+    expect(extractFrom("jsonld-synthetic").posting).toEqual({
+      postedAt: "2025-05-16",
+      postedAtSource: "json-ld",
+      validThrough: "2026-12-31",
+    });
+  });
+
+  it("has no date when the page shows none", () => {
+    expect(extractFrom("greenhouse").posting).toEqual({});
+    expect(extractFrom("linkedin-signed-in-synthetic").posting).toEqual({});
+  });
+
+  it("LinkedIn without JSON-LD: the top card's own age", () => {
+    expect(extractFrom("linkedin", { withoutJsonLd: true }).posting).toEqual({
+      postedAt: daysAgo(1),
+      postedAtSource: "page",
+    });
+  });
+
+  it("LinkedIn: a reposted job, not the similar jobs' ages", () => {
+    expect(extractFrom("linkedin-reposted-synthetic").posting).toEqual({
+      postedAt: daysAgo(14),
+      postedAtSource: "page",
+      reposted: true,
+    });
+  });
+
+  it("Workday: 30+ days is an upper bound on the date", () => {
+    expect(extractFrom("workday-synthetic").posting).toEqual({
+      postedAt: daysAgo(30),
+      postedAtSource: "page",
+      postedOrEarlier: true,
+    });
+  });
+
+  it("ignores an unparseable or future JSON-LD date", () => {
+    const page = (date) => new JSDOM(
+      `<script type="application/ld+json">{"@type":"JobPosting","title":"X","datePosted":"${date}"}</script><main><p>Short.</p></main>`,
+      { url: "https://careers.example.com/jobs/1", runScripts: "outside-only" },
+    ).window.eval(`${source}; extractJob()`);
+    expect(page("next week").posting).toEqual({});
+    expect(page("2999-01-01").posting).toEqual({});
+  });
+});

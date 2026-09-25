@@ -10,6 +10,16 @@
  * @property {string} location      where the job is ("Warsaw, Poland", "Remote"), "" when not found
  * @property {string} description   plain-text job description, "" when not found
  * @property {"selection"|"site"|"json-ld"|"page"|"none"} source where the description came from
+ * @property {Posting} posting      when the job was posted, {} when the page doesn't say
+ */
+
+/**
+ * @typedef {Object} Posting
+ * @property {string} [postedAt]            YYYY-MM-DD
+ * @property {"json-ld"|"page"} [postedAtSource] schema.org datePosted, or the page's "2 weeks ago"
+ * @property {true} [postedOrEarlier]       the page said "30+ days ago": posted on postedAt or before
+ * @property {true} [reposted]              the page says "Reposted"
+ * @property {string} [validThrough]        YYYY-MM-DD, schema.org validThrough
  */
 
 /** @returns {ExtractedJob} */
@@ -142,11 +152,74 @@ export function extractJob() {
       .filter(Boolean);
     const remote = [job.jobLocationType].flat().includes("TELECOMMUTE") ? "Remote" : "";
     return {
+      datePosted: job.datePosted,
+      validThrough: job.validThrough,
       title: clean(job.title),
       company: clean(typeof organization === "string" ? organization : organization?.name),
       location: [...new Set([...places.slice(0, 3), remote])].filter(Boolean).join(" · "),
       description: typeof job.description === "string" ? htmlToText(job.description) : "",
     };
+  }
+
+  const DAY_MS = 86400000;
+
+  // "2026-09-22" or "2026-09-22T12:49:10.000Z" to "2026-09-22"; null unless a real day
+  // this century, and not in the future when it's a posting date
+  function isoDay(value, { future = false } = {}) {
+    const day = typeof value === "string" ? value.trim().match(/^\d{4}-\d{2}-\d{2}/)?.[0] : null;
+    const time = day ? Date.parse(`${day}T00:00:00Z`) : NaN;
+    if (Number.isNaN(time) || new Date(time).toISOString().slice(0, 10) !== day) return null;
+    if (time < Date.UTC(2000, 0, 1) || (!future && time > Date.now() + DAY_MS)) return null;
+    return day;
+  }
+
+  // The job's own "posted" line. Only these elements: pages also list other
+  // jobs with their own "3 days ago", which must not be read as this one's
+  const POSTED_SELECTORS = [
+    ".job-details-jobs-unified-top-card__tertiary-description-container",
+    ".job-details-jobs-unified-top-card__primary-description-container",
+    ".posted-time-ago__text",
+    '[data-automation-id="postedOn"]',
+  ];
+  const UNIT_DAYS = { minute: 0, hour: 0, day: 1, week: 7, month: 30, year: 365 };
+
+  // "Reposted 2 weeks ago", "1 day ago", "Posted 30+ Days Ago", "Posted Today"
+  function postedOnPage() {
+    for (const selector of POSTED_SELECTORS) {
+      const element = document.querySelector(selector);
+      if (!element) continue;
+      const text = visibleText(element);
+      const match = text.match(/(\d+)(\+?)\s*(minute|hour|day|week|month|year)s?\s+ago/i);
+      const days = match
+        ? Number(match[1]) * UNIT_DAYS[match[3].toLowerCase()]
+        : /\b(today|just now)\b/i.test(text) ? 0 : /\byesterday\b/i.test(text) ? 1 : null;
+      if (days === null) continue;
+      return {
+        postedAt: new Date(Date.now() - days * DAY_MS).toISOString().slice(0, 10),
+        orEarlier: match?.[2] === "+",
+        reposted: /\breposted\b/i.test(text),
+      };
+    }
+    return null;
+  }
+
+  /** @returns {Posting} */
+  function postingDates(structured) {
+    const posting = {};
+    const page = postedOnPage();
+    const datePosted = isoDay(structured?.datePosted);
+    if (datePosted) {
+      posting.postedAt = datePosted;
+      posting.postedAtSource = "json-ld";
+    } else if (page) {
+      posting.postedAt = page.postedAt;
+      posting.postedAtSource = "page";
+      if (page.orEarlier) posting.postedOrEarlier = true;
+    }
+    if (page?.reposted) posting.reposted = true;
+    const validThrough = isoDay(structured?.validThrough, { future: true });
+    if (validThrough) posting.validThrough = validThrough;
+    return posting;
   }
 
   // Site-specific selectors for the boards that don't ship JSON-LD to logged-in users
@@ -419,7 +492,7 @@ export function extractJob() {
 
   const url = location.href;
   const host = location.hostname;
-  const result = { url, title: "", company: "", location: "", description: "", source: "none" };
+  const result = { url, title: "", company: "", location: "", description: "", source: "none", posting: {} };
 
   const site = SITES.find((candidate) => candidate.host.test(host));
   if (site) {
@@ -431,6 +504,7 @@ export function extractJob() {
   }
 
   const structured = jsonLdJob();
+  result.posting = postingDates(structured);
   if (structured) {
     result.title = result.title || structured.title;
     result.company = result.company || structured.company;

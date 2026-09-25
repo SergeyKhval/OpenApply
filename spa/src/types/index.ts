@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { CalendarDate, ZonedDateTime } from "@internationalized/date";
+import type { JobPosting } from "../../../shared/jobPosting";
 
 export type JobStatus =
   | "draft"
@@ -36,6 +37,8 @@ export type JobApplication = {
   followUpAt?: Timestamp | null;
   userId: string;
   toolMatch?: ToolMatch;
+  // When the posting says it was posted, read by the browser extension
+  posting?: JobPosting;
 };
 
 // Result of the free resume match tool on the landing page, saved with the

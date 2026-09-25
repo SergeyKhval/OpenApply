@@ -70,7 +70,7 @@ function bytesToBase64Url(bytes) {
 
 /**
  * The job as a URL-fragment value: base64url(deflate(JSON)).
- * @param {{ url: string, title: string, company: string, location: string, description: string }} job
+ * @param {{ url: string, title: string, company: string, location: string, description: string, posting?: import("./extract.js").Posting }} job
  * @returns {Promise<string>}
  */
 export async function encodeJob(job) {
@@ -78,6 +78,8 @@ export async function encodeJob(job) {
   for (const [key, limit] of Object.entries(JOB_LIMITS)) {
     payload[key] = String(job[key] ?? "").trim().slice(0, limit);
   }
+  // Dates the page showed; /save checks them (shared/jobPosting.ts)
+  if (job.posting && Object.keys(job.posting).length) payload.posting = job.posting;
   const bytes = new TextEncoder().encode(JSON.stringify(payload));
   const stream = new ReadableStream({
     start(controller) {
@@ -93,7 +95,7 @@ export async function encodeJob(job) {
  * "Save to OpenApply" with the job the popup read: /save creates the
  * application from the fragment, which the browser never sends to a server,
  * so nothing is scraped and login-gated pages work.
- * @param {{ url: string, title: string, company: string, location: string, description: string }} job
+ * @param {{ url: string, title: string, company: string, location: string, description: string, posting?: import("./extract.js").Posting }} job
  * @returns {Promise<string>}
  */
 export async function saveJobUrl(job) {

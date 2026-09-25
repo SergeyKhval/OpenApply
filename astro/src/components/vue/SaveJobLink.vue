@@ -100,6 +100,7 @@ function saveFromExtension(job: ExtensionJob): boolean {
     jobDescription: job.description,
     jobDescriptionLink: job.url,
     technologies: [],
+    posting: job.posting,
   });
   if (!saved) return false;
   trackEvent("extension_save_started", { job_host: jobHost.value, mode: "extracted" });

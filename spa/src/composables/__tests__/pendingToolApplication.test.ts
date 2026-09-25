@@ -124,6 +124,20 @@ describe("pendingToolApplication", () => {
       });
     });
 
+    it("keeps the posting dates the extension read, sanitized", () => {
+      const input = toJobApplicationInput({
+        ...extensionPending,
+        posting: { postedAt: "2025-05-16", postedAtSource: "json-ld", reposted: true },
+      });
+      expect(input.posting).toEqual({ postedAt: "2025-05-16", postedAtSource: "json-ld", reposted: true });
+
+      const tampered = toJobApplicationInput({
+        ...extensionPending,
+        posting: { postedAt: "2999-01-01", postedAtSource: "json-ld" } as never,
+      });
+      expect(tampered).not.toHaveProperty("posting");
+    });
+
     it("leaves the description alone without a location", () => {
       const input = toJobApplicationInput({ ...extensionPending, location: "" });
       expect(input.jobDescription).toBe("Wymagania: Vue.js 3, PHP.");

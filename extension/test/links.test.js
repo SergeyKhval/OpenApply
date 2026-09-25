@@ -71,6 +71,12 @@ describe("saveJobUrl", () => {
     expect(decoded.description).toBe(long.description.slice(0, 15000));
   });
 
+  it("carries the posting dates", async () => {
+    const posting = { postedAt: "2025-05-16", postedAtSource: "json-ld", reposted: true, validThrough: "2026-12-31" };
+    const url = await saveJobUrl({ ...job, posting });
+    await expect(decodeExtensionJob(new URL(url).hash)).resolves.toEqual({ ...job, posting });
+  });
+
   it("trims and caps every field", async () => {
     const encoded = await encodeJob({ ...job, title: `  ${"T".repeat(500)}  `, company: undefined });
     const decoded = await decodeExtensionJob(`#job=${encoded}`);
