@@ -5,3 +5,7 @@
 /* Set on <html> before paint by the landing when the extension is listed and
    the visitor is on desktop Chromium (shared/browser.ts). */
 @custom-variant chromium (&:where(.is-desktop-chromium, .is-desktop-chromium *));
+
+/* Set on <html> by the landing once the server says Pro is on sale
+   (getProAvailability). Until then Pro reads "coming soon". */
+@custom-variant pro-live (&:where(.pro-live, .pro-live *));

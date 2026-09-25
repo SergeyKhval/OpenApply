@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import Stripe from "stripe";
 import { isProStatus } from "./lib/aiAllowance";
+import { proPriceId } from "./lib/proPrice";
 import {
   APP_HOME_URL,
   getBillingProfileOrThrow,
@@ -9,14 +10,6 @@ import {
 } from "./lib/billingProfile";
 
 const STRIPE_API_KEY = defineString("STRIPE_API_KEY");
-
-/**
- * Read from the environment at runtime rather than declared with
- * defineString: a declared param missing from the deploy dotenv file fails a
- * non-interactive `firebase deploy`, default or not. Unset means Pro isn't
- * on sale yet.
- */
-const proPriceId = () => process.env.STRIPE_PRO_PRICE_ID || "";
 
 /**
  * Starts a Stripe Checkout for the Pro subscription. The name is kept from the
