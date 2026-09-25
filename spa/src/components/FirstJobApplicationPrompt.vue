@@ -1,73 +1,93 @@
+<!-- First run: one action per browser. Desktop Chrome/Edge get the
+     extension (once it has a store link, VITE_EXTENSION_URL); everyone else,
+     or anyone who prefers, pastes a link. Owner: no import, no checklist. -->
 <template>
   <div
-    class="mx-auto flex w-full max-w-xl flex-col items-center gap-6 rounded-xl border border-dashed border-border px-6 py-12 text-center"
+    class="mx-auto flex w-full max-w-lg flex-col items-center gap-5 rounded-card bg-card px-6 py-10 text-center shadow-card dark:border dark:border-border sm:px-10"
   >
-    <span
-      class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
-    >
-      <PhLink :size="24" weight="bold" />
+    <span class="grid size-14 place-items-center rounded-full bg-secondary text-secondary-foreground">
+      <PhPuzzlePiece v-if="showExtension" :size="26" />
+      <PhLink v-else :size="26" />
     </span>
     <div class="space-y-2">
-      <h3 class="text-xl font-semibold text-foreground">
-        Track your first job
-      </h3>
-      <p class="text-sm text-muted-foreground">
-        Paste a link to any job posting. We'll fill in the company, role, and
-        details for you.
+      <h2 class="text-2xl font-extrabold text-foreground sm:text-3xl">Save your first job</h2>
+      <p v-if="showExtension" class="text-[15px] text-soft-foreground">
+        Add the extension, open any job posting, and click <b class="text-foreground">Save to OpenApply</b>. It reads the job from the page for you.
+      </p>
+      <p v-else class="text-[15px] text-soft-foreground">
+        Paste the link to a job you're interested in. We'll fill in the company, role and details.
       </p>
     </div>
 
-    <form
-      class="flex w-full flex-col gap-2 sm:flex-row"
-      novalidate
-      @submit.prevent="handleSubmit"
-    >
-      <Input
-        v-model="jobDescriptionLink"
-        type="url"
-        inputmode="url"
-        :autofocus="shouldAutofocus"
-        aria-label="Job posting link"
-        :aria-invalid="showError"
-        aria-describedby="job-link-error"
-        placeholder="https://jobs.example.com/senior-engineer…"
-        :class="['sm:flex-1', showError && 'border-destructive']"
-      />
-      <Button type="submit">
-        <PhSparkle />
-        Add job
+    <template v-if="showExtension">
+      <Button size="lg" as-child>
+        <a :href="extensionUrl" target="_blank" rel="noopener noreferrer" @click="trackExtensionClick">
+          <PhGoogleChromeLogo />
+          Add to Chrome, it's free
+        </a>
       </Button>
-    </form>
-    <p v-if="showError" id="job-link-error" role="alert" class="-mt-4 text-xs text-destructive">
-      Paste a full link, starting with https://
-    </p>
-
-    <p class="text-sm text-muted-foreground">
-      No link?
       <button
         type="button"
-        class="cursor-pointer text-primary hover:underline"
+        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground hover:underline"
+        @click="preferPaste = true"
+      >
+        or paste a link instead
+      </button>
+    </template>
+
+    <template v-else>
+      <form class="flex w-full flex-col gap-2 sm:flex-row" novalidate @submit.prevent="handleSubmit">
+        <Input
+          v-model="jobDescriptionLink"
+          type="url"
+          inputmode="url"
+          :autofocus="shouldAutofocus"
+          aria-label="Job posting link"
+          :aria-invalid="showError"
+          aria-describedby="job-link-error"
+          placeholder="https://jobs.example.com/senior-engineer…"
+          :class="['h-12 sm:flex-1', showError && 'border-destructive']"
+        />
+        <Button type="submit" size="lg" class="shrink-0">Save job</Button>
+      </form>
+      <p v-if="showError" id="job-link-error" role="alert" class="-mt-3 text-xs text-destructive">
+        Paste a full link, starting with https://
+      </p>
+      <button
+        type="button"
+        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground hover:underline"
         @click="openAddDialog({ 'add-mode': 'manual' })"
       >
-        Enter details manually
+        or add one by hand
       </button>
-      or
-      <RouterLink to="/settings/import-export" class="text-primary hover:underline">
-        import a spreadsheet
-      </RouterLink>
-    </p>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { PhLink, PhSparkle } from "@phosphor-icons/vue";
+import { PhGoogleChromeLogo, PhLink, PhPuzzlePiece } from "@phosphor-icons/vue";
+import { isDesktopChromium } from "@/lib/browser";
+import { trackEvent } from "@/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const {
+  extensionUrl = import.meta.env.VITE_EXTENSION_URL,
+  desktopChromium = isDesktopChromium(),
+} = defineProps<{ extensionUrl?: string; desktopChromium?: boolean }>();
+
 const router = useRouter();
 const route = useRoute();
+
+// Extension first only where it installs and once it has a store link
+const preferPaste = ref(false);
+const showExtension = computed(() => Boolean(extensionUrl) && desktopChromium && !preferPaste.value);
+
+function trackExtensionClick() {
+  trackEvent("extension_install_clicked", { from: "first_run" });
+}
 
 const jobDescriptionLink = ref("");
 const submitted = ref(false);
@@ -75,7 +95,7 @@ const submitted = ref(false);
 // Autofocus is desktop-only: on mobile it pops the keyboard open over the
 // explanation before the user has read it.
 const shouldAutofocus =
-  typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+  typeof window !== "undefined" && (window.matchMedia?.("(pointer: fine)").matches ?? false);
 
 function isHttpUrl(value: string): boolean {
   try {

@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_PUBLIC_POSTHOG_HOST?: string;
   readonly VITE_ADMIN_EMAIL?: string;
   readonly VITE_SUPPORT_EMAIL?: string;
+  // Chrome Web Store page of the extension; first run leads with it when set
+  readonly VITE_EXTENSION_URL?: string;
 }
 
 interface ImportMeta {

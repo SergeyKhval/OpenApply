@@ -38,6 +38,7 @@ type EventMap = {
   status_changed: { applicationId: string; status: string };
   csv_import_completed: { rowCount: number };
   jobs_exported: { rowCount: number };
+  extension_install_clicked: { from: "first_run" };
   resume_match_started: { resumeId: string; jobApplicationId: string };
   resume_match_completed: { resumeId: string; jobApplicationId: string };
   resume_match_failed: { error: string };
