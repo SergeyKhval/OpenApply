@@ -118,8 +118,13 @@ export function isOpenApplication(title: string): boolean {
 
 export function observeJob(previous: PrivateJobSignals | undefined, observation: JobObservation): PrivateJobSignals {
   const seen = day(observation.seenAt);
+  // Older applications can be recorded after newer ones (on their next edit)
   const next: PrivateJobSignals = previous
-    ? { ...previous, lastSeenAt: seen > previous.lastSeenAt ? seen : previous.lastSeenAt }
+    ? {
+      ...previous,
+      firstSeenAt: seen < previous.firstSeenAt ? seen : previous.firstSeenAt,
+      lastSeenAt: seen > previous.lastSeenAt ? seen : previous.lastSeenAt,
+    }
     : { key: observation.key, companyTitleKey: "", firstSeenAt: seen, lastSeenAt: seen };
   next.key = observation.key;
 

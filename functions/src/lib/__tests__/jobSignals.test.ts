@@ -85,6 +85,12 @@ describe("observeJob", () => {
     });
   });
 
+  it("moves the first sighting earlier when an older application is recorded later", () => {
+    const recent = observeJob(undefined, { ...base, seenAt: now });
+    const older = observeJob(recent, { ...base, seenAt: Date.parse("2026-01-10T00:00:00Z") });
+    expect(older).toMatchObject({ firstSeenAt: "2026-01-10", lastSeenAt: "2026-09-25" });
+  });
+
   it("prefers a JSON-LD date over a page date, and keeps reposted and open application once seen", () => {
     const fromPage = observeJob(undefined, {
       ...base,
