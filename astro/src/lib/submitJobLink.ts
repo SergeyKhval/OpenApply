@@ -67,6 +67,10 @@ async function submitJob(request: JobRequest): Promise<JobLinkResult> {
     if ("text" in request && code === "functions/invalid-argument" && rawMessage) {
       return { ok: false, errorMessage: rawMessage };
     }
+    // The server's own wording for a rate limit: it already names the specific limit
+    if (code === "functions/resource-exhausted" && rawMessage) {
+      return { ok: false, errorMessage: rawMessage };
+    }
     if (rawMessage.includes("INVALID_ARGUMENT") || rawMessage.includes("invalid")) {
       return {
         ok: false,

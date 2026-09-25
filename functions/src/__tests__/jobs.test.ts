@@ -1,17 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { HOURLY_LIMIT_PER_CLIENT, DAILY_GLOBAL_LIMIT } from "../lib/jobsRateLimit";
 
 const mockGet = vi.fn();
 const mockAdd = vi.fn();
 const mockLimit = vi.fn().mockReturnValue({ get: mockGet });
 const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit });
-const mockCollection = vi.fn().mockReturnValue({ where: mockWhere, add: mockAdd });
+const mockTransactionGet = vi.fn();
+const mockTransactionSet = vi.fn();
+const mockCollection = vi.fn((name: string) => ({
+  where: mockWhere,
+  add: mockAdd,
+  doc: (id: string) => ({ path: `${name}/${id}` }),
+}));
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
-    collection: (...args: unknown[]) => mockCollection(...args),
+    collection: (...args: unknown[]) => mockCollection(...(args as [string])),
+    runTransaction: async (fn: (t: unknown) => Promise<void>) =>
+      fn({ get: mockTransactionGet, set: mockTransactionSet }),
   }),
   FieldValue: {
     serverTimestamp: () => "mock-timestamp",
+    increment: (n: number) => ({ __increment: n }),
+  },
+  Timestamp: {
+    fromMillis: (ms: number) => ({ __millis: ms }),
   },
 }));
 
@@ -25,22 +38,35 @@ vi.mock("firebase-functions/v2/https", () => {
   }
   return {
     HttpsError,
-    onCall: (fn: Function) => fn,
+    onCall: (optsOrFn: unknown, fn?: unknown) => fn ?? optsOrFn,
   };
 });
+
+vi.mock("firebase-functions", () => ({
+  logger: { info: vi.fn() },
+}));
 
 import { jobs } from "../jobs";
 
 describe("jobs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCollection.mockReturnValue({ where: mockWhere, add: mockAdd });
+    mockCollection.mockImplementation((name: string) => ({
+      where: mockWhere,
+      add: mockAdd,
+      doc: (id: string) => ({ path: `${name}/${id}` }),
+    }));
     mockWhere.mockReturnValue({ limit: mockLimit });
     mockLimit.mockReturnValue({ get: mockGet });
+    // Under every limit by default; individual tests override for specific windows.
+    mockTransactionGet.mockResolvedValue({ data: () => undefined });
   });
 
-  const callJobs = (data: unknown) =>
-    (jobs as unknown as Function)({ data });
+  const callJobs = (data: unknown, rawRequestOverride?: Record<string, unknown>) =>
+    (jobs as unknown as Function)({
+      rawRequest: rawRequestOverride ?? { headers: { "x-forwarded-for": "9.9.9.9" } },
+      data,
+    });
 
   it("rejects missing URL", async () => {
     await expect(callJobs({})).rejects.toThrow("Missing or invalid URL");
@@ -158,6 +184,63 @@ describe("jobs", () => {
 
     it("rejects an invalid link alongside the text", async () => {
       await expect(callJobs({ text: description, url: "linkedin" })).rejects.toThrow("Invalid URL format");
+    });
+
+    it("validates before spending quota: a rejected paste never touches the rate limit", async () => {
+      await expect(callJobs({ text: "too short" })).rejects.toThrow();
+      expect(mockTransactionGet).not.toHaveBeenCalled();
+    });
+
+    it("consumes the rate limit before writing the doc", async () => {
+      mockAdd.mockResolvedValueOnce({ id: "pasted-doc-id" });
+
+      await callJobs({ text: description });
+      expect(mockTransactionGet).toHaveBeenCalled();
+      expect(mockTransactionSet).toHaveBeenCalledTimes(3);
+      expect(mockAdd).toHaveBeenCalled();
+    });
+
+    it("rejects a paste once the global daily cap on new scrapes/parses is hit", async () => {
+      mockTransactionGet
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
+        .mockResolvedValueOnce({ data: () => ({ count: DAILY_GLOBAL_LIMIT }) }); // global
+
+      await expect(callJobs({ text: description })).rejects.toThrow("today's limit");
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("rate limiting", () => {
+    it("does not touch the rate limit on a cache hit", async () => {
+      mockGet.mockResolvedValueOnce({ empty: false, docs: [{ id: "existing-doc-id" }] });
+
+      await callJobs({ url: "https://example.com/cached-job" });
+      expect(mockTransactionGet).not.toHaveBeenCalled();
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    it("rejects a fresh URL once the caller is over the hourly limit", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockTransactionGet
+        .mockResolvedValueOnce({ data: () => ({ count: HOURLY_LIMIT_PER_CLIENT }) }) // hourly
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }) // daily
+        .mockResolvedValueOnce({ data: () => ({ count: 0 }) }); // global
+
+      await expect(callJobs({ url: "https://example.com/too-many" })).rejects.toThrow("this hour");
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    it("consumes hourly, daily and global counters for a fresh URL, keyed by a hash rather than the raw IP", async () => {
+      mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+      mockAdd.mockResolvedValueOnce({ id: "new-doc-id" });
+
+      await callJobs({ url: "https://example.com/fresh-job" });
+      expect(mockTransactionSet).toHaveBeenCalledTimes(3);
+      const paths = mockTransactionSet.mock.calls.map(([ref]) => (ref as { path: string }).path);
+      expect(paths.every((path) => path.startsWith("jobRateLimits/"))).toBe(true);
+      expect(paths.some((path) => path.startsWith("jobRateLimits/global_"))).toBe(true);
+      expect(paths.every((path) => !path.includes("9.9.9.9"))).toBe(true);
     });
   });
 });
