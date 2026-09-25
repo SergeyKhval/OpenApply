@@ -1,364 +1,208 @@
 <template>
   <div>
     <PageHeader>
-      <h2
-        class="text-2xl font-semibold whitespace-nowrap capitalize flex items-center gap-2 grow"
-      >
-        <RouterLink
-          to="/jobs"
-          class="lg:text-muted-foreground hover:underline hover:text-foreground"
-          >Applications</RouterLink
-        >
-        <PhCaretRight
-          class="hidden lg:inline text-muted-foreground"
-          :size="20"
-        />
-        <span v-if="application" class="hidden lg:inline">
-          <a
-            v-if="application.jobDescriptionLink"
-            :href="application.jobDescriptionLink"
-            class="text-primary inline-flex items-center gap-1 hover:underline text-base lg:text-2xl"
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-          >
-            {{ application.companyName }} - {{ application.position }}
-            <PhArrowSquareOut />
-          </a>
-          <template v-else>
-            {{ application.companyName }} - {{ application.position }}
-          </template>
-        </span>
-      </h2>
-      <AddJobApplicationDropdown />
+      <nav aria-label="Breadcrumb" class="flex min-w-0 grow items-center gap-1.5 text-[15px]">
+        <RouterLink to="/jobs" class="inline-flex items-center gap-1 font-semibold hover:underline">
+          <PhCaretLeft :size="16" />
+          Jobs
+        </RouterLink>
+        <span v-if="application" class="truncate text-muted-foreground">/ {{ application.companyName }}</span>
+      </nav>
+      <Button v-if="application?.jobDescriptionLink" variant="outline" size="sm" as-child>
+        <a :href="application.jobDescriptionLink" target="_blank" rel="noopener noreferrer nofollow">
+          Open posting
+          <PhArrowUpRight />
+        </a>
+      </Button>
     </PageHeader>
 
-    <div class="px-6 flex flex-col gap-6 pb-6">
-      <div v-if="application" class="flex flex-col gap-4">
-        <div class="lg:hidden mb-3 flex flex-col">
-          <span class="text-lg text-muted-foreground">
-            {{ application.companyName }}
-          </span>
-          <a
-            v-if="application.jobDescriptionLink"
-            :href="application.jobDescriptionLink"
-            class="text-primary inline-flex items-center gap-1 hover:underline text-2xl"
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-          >
-            {{ application.position }}
-            <PhArrowSquareOut />
-          </a>
-          <span v-else class="text-2xl">
-            {{ application.position }}
-          </span>
-        </div>
-        <h3
-          v-if="application.status === 'archived'"
-          class="text-2xl flex items-center gap-2"
-        >
-          This application is archived
-          <Button
-            variant="outline"
-            size="sm"
-            @click="restoreJobApplication(application)"
-          >
-            <PhClockClockwise />
-            Restore?
-          </Button>
-        </h3>
-        <div v-else class="mb-3">
-          <!-- Mobile: a real dropdown instead of a wrapping row of tiny text links -->
-          <Select
-            :model-value="application.status"
-            @update:model-value="(value) => updateJobApplicationStatus(value as JobStatus)"
-          >
-            <SelectTrigger class="sm:hidden w-full max-w-64">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="status in statusBar" :key="status.status" :value="status.status">
-                {{ status.name }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          <!-- Desktop/tablet: segmented control -->
-          <div class="hidden sm:inline-flex rounded-md border border-border overflow-hidden">
-            <Tooltip v-for="(status, index) in statusBar" :key="status.name">
-              <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="px-3 py-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors inline-flex items-center gap-1"
-                  :class="[
-                    index > 0 && 'border-l border-border',
-                    status.status === application.status
-                      ? 'bg-primary text-primary-foreground font-medium'
-                      : status.isActive
-                        ? 'text-foreground hover:bg-muted'
-                        : 'text-muted-foreground hover:bg-muted',
-                  ]"
-                  @click="updateJobApplicationStatus(status.status)"
-                >
-                  {{ status.name }}
-                  <span
-                    v-if="application.status === 'hired' && status.status === 'hired'"
-                    class="inline-flex items-center"
-                  >
-                    <PhFire size="14" class="text-stage-interviewing" />
-                    <PhHandsClapping size="14" />
-                  </span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent :side-offset="-5">
-                <span>Update status to {{ status.name }}</span>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        <div
-          v-if="application.technologies && application.technologies.length > 0"
-          class="flex flex-wrap gap-1"
-        >
-          <Badge
-            v-for="tech in application.technologies"
-            :key="tech"
-            variant="outline"
-            class="text-sm"
-          >
-            {{ tech }}
-          </Badge>
+    <div v-if="application" class="flex flex-col gap-6 px-4 pb-12 lg:px-6">
+      <div class="flex items-center gap-4">
+        <CompanyAvatar :company-name="application.companyName" :logo-url="application.companyLogoUrl" class="size-12 text-base lg:size-14" />
+        <div class="flex min-w-0 flex-col gap-1">
+          <h1 class="text-2xl font-extrabold break-words lg:text-[34px]">{{ application.position }}</h1>
+          <p class="text-[15px] text-soft-foreground lg:text-base">{{ subtitle }}</p>
         </div>
       </div>
+
+      <JobStageStepper :job="application" />
 
       <Alert v-if="showJustCreatedPrompt" class="flex items-center justify-between">
         <PhCheckCircle class="size-4 text-success" />
-        <AlertDescription class="flex items-center gap-3 flex-wrap">
+        <AlertDescription class="flex flex-wrap items-center gap-3">
           <span>Saved to your tracker. Have you applied yet?</span>
-          <div class="flex gap-2 shrink-0">
-            <Button size="sm" @click="markCreatedApplied">
-              <PhCheck />
-              I've applied
-            </Button>
-            <Button size="sm" variant="outline" @click="dismissJustCreatedPrompt">
-              Not yet
-            </Button>
+          <div class="flex shrink-0 gap-2">
+            <Button size="sm" @click="markCreatedApplied"><PhCheck />I've applied</Button>
+            <Button size="sm" variant="outline" @click="justCreatedDismissed = true">Not yet</Button>
           </div>
         </AlertDescription>
       </Alert>
 
-      <Alert
-        v-if="resumes.length === 0 && !isResumeBannerDismissed && !application?.toolMatch"
-        class="flex flex-col sm:flex-row sm:items-center justify-between"
-      >
-        <PhUploadSimple class="size-4" />
-        <AlertDescription class="flex flex-col sm:flex-row sm:items-center gap-3">
-          <span
-            ><strong>See how you stack up.</strong> Upload a resume to get an AI
-            match score and tailored fixes for this role.</span
-          >
-          <Button size="sm" class="shrink-0 whitespace-nowrap" :disabled="isUploading" @click="openFileDialog()">
-            {{ isUploading ? 'Uploading…' : 'Upload Resume →' }}
-          </Button>
-        </AlertDescription>
-        <Button
-          variant="ghost"
-          size="icon"
-          class="size-7 shrink-0 self-end sm:self-auto"
-          aria-label="Dismiss"
-          @click="dismissResumeBanner"
-        >
-          <PhX class="size-4" />
-        </Button>
-      </Alert>
-
-      <ToolMatchCard
-        v-if="application?.toolMatch"
-        :match="application.toolMatch"
-        :just-saved="route.query.from === 'tool'"
-        @mark-applied="updateJobApplicationStatus('applied')"
+      <NextStepCard
+        v-else
+        :job="application"
+        :upcoming-interview="upcomingInterview"
+        :now="now"
+        @draft-follow-up="followUpJob = application"
       />
 
-      <div v-if="application" class="grid lg:grid-cols-2 gap-4">
-        <div class="flex flex-col gap-4">
-          <JobApplicationAttachments :application="application" />
+      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <div class="flex min-w-0 flex-col gap-5">
+          <ToolMatchCard
+            v-if="application.toolMatch"
+            :match="application.toolMatch"
+            :just-saved="route.query.from === 'tool'"
+            @mark-applied="markApplied(application.id)"
+          />
+          <Alert
+            v-else-if="resumes.length === 0 && !isResumeBannerDismissed"
+            class="flex flex-col justify-between sm:flex-row sm:items-center"
+          >
+            <PhUploadSimple class="size-4" />
+            <AlertDescription class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <span><strong>See how you stack up.</strong> Upload a resume to check it against this job.</span>
+              <Button size="sm" class="shrink-0" :disabled="isUploading" @click="openFileDialog()">
+                {{ isUploading ? "Uploading…" : "Upload resume" }}
+              </Button>
+            </AlertDescription>
+            <Button variant="ghost" size="icon-sm" class="shrink-0 self-end sm:self-auto" aria-label="Dismiss" @click="dismissResumeBanner">
+              <PhX class="size-4" />
+            </Button>
+          </Alert>
 
-          <JobApplicationInterviews :application-id="applicationId" />
-
-          <JobApplicationNotes :application-id="applicationId" />
+          <JobTimeline
+            :entries="timeline.entries.value"
+            :add-note="timeline.addNote"
+            :update-note="timeline.updateNote"
+            :save-interview="timeline.saveInterview"
+            :set-interview-status="timeline.setInterviewStatus"
+            :save-contact="timeline.saveContact"
+            :remove="timeline.remove"
+          />
         </div>
 
-        <div class="flex flex-col gap-4">
-          <JobApplicationDescription
-            v-if="application"
-            :application="application"
-          />
-
-          <JobApplicationContacts :application-id="applicationId" />
+        <div class="flex min-w-0 flex-col gap-5">
+          <JobApplicationAttachments :application="application" />
+          <JobApplicationDescription :application="application" />
+          <Card class="gap-2">
+            <CardHeader><CardTitle class="text-base">Details</CardTitle></CardHeader>
+            <CardContent>
+              <dl class="flex flex-col gap-2 text-sm">
+                <div v-for="detail in details" :key="detail.label" class="flex justify-between gap-4">
+                  <dt class="text-muted-foreground">{{ detail.label }}</dt>
+                  <dd class="text-right font-semibold">{{ detail.value }}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
+
+    <FollowUpDialog :job="followUpJob" @close="followUpJob = null" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, shallowRef } from "vue";
 import { useRoute } from "vue-router";
 import { useDocument } from "vuefire";
+import { collection, doc } from "firebase/firestore";
+import { useIntervalFn } from "@vueuse/core";
 import {
-  collection,
-  doc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import {
-  PhArrowSquareOut,
-  PhCaretRight,
+  PhArrowUpRight,
+  PhCaretLeft,
   PhCheck,
   PhCheckCircle,
-  PhClockClockwise,
-  PhFire,
-  PhHandsClapping,
   PhUploadSimple,
   PhX,
 } from "@phosphor-icons/vue";
-import { JobApplication, JobStatus } from "@/types";
 import { db } from "@/firebase/config.ts";
 import PageHeader from "@/components/PageHeader.vue";
-import JobApplicationNotes from "@/components/JobApplicationNotes.vue";
-import JobApplicationContacts from "@/components/JobApplicationContacts.vue";
-import JobApplicationInterviews from "@/components/JobApplicationInterviews.vue";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useResumes } from "@/composables/useResumes";
-import { useResumeUpload } from "@/composables/useResumeUpload";
-import { restoreJobApplication } from "@/firebase/restoreJobApplication.ts";
-import { getLocalTimeZone, today } from "@internationalized/date";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import AddJobApplicationDropdown from "@/components/AddJobApplicationDropdown.vue";
 import JobApplicationAttachments from "@/components/JobApplicationAttachments.vue";
 import JobApplicationDescription from "@/components/JobApplicationDescription.vue";
 import ToolMatchCard from "@/components/ToolMatchCard.vue";
+import CompanyAvatar from "@/components/jobs/CompanyAvatar.vue";
+import FollowUpDialog from "@/components/jobs/FollowUpDialog.vue";
+import JobStageStepper from "@/components/job/JobStageStepper.vue";
+import JobTimeline from "@/components/job/JobTimeline.vue";
+import NextStepCard from "@/components/job/NextStepCard.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useJobTimeline } from "@/composables/useJobTimeline";
+import { useResumes } from "@/composables/useResumes";
+import { useResumeUpload } from "@/composables/useResumeUpload";
+import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus";
+import type { TimelineEntry } from "@/lib/timeline";
+import type { JobApplication } from "@/types";
 
-type ApplicationPageProps = {
-  jobId: string;
-};
-
-const { jobId: applicationId } = defineProps<ApplicationPageProps>();
+const { jobId } = defineProps<{ jobId: string }>();
 const route = useRoute();
 
-const { data: application } = useDocument<JobApplication>(
-  doc(collection(db, "jobApplications"), applicationId),
+const { data: application } = useDocument<JobApplication>(doc(collection(db, "jobApplications"), jobId));
+const timeline = useJobTimeline(application, jobId);
+const { markApplied } = useUpdateJobApplicationStatus();
+
+const now = ref(new Date());
+useIntervalFn(() => (now.value = new Date()), 60_000);
+
+const REMOTE_LABELS = { remote: "Remote", hybrid: "Hybrid", "in-office": "On site" } as const;
+const EMPLOYMENT_LABELS = { "full-time": "Full time", "part-time": "Part time" } as const;
+
+const subtitle = computed(() => {
+  const job = application.value;
+  if (!job) return "";
+  return [job.companyName, job.remotePolicy && REMOTE_LABELS[job.remotePolicy]].filter(Boolean).join(" · ");
+});
+
+const details = computed(() => {
+  const job = application.value;
+  if (!job) return [];
+  return [
+    { label: "Work", value: job.remotePolicy ? REMOTE_LABELS[job.remotePolicy] : "Not listed" },
+    { label: "Type", value: job.employmentType ? EMPLOYMENT_LABELS[job.employmentType] : "Not listed" },
+    { label: "Saved", value: job.createdAt?.toDate().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) ?? "" },
+  ];
+});
+
+const upcomingInterview = computed(
+  () =>
+    (timeline.entries.value.find((entry) => entry.kind === "interview" && entry.upcoming) as
+      | Extract<TimelineEntry, { kind: "interview" }>
+      | undefined) ?? null,
 );
+
+const followUpJob = shallowRef<JobApplication | null>(null);
 
 const { data: resumes } = useResumes();
 const { openFileDialog, isUploading } = useResumeUpload();
-const isResumeBannerDismissed = ref(
-  localStorage.getItem("dismiss-resume-banner") === "true",
-);
-
+const readBannerDismissed = () => {
+  try {
+    return localStorage.getItem("dismiss-resume-banner") === "true";
+  } catch {
+    return false;
+  }
+};
+const isResumeBannerDismissed = ref(readBannerDismissed());
 function dismissResumeBanner() {
   isResumeBannerDismissed.value = true;
-  localStorage.setItem("dismiss-resume-banner", "true");
+  try {
+    localStorage.setItem("dismiss-resume-banner", "true");
+  } catch {
+    // storage blocked: dismissed for this visit only
+  }
 }
 
 // Shown once right after a manual/link-parse save (?created=1); the tool
 // handoff has its own success moment on ToolMatchCard instead.
 const justCreatedDismissed = ref(false);
 const showJustCreatedPrompt = computed(
-  () =>
-    route.query.created === "1" &&
-    !justCreatedDismissed.value &&
-    !application.value?.toolMatch,
+  () => route.query.created === "1" && !justCreatedDismissed.value && !application.value?.toolMatch,
 );
-
-function dismissJustCreatedPrompt() {
-  justCreatedDismissed.value = true;
-}
-
 async function markCreatedApplied() {
-  await updateJobApplicationStatus("applied");
+  await markApplied(jobId);
   justCreatedDismissed.value = true;
-}
-
-const statusBar = computed(() => {
-  if (!application.value) return [];
-  const statuses: JobStatus[] = [
-    "draft",
-    "applied",
-    "interviewing",
-    "offered",
-    "hired",
-  ];
-  const activeStatusIndex = statuses.indexOf(application.value.status);
-  return statuses.map((status, index) => ({
-    status,
-    name: {
-      draft: "Draft",
-      applied: "Applied",
-      interviewing: "Interviewing",
-      offered: "Job Offer",
-      hired: "Hired",
-      rejected: "",
-      archived: "",
-    }[status],
-    isActive: index <= activeStatusIndex,
-    isCaretActive: index < activeStatusIndex,
-  }));
-});
-
-async function updateJobApplicationStatus(status: JobStatus) {
-  if (!application.value) return;
-
-  const timezone = getLocalTimeZone();
-  const currentDate = today(timezone).toDate(timezone);
-  const updates: Record<string, any> = {
-    status,
-    updatedAt: serverTimestamp(),
-  };
-
-  // Set the corresponding timestamp field based on the new status
-  // Using Date objects that will be stored as Timestamps in Firestore
-  switch (status) {
-    case "applied":
-      // If moving back to applied, keep the original appliedAt or set it now
-      if (!application.value.appliedAt) {
-        updates.appliedAt = currentDate;
-      }
-      // Clear future status timestamps when moving back
-      updates.interviewedAt = null;
-      updates.offeredAt = null;
-      updates.hiredAt = null;
-      break;
-    case "interviewing":
-      updates.interviewedAt = currentDate;
-      // Clear future status timestamps
-      updates.offeredAt = null;
-      updates.hiredAt = null;
-      break;
-    case "offered":
-      updates.offeredAt = currentDate;
-      // Clear future status timestamps
-      updates.hiredAt = null;
-      break;
-    case "hired":
-      updates.hiredAt = currentDate;
-      break;
-  }
-
-  await updateDoc(doc(db, "jobApplications", application.value?.id), updates);
 }
 </script>
 

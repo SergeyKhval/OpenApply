@@ -47,7 +47,7 @@ export const processUserDigest = onTaskDispatched(
     const appsSnapshot = await db
       .collection("jobApplications")
       .where("userId", "==", userId)
-      .where("status", "not-in", ["rejected", "archived"])
+      .where("status", "not-in", ["rejected", "withdrew", "archived"])
       .get();
 
     if (appsSnapshot.empty) {

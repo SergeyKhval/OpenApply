@@ -4,6 +4,21 @@ import { db } from "@/firebase/config.ts";
 import { JobStatus } from "@/types";
 import { trackEvent } from "@/analytics";
 
+// A week after applying is when a follow-up usually makes sense
+export const FOLLOW_UP_AFTER_APPLYING_DAYS = 7;
+export const SNOOZE_FOLLOW_UP_DAYS = 3;
+
+function startOfToday() {
+  const timezone = getLocalTimeZone();
+  return today(timezone).toDate(timezone);
+}
+
+function daysFromToday(days: number) {
+  const date = startOfToday();
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
 export function useUpdateJobApplicationStatus() {
   function updateJobApplicationStatus(
     applicationId: string,
@@ -43,5 +58,40 @@ export function useUpdateJobApplicationStatus() {
     return updateDoc(doc(db, "jobApplications", applicationId), updates);
   }
 
-  return { updateJobApplicationStatus };
+  // "I applied": Applied today, follow up in a week
+  function markApplied(applicationId: string) {
+    trackEvent("status_changed", { applicationId, status: "applied" });
+    return updateDoc(doc(db, "jobApplications", applicationId), {
+      status: "applied",
+      appliedAt: startOfToday(),
+      followUpAt: daysFromToday(FOLLOW_UP_AFTER_APPLYING_DAYS),
+      interviewedAt: null,
+      offeredAt: null,
+      hiredAt: null,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  function scheduleFollowUp(applicationId: string, days = FOLLOW_UP_AFTER_APPLYING_DAYS) {
+    return updateDoc(doc(db, "jobApplications", applicationId), {
+      followUpAt: daysFromToday(days),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  function snoozeFollowUp(applicationId: string) {
+    return updateDoc(doc(db, "jobApplications", applicationId), {
+      followUpAt: daysFromToday(SNOOZE_FOLLOW_UP_DAYS),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  function clearFollowUp(applicationId: string) {
+    return updateDoc(doc(db, "jobApplications", applicationId), {
+      followUpAt: null,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  return { updateJobApplicationStatus, markApplied, scheduleFollowUp, snoozeFollowUp, clearFollowUp };
 }
