@@ -297,6 +297,42 @@ describe("generateCoverLetter orchestration", () => {
     });
   });
 
+  describe("Length and tone", () => {
+    it("adds the chosen length and tone to the prompt and stores them", async () => {
+      setupSuccessfulGenerate();
+
+      await callGenerate(
+        authRequest(USER_ID, { jobApplicationId: JOB_APP_ID, resumeId: RESUME_ID, length: "short", tone: "warm" }),
+      );
+
+      const prompt = (mockGenerate.mock.calls[0][0] as { prompt: string }).prompt;
+      expect(prompt).toContain("at most 150 words");
+      expect(prompt).toContain("warm, personable voice");
+      expect(mockTransactionCreate.mock.calls[0][1]).toMatchObject({
+        style: { length: "short", tone: "warm" },
+        modelMetadata: { prompt: "cover-letter-v2-short-warm" },
+      });
+    });
+
+    it("defaults to a standard, plain letter for old clients", async () => {
+      setupSuccessfulGenerate();
+
+      await callGenerate(authRequest(USER_ID, { jobApplicationId: JOB_APP_ID, resumeId: RESUME_ID }));
+
+      const prompt = (mockGenerate.mock.calls[0][0] as { prompt: string }).prompt;
+      expect(prompt).toContain("250 to 350 words");
+      expect(prompt).toContain("Write plainly and directly");
+    });
+
+    it("rejects an unknown tone before spending anything", async () => {
+      const request = authRequest(USER_ID, { jobApplicationId: JOB_APP_ID, resumeId: RESUME_ID, tone: "pirate" });
+
+      await expect(callGenerate(request)).rejects.toMatchObject({ code: "invalid-argument" });
+      expect(mockGet).not.toHaveBeenCalled();
+      expect(mockGenerate).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Ownership", () => {
     it("throws permission-denied when user does not own job application", async () => {
       // Billing OK

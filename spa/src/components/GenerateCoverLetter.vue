@@ -1,165 +1,92 @@
 <template>
-  <Dialog :open="isOpen" @update:open="updateDialogOpenState">
-    <DialogScrollContent class="sm:max-w-200">
-      <DialogHeader>
-        <DialogTitle>Generate Cover Letter</DialogTitle>
-        <DialogDescription>
-          Select a job application and resume to generate a tailored cover
-          letter
-        </DialogDescription>
-      </DialogHeader>
+  <AiSheet :open="isOpen" title="Cover letter" :eyebrow="eyebrow" @update:open="updateDialogOpenState">
+    <AiLimitReached v-if="allowance && !canUseAi" :allowance="allowance" source="cover_letter" />
 
-      <div class="py-4 space-y-4">
-        <AiChecksLeft v-if="allowance && canUseAi" :allowance="allowance" />
+    <div v-else-if="isProcessing" class="flex flex-col items-center gap-4 py-10 text-center" role="status">
+      <Spinner class="size-10" />
+      <p class="text-[15px] text-soft-foreground">Writing your cover letter. This takes 20 to 30 seconds.</p>
+    </div>
 
-        <AiLimitReached
-          v-if="allowance && !canUseAi"
-          :allowance="allowance"
-          source="cover_letter"
-        />
-
-        <!-- Loading State -->
-        <div v-if="isProcessing" class="flex items-center flex-col py-8">
-          <PhSpinner size="64" class="animate-spin" />
-          <p class="mt-4 text-muted-foreground text-center">
-            Generating your cover letter...
-            <br />
-            This may take 20-30 seconds. Hold tight!
-          </p>
-        </div>
-
-        <div v-else-if="canUseAi" class="space-y-6">
-          <Empty v-if="!hasResumes">
-            <EmptyIcon>
-              <PhFile :size="32" />
-            </EmptyIcon>
-            <div class="space-y-2">
-              <EmptyTitle>Upload a resume</EmptyTitle>
-              <EmptyDescription>
-                Add a resume so we can tailor your cover letter to your
-                experience.
-              </EmptyDescription>
-            </div>
-            <EmptyAction>
-              <UploadResumeButton> Upload Resume </UploadResumeButton>
-            </EmptyAction>
-          </Empty>
-
-          <Empty v-else-if="!hasJobApplications">
-            <EmptyIcon>
-              <PhSuitcase :size="32" />
-            </EmptyIcon>
-            <div class="space-y-2">
-              <EmptyTitle>Add a job application</EmptyTitle>
-              <EmptyDescription>
-                Create an application to personalize your cover letter for the
-                role.
-              </EmptyDescription>
-            </div>
-            <EmptyAction>
-              <Button
-                @click="
-                  $router.replace({
-                    query: {
-                      ...$route.query,
-                      'dialog-name': 'add-job-application',
-                    },
-                  })
-                "
-              >
-                Add job application</Button
-              >
-            </EmptyAction>
-          </Empty>
-
-          <div v-else class="space-y-6">
-            <ResumeSelect v-model="selectedResumeId" />
-
-            <JobApplicationSelect v-model="selectedJobApplicationId" />
-
-            <Alert
-              v-if="
-                selectedJobApplicationId &&
-                !selectedJobApplication?.jobDescription
-              "
-            >
-              <PhWarningCircle class="text-destructive!" />
-              <AlertDescription>
-                <p>
-                  Selected job application does not have a job description.
-                  Cover letter quality may be impacted. You can add a job
-                  description on the
-                  <RouterLink
-                    :to="`/dashboard/applications/${selectedJobApplicationId}`"
-                    class="text-primary hover:underline"
-                  >
-                    job application details page </RouterLink
-                  >.
-                </p>
-              </AlertDescription>
-            </Alert>
-
-            <!-- Error Message -->
-            <Alert v-if="errorMessage" variant="destructive">
-              <PhWarningCircle />
-              <AlertDescription>
-                {{ errorMessage }}
-              </AlertDescription>
-            </Alert>
-
-            <DialogFooter>
-              <Button :disabled="!canSubmit" @click="handleGenerateCoverLetter">
-                <PhSparkle />
-                Generate
-              </Button>
-              <Button variant="outline" @click="updateDialogOpenState(false)">
-                Cancel
-              </Button>
-            </DialogFooter>
-          </div>
-        </div>
+    <Empty v-else-if="!hasResumes">
+      <EmptyIcon><PhFile :size="32" /></EmptyIcon>
+      <div class="space-y-2">
+        <EmptyTitle>Upload a resume</EmptyTitle>
+        <EmptyDescription>The letter is written from your resume and the job, so it needs a resume first.</EmptyDescription>
       </div>
-    </DialogScrollContent>
-  </Dialog>
+      <EmptyAction><UploadResumeButton>Upload resume</UploadResumeButton></EmptyAction>
+    </Empty>
+
+    <Empty v-else-if="!hasJobApplications">
+      <EmptyIcon><PhSuitcase :size="32" /></EmptyIcon>
+      <div class="space-y-2">
+        <EmptyTitle>Add a job</EmptyTitle>
+        <EmptyDescription>A cover letter is written for one job. Add the job first.</EmptyDescription>
+      </div>
+      <EmptyAction>
+        <Button @click="$router.replace({ query: { ...$route.query, 'dialog-name': 'add-job-application' } })">Add job</Button>
+      </EmptyAction>
+    </Empty>
+
+    <template v-else>
+      <div class="flex flex-col gap-4">
+        <ResumeSelect v-model="selectedResumeId" />
+        <JobApplicationSelect v-if="!fixedJob" v-model="selectedJobApplicationId" />
+      </div>
+
+      <Alert v-if="selectedJobApplicationId && !selectedJobApplication?.jobDescription">
+        <PhWarningCircle class="text-destructive!" />
+        <AlertDescription>
+          This job has no description, so the letter can only use the company and role. Add the description on
+          <RouterLink :to="`/jobs/${selectedJobApplicationId}`" class="font-medium text-secondary-foreground hover:underline">the job page</RouterLink>
+          for a letter that talks about the actual job.
+        </AlertDescription>
+      </Alert>
+
+      <div class="flex flex-col gap-3">
+        <ChoicePills v-model="length" label="Length" :options="LENGTH_OPTIONS" />
+        <ChoicePills v-model="tone" label="Tone" :options="TONE_OPTIONS" />
+      </div>
+
+      <Alert v-if="errorMessage" variant="destructive">
+        <PhWarningCircle />
+        <AlertDescription>{{ errorMessage }}</AlertDescription>
+      </Alert>
+    </template>
+
+    <template v-if="canUseAi && !isProcessing && hasResumes && hasJobApplications" #footer>
+      <AiChecksLeft v-if="allowance" :allowance="allowance" />
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <Button :disabled="!canSubmit" @click="handleGenerateCoverLetter">
+          <PhSparkle />
+          Write it · 1 check
+        </Button>
+        <Button variant="ghost" @click="updateDialogOpenState(false)">Cancel</Button>
+      </div>
+    </template>
+  </AiSheet>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import {
-  PhFile,
-  PhSparkle,
-  PhSpinner,
-  PhSuitcase,
-  PhWarningCircle,
-} from "@phosphor-icons/vue";
-import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogScrollContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import UploadResumeButton from "@/components/UploadResumeButton.vue";
-import AiChecksLeft from "@/components/AiChecksLeft.vue";
-import AiLimitReached from "@/components/AiLimitReached.vue";
-import { useCoverLetters } from "@/composables/useCoverLetters";
-import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
-import { useResumes } from "@/composables/useResumes";
-import {
-  Empty,
-  EmptyAction,
-  EmptyDescription,
-  EmptyIcon,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { useAiAllowance } from "@/composables/useAiAllowance";
+import { PhFile, PhSparkle, PhSuitcase, PhWarningCircle } from "@phosphor-icons/vue";
 import { omit } from "lodash";
 import { useRoute, useRouter } from "vue-router";
-import ResumeSelect from "@/components/inputs/ResumeSelect.vue";
+import AiChecksLeft from "@/components/AiChecksLeft.vue";
+import AiLimitReached from "@/components/AiLimitReached.vue";
+import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import AiSheet from "@/components/ai/AiSheet.vue";
+import ChoicePills from "@/components/ai/ChoicePills.vue";
 import JobApplicationSelect from "@/components/inputs/JobApplicationSelect.vue";
+import ResumeSelect from "@/components/inputs/ResumeSelect.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyAction, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import { useAiAllowance } from "@/composables/useAiAllowance";
+import { useCoverLetters, type CoverLetterStyle } from "@/composables/useCoverLetters";
+import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
+import { useResumes } from "@/composables/useResumes";
+import { LENGTH_OPTIONS, TONE_OPTIONS } from "@/components/ai/coverLetterOptions";
 
 type GenerateCoverLetterProps = {
   isOpen: boolean;
@@ -177,6 +104,10 @@ const router = useRouter();
 const route = useRoute();
 
 const selectedJobApplicationId = ref("");
+// Opened from a job (its page or a match): the job is fixed, no picker
+const fixedJob = computed(() => typeof route.query["application-id"] === "string");
+const length = ref<CoverLetterStyle["length"]>("standard");
+const tone = ref<CoverLetterStyle["tone"]>("plain");
 watch(
   () => route.query["application-id"],
   (newApplicationId) => {
@@ -188,6 +119,12 @@ watch(
     }
   },
   { immediate: true },
+);
+
+const eyebrow = computed(() =>
+  fixedJob.value && selectedJobApplication.value
+    ? `${selectedJobApplication.value.companyName} · ${selectedJobApplication.value.position}`
+    : undefined,
 );
 
 const selectedJobApplication = computed(() => {
@@ -278,13 +215,21 @@ const handleGenerateCoverLetter = async () => {
   const result = await generateCoverLetter(
     selectedJobApplicationId.value,
     selectedResumeId.value,
+    { length: length.value, tone: tone.value },
   );
 
   isProcessing.value = false;
 
-  if (result.success) {
-    await updateDialogOpenState(false);
-  } else {
+  if (result.success && result.data) {
+    // Show the letter right away, in the preview sheet
+    await router.replace({
+      query: {
+        ...omit(route.query, ["application-id", "resume-id"]),
+        "dialog-name": "cover-letter-preview",
+        "cover-letter-id": result.data.coverLetterId,
+      },
+    });
+  } else if (!result.success) {
     errorMessage.value = result.error || "Failed to generate cover letter";
   }
 };
@@ -294,6 +239,8 @@ const resetForm = () => {
   selectedResumeId.value = "";
   errorMessage.value = "";
   pendingJobApplicationId.value = null;
+  length.value = "standard";
+  tone.value = "plain";
 };
 
 async function updateDialogOpenState(open: boolean) {

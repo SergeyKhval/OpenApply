@@ -13,6 +13,11 @@ vi.mock("@/composables/useProSubscription", () => ({
   }),
 }));
 
+const proAvailable = ref<boolean | null>(true);
+vi.mock("@/composables/useProAvailability", () => ({
+  useProAvailability: () => ({ proAvailable }),
+}));
+
 vi.mock("@/analytics", () => ({
   trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
 }));
@@ -31,7 +36,10 @@ const allowance = (overrides: Partial<AllowanceState> = {}): AllowanceState => (
 });
 
 describe("AiLimitReached", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    proAvailable.value = true;
+  });
 
   it("offers Pro to a free user and records the limit hit", () => {
     const wrapper = mount(AiLimitReached, {
@@ -40,7 +48,7 @@ describe("AiLimitReached", () => {
 
     expect(wrapper.text()).toContain("You've used your 15 free AI checks this month");
     expect(wrapper.text()).toContain("They reset on October 1");
-    expect(wrapper.text()).toContain("Go Pro, $9/month");
+    expect(wrapper.text()).toContain("Upgrade to Pro");
     expect(mockTrackEvent).toHaveBeenCalledTimes(1);
     expect(mockTrackEvent).toHaveBeenCalledWith("ai_limit_reached", {
       plan: "free",
@@ -48,7 +56,28 @@ describe("AiLimitReached", () => {
     });
   });
 
-  it("starts checkout with the source when Go Pro is clicked", async () => {
+  it("says Pro isn't on sale yet, with no buy button, until the price is set", () => {
+    proAvailable.value = false;
+    const wrapper = mount(AiLimitReached, {
+      props: { allowance: allowance(), source: "cover_letter" },
+    });
+
+    expect(wrapper.text()).toContain("Coming soon");
+    expect(wrapper.text()).toContain("Pro isn't on sale yet, so there's nothing to buy");
+    expect(wrapper.find("button").exists()).toBe(false);
+  });
+
+  it("shows no button while it's still asking whether Pro is on sale", () => {
+    proAvailable.value = null;
+    const wrapper = mount(AiLimitReached, {
+      props: { allowance: allowance(), source: "cover_letter" },
+    });
+
+    expect(wrapper.find("button").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Coming soon");
+  });
+
+  it("starts checkout with the source when Upgrade to Pro is clicked", async () => {
     const wrapper = mount(AiLimitReached, {
       props: { allowance: allowance(), source: "ai_review" },
     });
@@ -68,7 +97,7 @@ describe("AiLimitReached", () => {
     });
 
     expect(wrapper.text()).toContain("You've used this month's 150 AI checks");
-    expect(wrapper.text()).not.toContain("Go Pro");
+    expect(wrapper.text()).not.toContain("Upgrade to Pro");
     expect(wrapper.find("a[href^='mailto:']").exists()).toBe(true);
   });
 });

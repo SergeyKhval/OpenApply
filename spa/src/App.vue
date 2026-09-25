@@ -10,7 +10,6 @@
   <CoverLetterPreview :is-open="isCoverLetterPreviewDialogOpen" />
   <ResumePickerDialog :is-open="isResumePickerDialogOpen" />
   <AddJobApplication :is-open="isAddJobApplicationDialogOpen" />
-  <ScoreResumeDialog :is-open="isScoreResumeDialogOpen" />
 </template>
 <script setup lang="ts">
 import { computed } from "vue";
@@ -23,7 +22,6 @@ import GenerateCoverLetter from "@/components/GenerateCoverLetter.vue";
 import ResumePickerDialog from "@/components/ResumePickerDialog.vue";
 import CoverLetterPreview from "@/components/CoverLetterPreview.vue";
 import AddJobApplication from "@/components/AddJobApplication.vue";
-import ScoreResumeDialog from "@/components/ScoreResumeDialog.vue";
 import { usePersistAcquisition } from "@/composables/usePersistAcquisition";
 
 const route = useRoute();
@@ -48,9 +46,5 @@ const isResumePickerDialogOpen = computed(
 
 const isAddJobApplicationDialogOpen = computed(
   () => route.query["dialog-name"] === "add-job-application",
-);
-
-const isScoreResumeDialogOpen = computed(
-  () => route.query["dialog-name"] === "score-resume",
 );
 </script>
