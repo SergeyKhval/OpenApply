@@ -1,0 +1,26 @@
+---
+// Tangerine check mark + wordmark, as on the hi-fi canvas
+interface Props {
+  size?: 'md' | 'sm';
+}
+const { size = 'md' } = Astro.props;
+---
+
+<a href="/" aria-label="OpenApply home" class="flex items-center gap-[9px] no-underline">
+  <span
+    class:list={[
+      'grid shrink-0 place-items-center bg-primary text-primary-foreground',
+      size === 'md' ? 'size-[30px] rounded-[10px_10px_10px_3px] max-lg:size-[27px]' : 'size-[26px] rounded-[9px_9px_9px_3px]',
+    ]}
+  >
+    <svg width={size === 'md' ? 17 : 15} height={size === 'md' ? 17 : 15} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7.5"></path>
+    </svg>
+  </span>
+  <span
+    class:list={[
+      'font-display font-extrabold tracking-[-0.02em] text-foreground',
+      size === 'md' ? 'text-[21px] max-lg:text-[19px]' : 'text-lg',
+    ]}
+  >OpenApply</span>
+</a>

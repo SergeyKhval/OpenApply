@@ -3,494 +3,330 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import JobLinkInput from '../components/vue/JobLinkInput.vue';
+import { isDesktopChromium } from '../../../shared/browser';
 
-// Live trust signal for the hero; the build must succeed even if GitHub is
-// unreachable or rate-limits us, so the star count is simply omitted then.
-let githubStars: number | null = null;
-try {
-  const response = await fetch('https://api.github.com/repos/SergeyKhval/OpenApply', {
-    headers: { Accept: 'application/vnd.github+json' },
-  });
-  if (response.ok) {
-    const data = await response.json();
-    githubStars = typeof data.stargazers_count === 'number' ? data.stargazers_count : null;
-  }
-} catch {
-  // Offline or rate-limited build environment; leave the star count out.
-}
+const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || '/app';
+const signupUrl = `${spaBase}/?mode=signup`;
+const toolUrl = '/tools/resume-job-match?utm_source=landing&utm_medium=internal_link&utm_campaign=sprint-2609';
+
+// Unset until the Chrome Web Store listing is live. Then desktop Chromium
+// visitors get "Add to Chrome" first and everyone else keeps the link box.
+const extensionUrl = import.meta.env.PUBLIC_EXTENSION_URL;
+const hasExtension = Boolean(extensionUrl);
+
+// Runs before the hero is parsed so the right variant shows on first paint
+const detectBrowserScript = `if ((${isDesktopChromium.toString()})(navigator)) document.documentElement.classList.add("is-desktop-chromium");`;
+
+const steps = [
+  {
+    icon: 'ph-link',
+    title: 'Save a job',
+    body: hasExtension
+      ? 'One click on any job page with the extension. Or paste a link, or type the company and role.'
+      : 'Paste a link from any job board and we fill in the details. Or type the company and role.',
+  },
+  {
+    icon: 'ph-paper-plane-tilt',
+    title: 'Apply and follow up',
+    body: 'Mark it applied and we set a reminder to follow up a week later.',
+  },
+  {
+    icon: 'ph-sparkle',
+    title: 'Check your fit',
+    body: 'See which must-haves your resume meets and what to fix, before you apply.',
+  },
+];
+
+// Pricing and FAQ copy belong to the billing change (oa-7zn.1); it replaces
+// these entries when Pro launches. Everything else on the page is layout.
+const pricingPlans = [
+  {
+    name: 'Free',
+    price: '$0',
+    summary: 'Track your entire job search',
+    features: [
+      'Unlimited application tracking',
+      'Paste-a-link job import',
+      'Notes, due dates, and tags',
+      'Resume and document storage',
+      'Spreadsheet/CSV import',
+    ],
+    cta: 'Start free',
+    featured: true,
+  },
+  {
+    name: 'AI Features',
+    price: 'From $0.12',
+    summary: 'Pay-as-you-go. No subscription.',
+    features: [
+      'AI resume review from $0.12',
+      'AI cover letter from $0.12',
+      'Pay only when you use AI',
+      'No subscriptions, no lock-in',
+    ],
+    cta: null,
+    featured: false,
+  },
+];
+
+const faqs = [
+  {
+    question: 'How do coins work?',
+    answer: 'Coins are only spent on AI features like resume reviews and cover letters; tracking is free. Each review or cover letter costs 10 coins, and coin packs range from $0.012 to $0.02 per coin depending on pack size, so a review costs $0.12 to $0.20.',
+  },
+  {
+    question: 'How do AI resume reviews work?',
+    answer: 'Pick a job and a resume, and we check the match. You get a score with specific suggestions on what to improve, ready in under a minute.',
+  },
+  {
+    question: 'Can I export my data?',
+    answer: 'Yes. Download every job you track as a CSV from Settings, anytime. You can also import a spreadsheet to get started.',
+  },
+  {
+    question: 'How does paste-a-link work?',
+    answer: 'Paste a URL from any job board and we scrape the page to fill in the company, role, and description automatically. Works with most popular boards. If a site is tricky, you can always add details manually.',
+  },
+  {
+    question: 'Can it write cover letters?',
+    answer: "Yes. Pick a job and a resume, and the AI generates a cover letter tailored to both. You can regenerate until you're happy with it.",
+  },
+  {
+    question: 'Can I self-host it?',
+    answer: 'Yes. The code is on GitHub and you can run it with your own API keys.',
+  },
+  {
+    question: 'Which currencies do you support?',
+    answer: 'Billing is pay‑as‑you‑go; currency and pricing are shown at checkout.',
+  },
+];
+
+const lanes = [
+  { name: 'Saved', tone: 'bg-stage-saved-soft', jobs: [{ initials: 'FE', avatar: 'var(--avatar-3)', company: 'Fernway', role: 'Frontend Developer' }] },
+  {
+    name: 'Applied',
+    tone: 'bg-stage-applied-soft',
+    jobs: [
+      { initials: 'BH', avatar: 'var(--avatar-4)', company: 'Brightline Health', role: 'Frontend Engineer' },
+      { initials: 'TE', avatar: 'var(--avatar-7)', company: 'Tessel', role: 'UI Engineer' },
+    ],
+  },
+  { name: 'Interviewing', tone: 'bg-stage-interviewing-soft', jobs: [{ initials: 'NL', avatar: 'var(--avatar-1)', company: 'Northwind Labs', role: 'Senior Frontend Engineer' }] },
+];
+
+const primaryButton = 'inline-flex h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-primary bg-primary px-[26px] text-[16.5px] font-semibold text-primary-foreground hover:bg-primary/90';
+const cardSurface = 'rounded-card bg-card shadow-card border border-transparent dark:border-border';
 ---
 
-<Layout>
-  <div id="root">
-    <div
-      class="bg-background text-foreground antialiased"
-    >
-      <div>
-        <Header />
-        <main id="main">
-        <section
-          class="relative flex min-h-[80vh] items-center justify-center overflow-hidden"
-        >
-          <div
-            class="absolute inset-0 bg-background"
-          ></div>
-          <div class="container mx-auto px-4 py-20 relative z-10">
-            <div class="flex flex-col gap-8 items-center">
-              <h1
-                class="font-display text-foreground text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-center"
-              >
-                47 open tabs, 3 spreadsheets, and no idea where you applied?
-              </h1>
-              <p class="text-xl text-muted-foreground max-w-2xl text-center">
-                OpenApply replaces all of that. Paste a job link and the company, role, and details are filled in seconds. Get AI resume reviews matched to each role. Everything in one place.
-              </p>
-              <JobLinkInput client:visible />
-              <p class="text-sm text-muted-foreground text-center">
-                Free and open source
-                {githubStars !== null && <>· ★ {githubStars.toLocaleString('en-US')} on GitHub</>}
-                · Your data stays yours
-              </p>
-              <p class="text-sm text-muted-foreground text-center">
-                Not ready to sign up?
-                <a
-                  href="/tools/resume-job-match?utm_source=landing&utm_medium=internal_link&utm_campaign=sprint-2609"
-                  class="font-medium text-foreground underline underline-offset-2 hover:text-primary"
-                >
-                  Try the free resume vs job description checker
-                </a>
-                , no account needed.
-              </p>
-              <img
-                src="/images/marketing/dashboard-preview.png"
-                width="960"
-                height="427"
-                loading="eager"
-                fetchpriority="high"
-                alt="OpenApply dashboard showing tracked job applications at different stages: Offered, Draft, Interviewing, and Applied"
-                class="mt-4 w-full max-w-3xl rounded-xl border border-border/60 shadow-2xl shadow-primary/10"
-              />
-            </div>
-          </div>
-        </section>
-        <!-- How It Works Section -->
-        <section id="how-it-works" class="relative py-24 scroll-mt-16">
-          <div class="absolute inset-0 -z-10 bg-muted/40"></div>
-          <div
-            class="absolute inset-x-0 top-0 -z-10 h-px bg-border"
-          ></div>
-          <div class="container mx-auto relative px-4">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-              <h2 class="text-4xl font-bold mb-4">
-                How It Works
-              </h2>
-              <p class="text-xl text-muted-foreground">
-                Get set up in under five minutes.
-              </p>
-            </div>
-            <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <div class="text-center space-y-4">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
-                  <span class="text-2xl font-bold text-primary">1</span>
-                </div>
-                <h3 class="text-xl font-semibold">Import your spreadsheet</h3>
-                <p class="text-muted-foreground">
-                  Bring your current tracking file and keep your history intact.
-                </p>
-              </div>
-              <div class="text-center space-y-4">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
-                  <span class="text-2xl font-bold text-primary">2</span>
-                </div>
-                <h3 class="text-xl font-semibold">Paste a job link</h3>
-                <p class="text-muted-foreground">
-                  We parse the page and fill in the role, company, and key details in seconds.
-                </p>
-              </div>
-              <div class="text-center space-y-4">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 mx-auto">
-                  <span class="text-2xl font-bold text-primary">3</span>
-                </div>
-                <h3 class="text-xl font-semibold">Get an AI resume review</h3>
-                <p class="text-muted-foreground">
-                  Check how your resume stacks up against the job. Generate a cover letter if you want one.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+<Layout
+  title="OpenApply: a free job application tracker with follow-up reminders and resume checks"
+  description="Keep every job application in one place. Paste a job link and the details are filled in, get a reminder to follow up, and check your resume against the job. Free."
+>
+  {hasExtension && <script is:inline set:html={detectBrowserScript} />}
+  <div class="bg-background text-foreground antialiased">
+    <Header currentPath="/" />
+    <main id="main" class="mx-auto max-w-[1440px]">
+      <!-- Hero -->
+      <section class="flex flex-col gap-6 px-5 pt-4 pb-2 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-20 lg:pt-12 lg:pb-10">
+        <div class="flex min-w-0 flex-col gap-5 lg:w-[620px] lg:shrink-0 lg:gap-7">
+          <h1 class="m-0 font-display text-[44px] leading-none font-extrabold tracking-[-0.035em] lg:text-[76px]">
+            Keep every job application in
+            <span class="-ml-1 rounded-[12px] whitespace-nowrap bg-secondary px-2 [box-decoration-break:clone] lg:rounded-[16px] lg:px-3">one place.</span>
+          </h1>
+          <p class="m-0 max-w-[540px] text-[17px] leading-normal text-soft-foreground lg:text-xl">
+            {hasExtension
+              ? 'Save jobs from LinkedIn, Indeed or any career site in one click.'
+              : 'Paste a job link from LinkedIn, Indeed or any career site and the details fill in.'}
+            {' '}We remind you to follow up and check your resume against the job. Free.
+          </p>
 
-        <!-- Features Section -->
-        <section id="features" class="relative py-24 scroll-mt-16">
-          <div class="container mx-auto relative px-4">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-              <h2 class="text-4xl font-bold mb-4">
-                What you get
-              </h2>
+          {hasExtension && (
+            <div class="hidden flex-col gap-2.5 chromium:flex">
+              <a
+                href={extensionUrl}
+                target="_blank"
+                rel="noopener"
+                class:list={[primaryButton, 'self-start']}
+                onclick="window.posthog?.capture('lp_extension_install_clicked', { from: 'hero' })"
+              >
+                <i class="ph ph-chrome-logo text-[19px]" aria-hidden="true"></i>
+                Add to Chrome, it is free
+              </a>
+              <span class="text-sm text-muted-foreground">Works on LinkedIn, Greenhouse, Lever, Workday and most career sites.</span>
             </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-link w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">AI resume reviews</h3>
-                  <p class="text-muted-foreground">
-                    See how well your resume fits the job and what to fix before applying.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-layout-list w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <rect width="7" height="7" x="3" y="3" rx="1"></rect>
-                      <rect width="7" height="7" x="3" y="14" rx="1"></rect>
-                      <path d="M14 4h7"></path>
-                      <path d="M14 9h7"></path>
-                      <path d="M14 15h7"></path>
-                      <path d="M14 20h7"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">Organized dashboard</h3>
-                  <p class="text-muted-foreground">
-                    Statuses, notes, due dates, and tags for every application.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-sparkles w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
-                      <path d="M20 3v4"></path>
-                      <path d="M22 5h-4"></path>
-                      <path d="M4 17v2"></path>
-                      <path d="M5 18H3"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">Quick cover letters</h3>
-                  <p class="text-muted-foreground">
-                    Generated from the job post and your resume, not a generic template.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-file-text w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
-                      <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
-                      <path d="M10 9H8"></path>
-                      <path d="M16 13H8"></path>
-                      <path d="M16 17H8"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">Resume storage</h3>
-                  <p class="text-muted-foreground">
-                    Upload your resumes and link them to applications.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-upload w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="17 8 12 3 7 8"></polyline>
-                      <line x1="12" x2="12" y1="3" y2="15"></line>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">Spreadsheet onboarding</h3>
-                  <p class="text-muted-foreground">
-                    Start in minutes, not hours.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
-              >
-                <div class="p-6 space-y-4">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-link w-6 h-6 text-secondary-foreground"
-                      aria-hidden="true"
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-semibold">Paste-a-link import</h3>
-                  <p class="text-muted-foreground">
-                    Paste a job URL and the company, role, and details are filled in automatically.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+          )}
 
-        <!-- Pricing Section -->
-        <section id="pricing" class="relative py-24 scroll-mt-16">
-          <div class="absolute inset-0 -z-10 bg-muted/40"></div>
-          <div
-            class="absolute inset-x-0 top-0 -z-10 h-px bg-border"
-          ></div>
-          <div class="container mx-auto relative px-4">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-              <h2 class="text-4xl font-bold mb-4">
-                Free to track. Pay as you go for AI.
-              </h2>
-              <p class="text-xl text-muted-foreground">
-                Track as many applications as you want for free. AI resume reviews and cover letters are pay-as-you-go. No monthly plans, no subscriptions.
-              </p>
-            </div>
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <!-- Free Card -->
-              <div
-                class="rounded-lg text-card-foreground border border-border/60 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
-              >
-                <div class="mb-6">
-                  <h3 class="text-2xl font-bold">Free</h3>
-                  <p class="text-muted-foreground mt-1">Track your entire job search</p>
-                </div>
-                <ul class="space-y-4 flex-grow">
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Unlimited application tracking</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Paste-a-link job import</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Notes, due dates, and tags</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Resume and document storage</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Spreadsheet/CSV import</span>
-                  </li>
-                </ul>
-                <div class="mt-8">
-                  <a
-                    href="/app?mode=signup"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
-                  >
-                    Get Started
-                  </a>
-                </div>
-              </div>
-              <!-- AI Features Card -->
-              <div
-                class="rounded-lg text-card-foreground border border-primary/40 bg-card/80 shadow-sm backdrop-blur p-8 flex flex-col"
-              >
-                <div class="mb-6">
-                  <h3 class="text-2xl font-bold">AI Features</h3>
-                  <p class="text-muted-foreground mt-1">Pay-as-you-go. No subscription.</p>
-                </div>
-                <ul class="space-y-4 flex-grow">
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>AI resume review from $0.12</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>AI cover letter from $0.12</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>Pay only when you use AI</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-5 h-5 text-primary mt-0.5 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                    <span>No subscriptions, no lock-in</span>
-                  </li>
-                </ul>
-                <div class="mt-8">
-                  <a
-                    href="/app?mode=signup"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 w-full"
-                  >
-                    Start Free
-                  </a>
-                </div>
-              </div>
-            </div>
-            <p class="text-center text-sm text-muted-foreground mt-8">
-              Want full control? <a href="https://github.com/SergeyKhval/OpenApply" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Self-host with your own API keys</a>.
+          <div class="flex flex-col gap-2 lg:max-w-[560px]">
+            {hasExtension && (
+              <label for="hero-job-link" class="hidden text-[14.5px] text-soft-foreground chromium:block">
+                No extension? Paste a job link instead.
+              </label>
+            )}
+            <JobLinkInput
+              client:visible
+              inputId="hero-job-link"
+              placeholder="https://www.linkedin.com/jobs/view/…"
+              secondaryOnChromium={hasExtension}
+            />
+          </div>
+
+          <div class="flex flex-col-reverse gap-5 lg:flex-row lg:items-center">
+            <p class="m-0 flex items-center gap-2 text-[14.5px] text-muted-foreground">
+              <i class="ph ph-shield-check text-[17px]" aria-hidden="true"></i>
+              Free. Your data stays yours, export anytime.
             </p>
+            <a
+              href={signupUrl}
+              class="self-start text-[15px] font-semibold text-secondary-foreground hover:text-foreground lg:text-[14.5px]"
+              onclick="window.posthog?.capture('lp_signup_link_clicked', { from: 'hero' })"
+            >
+              or create a free account
+            </a>
           </div>
-        </section>
+        </div>
 
-        <!-- FAQ Section -->
-        <section id="faq" class="relative py-24 scroll-mt-16">
-          <div class="container mx-auto relative px-4">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-              <h2 class="text-4xl font-bold mb-4">
-                Frequently Asked Questions
-              </h2>
+        <!-- Product visual: static markup, not a screenshot -->
+        <div class="relative min-w-0 pt-2 lg:w-[620px] lg:shrink-0 lg:pt-0" aria-hidden="true">
+          {hasExtension && (
+            <div class="absolute top-0 right-0 z-10 hidden w-[304px] flex-col gap-3 rounded-[18px] border border-border bg-card p-4 shadow-pop lg:chromium:flex">
+              <div class="flex items-center justify-between gap-3">
+                <span class="flex items-center gap-[9px]">
+                  <span class="grid size-6 place-items-center rounded-[8px_8px_8px_2px] bg-primary text-primary-foreground">
+                    <i class="ph ph-check text-[13px]"></i>
+                  </span>
+                  <span class="font-display text-[17px] font-extrabold tracking-[-0.02em]">OpenApply</span>
+                </span>
+                <span class="text-[12.5px] text-muted-foreground">Extension</span>
+              </div>
+              <div class="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
+                <span class="text-[14.5px] font-bold">Senior Frontend Engineer</span>
+                <span class="text-[13.5px] text-soft-foreground">Northwind Labs · Hybrid, Berlin</span>
+                <span class="mt-1 flex items-center gap-1.5 text-[12.5px] font-semibold text-success">
+                  <i class="ph ph-check text-sm"></i>Description read from the page
+                </span>
+              </div>
+              <span class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-semibold text-primary-foreground">
+                <i class="ph ph-plus text-[17px]"></i>Save to OpenApply
+              </span>
             </div>
-            <div class="max-w-3xl mx-auto space-y-6">
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">How do coins work?</h3>
-                <p class="text-muted-foreground">
-                  Coins are only spent on AI features like resume reviews and cover letters; tracking is free. Each review or cover letter costs 10 coins, and coin packs range from $0.012 to $0.02 per coin depending on pack size, so a review costs $0.12 to $0.20.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">How do AI resume reviews work?</h3>
-                <p class="text-muted-foreground">
-                  Pick a job and a resume, and we check the match. You get a score with specific suggestions on what to improve, ready in under a minute.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Can I import my spreadsheet?</h3>
-                <p class="text-muted-foreground">
-                  Yes. Bring your CSV or export from your spreadsheet and you're set.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">How does paste-a-link work?</h3>
-                <p class="text-muted-foreground">
-                  Paste a URL from any job board and we scrape the page to fill in the company, role, and description automatically. Works with most popular boards. If a site is tricky, you can always add details manually.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Can it write cover letters?</h3>
-                <p class="text-muted-foreground">
-                  Yes. Pick a job and a resume, and the AI generates a cover letter tailored to both. You can regenerate until you're happy with it.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Is OpenApply open source?</h3>
-                <p class="text-muted-foreground">
-                  Yes. The entire codebase is on GitHub. You can self-host it with your own API keys if you prefer.
-                </p>
-              </div>
-              <div class="rounded-lg border border-border/60 bg-card/80 backdrop-blur p-6">
-                <h3 class="text-lg font-semibold mb-2">Which currencies do you support?</h3>
-                <p class="text-muted-foreground">
-                  Billing is pay‑as‑you‑go; currency and pricing are shown at checkout.
-                </p>
-              </div>
+          )}
+          <div class="flex flex-col gap-3.5 rounded-[24px] bg-muted p-3.5 lg:w-[560px] lg:rounded-[28px] lg:p-5 lg:chromium:mt-[250px]">
+            <div class="hidden items-center justify-between gap-3 lg:flex">
+              <p class="m-0 font-display text-xl font-extrabold tracking-[-0.02em]">Good morning, Maya</p>
+              <span class="inline-flex h-6 items-center rounded-full bg-secondary px-2.5 text-[12.5px] font-semibold whitespace-nowrap text-secondary-foreground">
+                Follow up with Brightline today
+              </span>
+            </div>
+            <div class="grid grid-cols-3 items-start gap-2.5">
+              {lanes.map((lane) => (
+                <div class:list={['flex min-w-0 flex-col gap-2 rounded-2xl p-2.5', lane.tone]}>
+                  <span class="px-0.5 font-display text-[13.5px] font-bold">{lane.name}</span>
+                  {lane.jobs.map((job) => (
+                    <div class="flex items-center gap-2 rounded-xl bg-card p-2.5 shadow-card">
+                      <span
+                        class="hidden size-7 shrink-0 place-items-center rounded-full sm:grid font-display text-[10px] font-bold text-foreground"
+                        style={`background: ${job.avatar}`}
+                      >{job.initials}</span>
+                      <span class="flex min-w-0 flex-col">
+                        <span class="truncate text-[12.5px] font-bold">{job.company}</span>
+                        <span class="truncate text-[11.5px] text-soft-foreground">{job.role}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
-        </section>
-        <!-- Closing CTA -->
-        <section class="relative py-24">
-          <div class="absolute inset-0 -z-10 bg-muted"></div>
-          <div class="container mx-auto px-4 max-w-2xl text-center">
-            <h2 class="text-3xl lg:text-4xl font-bold mb-4">
-              Stop losing track of where you applied
-            </h2>
-            <p class="text-lg text-muted-foreground mb-8">
-              Paste a job link and get started in seconds. Free, open source, no credit card.
-            </p>
-            <JobLinkInput client:visible />
-          </div>
-        </section>
-        </main>
-        <Footer />
-      </div>
-    </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section id="how-it-works" class="flex scroll-mt-20 flex-col gap-6 px-5 pt-12 lg:px-20 lg:pt-[72px]">
+        <h2 class="m-0 font-display text-[30px] font-extrabold tracking-[-0.02em] lg:text-[40px]">How it works</h2>
+        <div class="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
+          {steps.map((step, index) => (
+            <section class:list={[cardSurface, 'flex flex-col gap-3 p-6']}>
+              <div class="flex items-center gap-3">
+                <span class="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
+                  <i class:list={['ph', step.icon, 'text-[22px]']} aria-hidden="true"></i>
+                </span>
+                <span class="font-display text-[15px] font-bold text-muted-foreground">Step {index + 1}</span>
+              </div>
+              <h3 class="m-0 font-display text-[21px] font-bold tracking-[-0.02em]">{step.title}</h3>
+              <p class="m-0 text-base leading-normal text-soft-foreground">{step.body}</p>
+            </section>
+          ))}
+        </div>
+      </section>
+
+      <!-- Free check band -->
+      <section class="mx-5 mt-10 flex flex-col gap-4 rounded-[28px] bg-secondary p-6 lg:mx-20 lg:mt-16 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:px-10 lg:py-8">
+        <div class="flex flex-col gap-1">
+          <h2 class="m-0 font-display text-[22px] font-extrabold tracking-[-0.02em] lg:text-[26px]">Not ready to sign up?</h2>
+          <p class="m-0 text-base text-soft-foreground">Check your resume against any job. No account needed.</p>
+        </div>
+        <a href={toolUrl} class:list={[primaryButton, 'w-full lg:w-auto']}>
+          Try the free check
+          <i class="ph ph-arrow-right text-base" aria-hidden="true"></i>
+        </a>
+      </section>
+
+      <!-- Pricing -->
+      <section id="pricing" class="flex scroll-mt-20 flex-col gap-6 px-5 pt-12 lg:px-20 lg:pt-[72px]">
+        <h2 class="m-0 font-display text-[30px] font-extrabold tracking-[-0.02em] lg:text-[40px]">Pricing</h2>
+        <div class="grid max-w-[900px] gap-5 lg:grid-cols-2">
+          {pricingPlans.map((plan) => (
+            <section
+              class:list={[
+                'flex flex-col gap-3.5 p-7',
+                plan.featured ? cardSurface : 'rounded-card border-[1.5px] border-input',
+              ]}
+            >
+              <h3 class="m-0 text-[15px] font-bold text-soft-foreground">{plan.name}</h3>
+              <p class="m-0 font-display text-[44px] leading-tight font-extrabold tracking-[-0.02em]">{plan.price}</p>
+              <p class="m-0 text-base text-soft-foreground">{plan.summary}</p>
+              <ul class="m-0 flex list-none flex-col gap-2 p-0">
+                {plan.features.map((feature) => (
+                  <li class="flex items-start gap-2.5 text-base leading-normal text-soft-foreground">
+                    <i class="ph ph-check mt-1 text-primary" aria-hidden="true"></i>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              {plan.cta && (
+                <div class="mt-auto pt-2">
+                  <a href={signupUrl} class:list={[primaryButton, 'w-full lg:w-auto']}>{plan.cta}</a>
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="flex scroll-mt-20 flex-col gap-6 px-5 pt-12 lg:px-20 lg:pt-[72px]">
+        <h2 class="m-0 font-display text-[30px] font-extrabold tracking-[-0.02em] lg:text-[40px]">Questions</h2>
+        <div class="grid items-start gap-3.5 lg:grid-cols-2">
+          {faqs.map((faq, index) => (
+            <details class="group rounded-[18px] border border-transparent bg-card shadow-card dark:border-border" open={index === 0}>
+              <summary class="flex min-h-[60px] cursor-pointer list-none items-center justify-between gap-4 px-[22px] py-3 text-[17px] font-semibold [&::-webkit-details-marker]:hidden">
+                <h3 class="m-0 text-[17px] font-semibold">{faq.question}</h3>
+                <i class="ph ph-caret-down shrink-0 text-lg transition-transform group-open:rotate-180" aria-hidden="true"></i>
+              </summary>
+              <p class="m-0 px-[22px] pb-5 text-base leading-[1.55] text-soft-foreground">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <!-- Closing -->
+      <section class="mx-5 mt-12 flex flex-col gap-3.5 rounded-[28px] bg-muted px-[22px] py-7 lg:mx-20 lg:mt-[72px] lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:rounded-[32px] lg:px-12 lg:py-11">
+        <h2 class="m-0 max-w-[520px] font-display text-[28px] font-extrabold tracking-[-0.02em] lg:text-4xl">Stop losing track of where you applied.</h2>
+        <div class="lg:w-[520px]">
+          <JobLinkInput client:visible inputId="closing-job-link" />
+        </div>
+      </section>
+      <div class="h-12"></div>
+    </main>
+    <Footer />
   </div>
-
 </Layout>
