@@ -242,6 +242,12 @@
       "indexes": []
     },
     {
+      "collectionGroup": "jobRateLimits",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
       "collectionGroup": "billingProfile",
       "fieldPath": "stripeCustomerId",
       "ttl": false,

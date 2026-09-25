@@ -65,6 +65,9 @@ export function friendlyRequestError(err: unknown): string {
   if (code === "functions/invalid-argument" && message) {
     return message;
   }
+  if (code === "functions/resource-exhausted" && message) {
+    return message;
+  }
   if (code === "functions/deadline-exceeded") {
     return "That took too long. Enter the details yourself instead.";
   }
