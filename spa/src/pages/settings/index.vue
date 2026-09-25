@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// /settings opens its first section until the full Settings page lands
-definePage({ redirect: "/settings/import-export" });
+// /settings opens its first section
+definePage({ redirect: "/settings/plan" });
 </script>
 
 <template>

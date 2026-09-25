@@ -28,6 +28,7 @@
 import PageHeader from "@/components/PageHeader.vue";
 
 const SECTIONS = [
+  { to: "/settings/plan", label: "Plan and AI usage" },
   { to: "/settings/import-export", label: "Import and export" },
   { to: "/settings/email", label: "Email" },
   { to: "/settings/account", label: "Account" },

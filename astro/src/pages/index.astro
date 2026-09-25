@@ -37,6 +37,9 @@ const steps = [
   },
 ];
 
+// Pro shows as "coming soon" until the Stripe price is configured; the
+// script below asks the server and adds `pro-live` to <html> when it's on
+// sale. Entries with a `soon` variant swap on that class.
 const pricingPlans = [
   {
     name: 'Free',
@@ -52,6 +55,7 @@ const pricingPlans = [
     ],
     cta: 'Start free',
     featured: true,
+    comingSoon: false,
   },
   {
     name: 'Pro',
@@ -65,6 +69,7 @@ const pricingPlans = [
     ],
     cta: null,
     featured: false,
+    comingSoon: true,
   },
 ];
 
@@ -72,6 +77,7 @@ const faqs = [
   {
     question: 'What counts as an AI check?',
     answer: 'Each AI resume match or cover letter (including a regenerate) is one check. Tracking, job link import and resume upload are free and unlimited. Free accounts get 15 checks a month; Pro gets 150 for $9 a month. Checks reset on the 1st of each month.',
+    soon: "Each AI resume match or cover letter (including a regenerate) is one check. Tracking, job link import and resume upload are free and unlimited. Free accounts get 15 checks a month, reset on the 1st. Pro (150 checks for $9 a month) isn't on sale yet.",
   },
   {
     question: 'How do AI resume reviews work?',
@@ -96,8 +102,28 @@ const faqs = [
   {
     question: 'Which currencies do you support?',
     answer: 'Pro is billed monthly through Stripe. Your currency and any local taxes are shown at checkout.',
+    soon: "There's nothing to pay for yet: everything on the site is free today. When Pro goes on sale it will be billed monthly through Stripe, with your currency and any local taxes shown at checkout.",
   },
 ];
+
+// Callable URL (plain fetch keeps the Firebase SDK off the landing). The
+// last answer is remembered so returning visitors don't see Pro flip.
+const projectId = import.meta.env.PUBLIC_FIREBASE_PROJECT_ID;
+const proAvailabilityUrl = import.meta.env.DEV
+  ? `http://localhost:5001/${projectId}/us-central1/getProAvailability`
+  : `https://us-central1-${projectId}.cloudfunctions.net/getProAvailability`;
+const proAvailabilityScript = `(function () {
+  var root = document.documentElement, key = "oa-pro-live";
+  try { if (localStorage.getItem(key) === "1") root.classList.add("pro-live"); } catch (e) {}
+  fetch(${JSON.stringify(proAvailabilityUrl)}, { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"data":{}}' })
+    .then(function (r) { return r.json(); })
+    .then(function (body) {
+      var live = !!(body && body.result && body.result.proAvailable);
+      root.classList.toggle("pro-live", live);
+      try { if (live) localStorage.setItem(key, "1"); else localStorage.removeItem(key); } catch (e) {}
+    })
+    .catch(function () {});
+})();`;
 
 const lanes = [
   { name: 'Saved', tone: 'bg-stage-saved-soft', jobs: [{ initials: 'FE', avatar: 'var(--avatar-3)', company: 'Fernway', role: 'Frontend Developer' }] },
@@ -121,6 +147,7 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
   description="Keep every job application in one place. Paste a careers page link and the details fill in, get a reminder to follow up, and check your resume against the job. Free."
 >
   {hasExtension && <script is:inline set:html={detectBrowserScript} />}
+  <script is:inline set:html={proAvailabilityScript} />
   <div class="bg-background text-foreground antialiased">
     <Header currentPath="/" />
     <main id="main" class="mx-auto max-w-[1440px]">
@@ -280,9 +307,19 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
                 plan.featured ? cardSurface : 'rounded-card border-[1.5px] border-input',
               ]}
             >
-              <h3 class="m-0 text-[15px] font-bold text-soft-foreground">{plan.name}</h3>
+              <h3 class="m-0 flex items-center gap-2 text-[15px] font-bold text-soft-foreground">
+                {plan.name}
+                {plan.comingSoon && (
+                  <span class="inline-flex h-6 items-center rounded-full bg-secondary px-2.5 text-xs font-semibold text-secondary-foreground pro-live:hidden">Coming soon</span>
+                )}
+              </h3>
               <p class="m-0 font-display text-[44px] leading-tight font-extrabold tracking-[-0.02em]">{plan.price}</p>
               <p class="m-0 text-base text-soft-foreground">{plan.summary}</p>
+              {plan.comingSoon && (
+                <p class="m-0 rounded-field bg-muted px-4 py-3 text-[15px] leading-normal text-soft-foreground pro-live:hidden">
+                  Not on sale yet. Payments aren't switched on, so there's nothing to buy today. The free plan is the whole product for now.
+                </p>
+              )}
               <ul class="m-0 flex list-none flex-col gap-2 p-0">
                 {plan.features.map((feature) => (
                   <li class="flex items-start gap-2.5 text-base leading-normal text-soft-foreground">
@@ -311,7 +348,14 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
                 <h3 class="m-0 text-[17px] font-semibold">{faq.question}</h3>
                 <i class="ph ph-caret-down shrink-0 text-lg transition-transform group-open:rotate-180" aria-hidden="true"></i>
               </summary>
-              <p class="m-0 px-[22px] pb-5 text-base leading-[1.55] text-soft-foreground">{faq.answer}</p>
+              {faq.soon ? (
+                <>
+                  <p class="m-0 px-[22px] pb-5 text-base leading-[1.55] text-soft-foreground pro-live:hidden">{faq.soon}</p>
+                  <p class="m-0 hidden px-[22px] pb-5 text-base leading-[1.55] text-soft-foreground pro-live:block">{faq.answer}</p>
+                </>
+              ) : (
+                <p class="m-0 px-[22px] pb-5 text-base leading-[1.55] text-soft-foreground">{faq.answer}</p>
+              )}
             </details>
           ))}
         </div>

@@ -4,7 +4,7 @@ function isLoaded(): boolean {
   return posthog.__loaded;
 }
 
-export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter";
+export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan";
 
 type EventMap = {
   signup_completed: {

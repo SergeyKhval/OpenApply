@@ -91,6 +91,7 @@ declare module 'vue-router/auto-routes' {
       | '/settings/appearance'
       | '/settings/email'
       | '/settings/import-export'
+      | '/settings/plan'
     >,
     '/settings/': RouteRecordInfo<
       '/settings/',
@@ -123,6 +124,13 @@ declare module 'vue-router/auto-routes' {
     '/settings/import-export': RouteRecordInfo<
       '/settings/import-export',
       '/settings/import-export',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/settings/plan': RouteRecordInfo<
+      '/settings/plan',
+      '/settings/plan',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -200,6 +208,7 @@ declare module 'vue-router/auto-routes' {
         | '/settings/appearance'
         | '/settings/email'
         | '/settings/import-export'
+        | '/settings/plan'
       views:
         | 'default'
     }
@@ -230,6 +239,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/settings/import-export.vue': {
       routes:
         | '/settings/import-export'
+      views:
+        | never
+    }
+    'src/pages/settings/plan.vue': {
+      routes:
+        | '/settings/plan'
       views:
         | never
     }
