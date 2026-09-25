@@ -39,6 +39,8 @@ export type JobApplication = {
   toolMatch?: ToolMatch;
   // When the posting says it was posted, read by the browser extension
   posting?: JobPosting;
+  // Id of the public jobSignals doc for this posting, set by the jobSignals function
+  jobKeyHash?: string;
 };
 
 // Result of the free resume match tool on the landing page, saved with the

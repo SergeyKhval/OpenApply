@@ -4,13 +4,14 @@ const record = vi.fn();
 const update = vi.fn();
 const docs: { id: string; data: () => Record<string, unknown>; ref: { update: typeof update } }[] = [];
 const userAdmin = vi.fn();
+const limitArg = vi.fn();
 
 vi.mock("../jobSignals", () => ({ recordJobSignals: (...args: unknown[]) => record(...args) }));
 vi.mock("firebase-admin/firestore", () => {
   const query = {
     orderBy: () => query,
     startAfter: () => query,
-    limit: () => query,
+    limit: (value: number) => (limitArg(value), query),
     get: async () => ({ docs }),
   };
   return {
@@ -68,6 +69,15 @@ describe("backfillJobSignals", () => {
     await expect(call({ dryRun: false })).resolves.toMatchObject({ dryRun: false, eligible: 1, recorded: 1 });
     expect(record).toHaveBeenCalledWith({ jobDescriptionLink: "https://jobs.lever.co/acme/1" });
     expect(update).toHaveBeenCalledWith({ jobKeyHash: "hash-1" });
+  });
+
+  it("reads 50 per page by default and never more than 100", async () => {
+    await call({});
+    expect(limitArg).toHaveBeenLastCalledWith(50);
+    await call({ limit: 500 });
+    expect(limitArg).toHaveBeenLastCalledWith(100);
+    await call({ limit: 30 });
+    expect(limitArg).toHaveBeenLastCalledWith(30);
   });
 
   it("returns no cursor when the page isn't full", async () => {

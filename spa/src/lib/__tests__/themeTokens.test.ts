@@ -52,6 +52,8 @@ describe.each([":root", ".dark"] as const)("theme %s", (selector) => {
     ["stage-interviewing-text", "stage-interviewing-soft"],
     ["stage-offer-text", "stage-offer-soft"],
     ["stage-closed-text", "stage-closed-soft"],
+    ["signal-text", "signal-soft"],
+    ["signal-text", "card"],
   ])("%s on %s is at least 4.5:1", (text, surface) => {
     expect(theme[text], `--${text} missing`).toBeDefined();
     expect(theme[surface], `--${surface} missing`).toBeDefined();

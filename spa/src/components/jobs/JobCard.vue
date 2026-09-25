@@ -19,6 +19,7 @@
       <div class="flex min-w-0 flex-col gap-2.5">
         <div class="flex flex-col gap-0.5 text-[13px] text-muted-foreground">
           <span>{{ metaLine }}</span>
+          <PostingSignsBadge v-if="signs.length" :lines="signs" class="mt-1" />
           <span
             v-if="followUp"
             class="inline-flex items-center gap-1"
@@ -50,6 +51,8 @@ import { PhCheck, PhPaperPlaneTilt } from "@phosphor-icons/vue";
 import { Button } from "@/components/ui/button";
 import CompanyAvatar from "@/components/jobs/CompanyAvatar.vue";
 import JobStageMenu from "@/components/jobs/JobStageMenu.vue";
+import PostingSignsBadge from "@/components/jobs/PostingSignsBadge.vue";
+import { useJobSignals } from "@/composables/useJobSignals";
 import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus";
 import { followUpLabel, stageSinceLabel } from "@/lib/jobDates";
 import type { JobApplication } from "@/types";
@@ -58,6 +61,7 @@ const { job, now } = defineProps<{ job: JobApplication; now: Date }>();
 
 const { markApplied } = useUpdateJobApplicationStatus();
 
+const signs = useJobSignals(() => job, () => now);
 const followUp = computed(() => followUpLabel(job, now));
 const metaLine = computed(() => {
   const score = job.toolMatch?.matchScore;

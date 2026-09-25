@@ -48,6 +48,13 @@
 
       <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
         <div class="flex min-w-0 flex-col gap-5">
+          <JobPostingSignals
+            v-if="signs.length && !isWide"
+            :lines="signs"
+            :company-name="application.companyName"
+            :position="application.position"
+            :link="application.jobDescriptionLink"
+          />
           <ToolMatchCard
             v-if="application.toolMatch"
             :match="application.toolMatch"
@@ -82,6 +89,13 @@
         </div>
 
         <div class="flex min-w-0 flex-col gap-5">
+          <JobPostingSignals
+            v-if="signs.length && isWide"
+            :lines="signs"
+            :company-name="application.companyName"
+            :position="application.position"
+            :link="application.jobDescriptionLink"
+          />
           <JobApplicationAttachments :application="application" />
           <JobApplicationDescription :application="application" />
           <Card class="gap-2">
@@ -108,7 +122,7 @@ import { computed, ref, shallowRef } from "vue";
 import { useRoute } from "vue-router";
 import { useDocument } from "vuefire";
 import { collection, doc } from "firebase/firestore";
-import { useIntervalFn } from "@vueuse/core";
+import { useIntervalFn, useMediaQuery } from "@vueuse/core";
 import {
   PhArrowUpRight,
   PhCaretLeft,
@@ -124,12 +138,14 @@ import JobApplicationDescription from "@/components/JobApplicationDescription.vu
 import ToolMatchCard from "@/components/ToolMatchCard.vue";
 import CompanyAvatar from "@/components/jobs/CompanyAvatar.vue";
 import FollowUpDialog from "@/components/jobs/FollowUpDialog.vue";
+import JobPostingSignals from "@/components/job/JobPostingSignals.vue";
 import JobStageStepper from "@/components/job/JobStageStepper.vue";
 import JobTimeline from "@/components/job/JobTimeline.vue";
 import NextStepCard from "@/components/job/NextStepCard.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useJobSignals } from "@/composables/useJobSignals";
 import { useJobTimeline } from "@/composables/useJobTimeline";
 import { useResumes } from "@/composables/useResumes";
 import { useResumeUpload } from "@/composables/useResumeUpload";
@@ -146,6 +162,10 @@ const { markApplied } = useUpdateJobApplicationStatus();
 
 const now = ref(new Date());
 useIntervalFn(() => (now.value = new Date()), 60_000);
+
+const signs = useJobSignals(application, now);
+// Before the timeline on phones, where the side column ends up last
+const isWide = useMediaQuery("(min-width: 1024px)");
 
 const REMOTE_LABELS = { remote: "Remote", hybrid: "Hybrid", "in-office": "On site" } as const;
 const EMPLOYMENT_LABELS = { "full-time": "Full time", "part-time": "Part time" } as const;
