@@ -47,6 +47,7 @@ type EventMap = {
   note_created: { applicationId: string };
   next_up_action: { kind: "follow-up" | "interview" | "stale-saved"; action: "draft" | "done" | "snooze" | "applied" | "let_go" | "open" };
   follow_up_copied: { applicationId?: string };
+  account_deleted: void;
 };
 
 type EventName = keyof EventMap;
