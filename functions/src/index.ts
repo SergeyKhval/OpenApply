@@ -30,3 +30,4 @@ export * from "./deleteAccount";
 export * from "./jobSignals";
 export * from "./backfillJobSignals";
 export * from "./jobListingRecheck";
+export * from "./jobReports";

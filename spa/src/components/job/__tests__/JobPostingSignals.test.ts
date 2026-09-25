@@ -28,9 +28,12 @@ const doc: JobSignalsDoc = {
 const lines = signLines(doc, "Workato", NOW);
 
 describe("JobPostingSignals", () => {
-  const wrapper = mount(JobPostingSignals, {
-    props: { lines, companyName: "Workato", position: "Data Analyst", link: "https://jobs.lever.co/x/1" },
-  });
+  const mountSignals = (shown: SignLine[]) =>
+    mount(JobPostingSignals, {
+      props: { lines: shown, keyHash: "a".repeat(64) },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    });
+  const wrapper = mountSignals(lines);
 
   it("lists each sign with its source", () => {
     const text = wrapper.text();
@@ -45,6 +48,24 @@ describe("JobPostingSignals", () => {
     expect(wrapper.text()).not.toMatch(/ghost|scam|fake|likely|fraud|suspicious/i);
     // Unprefixed utilities only: the Button's aria-invalid:ring-destructive never applies here
     expect(wrapper.html()).not.toMatch(/(?<![:\w-])(text|bg|border|ring)-(destructive|red|rose)/);
+  });
+
+  it("links to the review page for this posting", () => {
+    expect(wrapper.findComponent(RouterLinkStub).props("to")).toEqual({
+      path: "/posting-review",
+      query: { job: "a".repeat(64) },
+    });
+  });
+
+  it("goes red only for 3+ reports of being asked to pay", () => {
+    const money = signLines(
+      { reports: { asked_for_money: { days: ["2026-09-01", "2026-09-02", "2026-09-20"] } } },
+      "Workato",
+      NOW,
+    );
+    const html = mountSignals([...money, ...lines]).html();
+    expect(html).toMatch(/(?<![:\w-])text-destructive/);
+    expect(html).toMatch(/(?<![:\w-])bg-destructive/);
   });
 
   it("reports what was shown", () => {

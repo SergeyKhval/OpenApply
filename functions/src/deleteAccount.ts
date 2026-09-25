@@ -3,6 +3,7 @@ import { getStorage } from "firebase-admin/storage";
 import { getAuth } from "firebase-admin/auth";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { refreshPublicReports } from "./jobReports";
 
 // Every collection whose documents belong to one user through a `userId`
 // field. `jobs` is left alone: it is a shared cache of parsed job pages.
@@ -60,6 +61,12 @@ export const deleteAccount = onCall({ timeoutSeconds: 300 }, async (request) => 
   const counts: Record<string, number> = {};
   for (const collection of USER_DATA_COLLECTIONS) {
     counts[collection] = await deleteOwnedDocuments(collection, uid);
+  }
+  // Their posting reports go too, and the public counts they fed are redone
+  const reported = (await db.collection("jobReports").where("userId", "==", uid).get()).docs;
+  counts.jobReports = await deleteOwnedDocuments("jobReports", uid);
+  for (const keyHash of new Set(reported.map((doc) => String(doc.get("keyHash"))))) {
+    await refreshPublicReports(keyHash);
   }
   await db.recursiveDelete(userRef);
   await getStorage().bucket().deleteFiles({ prefix: `resumes/${uid}/` });

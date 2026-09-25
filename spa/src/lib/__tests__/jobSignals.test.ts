@@ -22,23 +22,27 @@ describe("signLines", () => {
         type: "still_listed",
         text: "Still listed 8 months after it was first saved on OpenApply (Jan 2026)",
         source: "Saves and OpenApply's weekly check, last seen listed Sep 20",
+        tone: "amber",
       },
       {
         type: "posted",
         text: "First posted 14 months ago (Jul 27, 2025)",
         source: "The posting's own date (schema.org datePosted)",
+        tone: "amber",
       },
       {
         type: "date_refreshed",
         text: "Posted date moved from Jul 27, 2025 to Aug 27, 2026",
         source: "The posting's own date, read on two different days",
+        tone: "amber",
       },
       {
         type: "same_role",
         text: "Same title at Workato saved under 1 older job ID, first in Jun 2026",
         source: "Jobs saved on OpenApply",
+        tone: "amber",
       },
-      { type: "open_application", text: "Open application, not a specific opening", source: "The job title" },
+      { type: "open_application", text: "Open application, not a specific opening", source: "The job title", tone: "amber" },
     ]);
   });
 
@@ -82,8 +86,63 @@ describe("signLines", () => {
         type: "same_role",
         text: "Same title at this company saved under 2 older job IDs, first in Mar 2026",
         source: "Jobs saved on OpenApply",
+        tone: "amber",
       },
     ]);
+  });
+});
+
+describe("report lines", () => {
+  const days = (...list: string[]) => ({ days: list });
+
+  it("shows a reason at 3 reports in 180 days, as a count with the latest date", () => {
+    const lines = signLines(
+      { reports: { no_reply_30d: days("2026-06-01", "2026-08-02", "2026-09-12") } },
+      "Acme",
+      NOW,
+    );
+    expect(lines).toEqual([
+      {
+        type: "report_no_reply_30d",
+        text: "3 people reported no reply 30+ days after applying (latest Sep 12)",
+        source: "Reports from people who saved this job on OpenApply",
+        tone: "amber",
+      },
+    ]);
+  });
+
+  it("is red only for 3+ reports of being asked to pay, listed first", () => {
+    const lines = signLines(
+      {
+        signs: { firstSeenAt: "2026-09-01", openApplication: true },
+        reports: { asked_for_money: days("2026-09-01", "2026-09-02", "2026-09-20") },
+      },
+      "Acme",
+      NOW,
+    );
+    expect(lines.map((line) => [line.type, line.tone])).toEqual([
+      ["report_asked_for_money", "red"],
+      ["open_application", "amber"],
+    ]);
+    expect(lines[0].text).not.toMatch(/scam|fraud|fake|ghost|likely/i);
+  });
+
+  it("drops reports older than 180 days, so an aged-out reason disappears", () => {
+    const doc = { reports: { asked_for_money: days("2026-03-01", "2026-09-01", "2026-09-02") } };
+    expect(signLines(doc, "Acme", NOW)).toEqual([]);
+  });
+
+  it("hides reports while a review is open, keeps the dated signs", () => {
+    const doc = {
+      reportsHidden: true,
+      signs: { firstSeenAt: "2026-09-01", openApplication: true as const },
+      reports: { asked_for_money: days("2026-09-01", "2026-09-02", "2026-09-03") },
+    };
+    expect(signLines(doc, "Acme", NOW).map((line) => line.type)).toEqual(["open_application"]);
+  });
+
+  it("no rule-based sign is ever red", () => {
+    expect(signLines(every, "Workato", NOW).every((line) => line.tone === "amber")).toBe(true);
   });
 });
 
