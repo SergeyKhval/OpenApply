@@ -3,6 +3,8 @@
 // the job application from it right after sign-in, or at once if signed in.
 // The browser extension's Save uses it too, via /save. Landing and app share an origin,
 // so localStorage carries it through signup without storing anything server-side.
+import type { JobPosting } from "../../../shared/jobPosting";
+
 export const PENDING_TOOL_APPLICATION_KEY = "oa-pending-tool-application";
 
 export type PendingToolApplication = {
@@ -17,6 +19,8 @@ export type PendingToolApplication = {
   // Where the job came from; absent means the match tool
   source?: "extension";
   location?: string;
+  // When the page says the job was posted (extension only)
+  posting?: JobPosting;
   // Absent when the extension saved the job without a match check
   match?: {
     matchScore: number;
