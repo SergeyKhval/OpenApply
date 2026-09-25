@@ -64,6 +64,16 @@ If you have a limited work history (perhaps you're writing a *software engineer 
 
 When referencing these projects in your *software engineer cover letter*, go beyond just listing them. Provide context. Explain *why* you chose those technologies and *how* the project aligns with the skills required for the target role. For instance, "I developed a machine learning model using TensorFlow to predict patient readmission rates, demonstrating my ability to apply AI techniques in a healthcare setting." A well-documented GitHub repository not only showcases your code but also your ability to write clear and concise documentation, a vital skill for collaboration within a software team. You may even find useful *software engineer cover letter template reddit* threads discussing how to optimally link to your profiles.
 
+## Tech-Specific Tips
+
+*   **Show results, not just tasks.** "Worked on backend services" tells a recruiter nothing. "Reduced API response time by 30% by optimizing SQL queries" tells them a lot.
+*   **Link to specific GitHub repos when relevant.** Not just your profile, the specific repo that demonstrates the relevant skill.
+*   **Mention open-source contributions.** It signals initiative and collaboration.
+*   **Tailor per application.** A senior backend role at a fintech gets a different letter than a full-stack startup role. Five minutes of tailoring makes a real difference.
+*   **Keep it to one page.** This is not a cover letter industry where long is respected.
+*   **Check for bugs.** Typos in a developer's cover letter are a bad signal for a profession where precision matters.
+*   **Mention AI tools if you use them.** In 2026, using GitHub Copilot or similar tools is expected. Noting it shows you're current.
+
 ---
 
 ## Generate Your Own Cover Letter
