@@ -1,0 +1,36 @@
+{
+  "_comment": "One job, one key. Run by functions/src/lib/__tests__/jobKey.test.ts and extension/test/jobKey.test.js so the two copies can't drift. URLs from the prod jobs cache, 2026-09-25.",
+  "keys": [
+    ["https://job-boards.greenhouse.io/workato/jobs/8181689002", "greenhouse:8181689002"],
+    ["https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us", "greenhouse:8181689002"],
+    ["https://job-boards.eu.greenhouse.io/parloa/jobs/4889900101", "greenhouse:4889900101"],
+    ["https://my.greenhouse.io/thesocialhub/jobs/4905077101", "greenhouse:4905077101"],
+    ["https://boards.greenhouse.io/embed/job_app?for=doximity&token=6738818", "greenhouse:6738818"],
+    ["https://auterion.com/company/careers-open-position/?gh_jid=8391045002", "greenhouse:8391045002"],
+    ["https://www.pinterestcareers.com/jobs/7386442/data-analyst-ii-trust-safety/?utm_source=startup.jobs&gh_jid=7386442#application_form", "greenhouse:7386442"],
+    ["https://jobs.lever.co/analyticpartners/2439f5cb-e5ef-4cb1-83c9-070048918384", "lever:2439f5cb-e5ef-4cb1-83c9-070048918384"],
+    ["https://jobs.lever.co/fresha/5ba648da-c575-462e-85e0-f1a996350110/apply?source=LinkedIn", "lever:5ba648da-c575-462e-85e0-f1a996350110"],
+    ["https://jobs.eu.lever.co/acme/5BA648DA-C575-462E-85E0-F1A996350110", "lever:5ba648da-c575-462e-85e0-f1a996350110"],
+    ["https://jobs.ashbyhq.com/SearchApi/fa1c90a1-11eb-406b-b672-84834c48c4bf/application?embed=js", "ashby:fa1c90a1-11eb-406b-b672-84834c48c4bf"],
+    ["https://jobs.ashbyhq.com/fathom.video/50323c12-96b2-4e6a-b8ea-98f21ea6e960?departmentId=c49c049d-b599-495d-b84e-da7906a6426a", "ashby:50323c12-96b2-4e6a-b8ea-98f21ea6e960"],
+    ["https://company.g2.com/careers/open-positions?ashby_jid=9f252c7f-70ea-42c2-b4e3-b1bdc8ef42d4", "ashby:9f252c7f-70ea-42c2-b4e3-b1bdc8ef42d4"],
+    ["https://cvshealth.wd1.myworkdayjobs.com/en-US/CVS_Health_Careers/job/Data-Insight-Analyst_R0779291", "workday:cvshealth:R0779291"],
+    ["https://cw.wd1.myworkdayjobs.com/External/job/Chicago-Illinois-USA/Business-Analyst_R290389?source=APPLICANT_SOURCE-3-151", "workday:cw:R290389"],
+    ["https://iko.wd3.myworkdayjobs.com/IKO_Careers/job/Mississauga-ON/IT-Project-Coordinator-Co-Op_REQ-11942?source=LinkedIn", "workday:iko:REQ-11942"],
+    ["https://wsgr.wd503.myworkdayjobs.com/WSGR/job/Data-Analyst--CRM_R1568/apply?utm_source=ziprecruiter", "workday:wsgr:R1568"],
+    ["https://abercrombie.wd108.myworkdayjobs.com/en-US/anf/details/Assistant-Manager-m-w-d---Mall-of-Berlin--Hollister_JR102021?locations=daf9", "workday:abercrombie:JR102021"],
+    ["https://apply.workable.com/conflux/j/8D7E777519/", "workable:8D7E777519"],
+    ["https://jobs.smartrecruiters.com/AirNewZealand/6000000000679893-pricing-analyst-los-angeles", "smartrecruiters:6000000000679893"],
+    ["https://www.linkedin.com/jobs/search/?currentJobId=4012345678&keywords=ruby", "linkedin:4012345678"],
+    ["https://www.linkedin.com/jobs/view/senior-dev-at-acme-4012345678?trk=abc", "linkedin:4012345678"],
+    ["https://de.indeed.com/jobs?q=dev&vjk=abc123def", "indeed:abc123def"],
+    ["https://www.indeed.com/viewjob?jk=abc123def", "indeed:abc123def"],
+    ["https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team", "url:https://zoolatech.com/vacancies/qa-216414-1.html"],
+    ["https://job-boards.greenhouse.io/dept/jobs/8020859?gh_source=https%3A%2F%2Fwww.deptagency.com#app", "greenhouse:8020859"],
+    ["https://careers.example.com/#/jobs/123", "url:https://careers.example.com/#/jobs/123"]
+  ],
+  "hashes": [
+    ["greenhouse:8181689002", "778e892640b15168fa6e61cc9b0760099e38fc90f994f55932f7a1b8c55b49eb"],
+    ["url:https://zoolatech.com/vacancies/qa-216414-1.html", "d71fb6085c7bddef4386c403d24619329728c814d317c9949804d723a449a3aa"]
+  ]
+}
