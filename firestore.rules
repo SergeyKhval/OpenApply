@@ -87,6 +87,15 @@ service cloud.firestore {
       allow delete: if canDeleteOwn();
     }
 
+    // Ghost-job signals: dated facts about a posting, keyed by the sha256 of
+    // its job key. Anyone may read one by id (the extension has no auth);
+    // nobody may list them or write them. The inputs they're computed from
+    // (jobSignalsPrivate) fall through to the deny-all rule below.
+    match /jobSignals/{keyHash} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
     match /promptTemplates/{promptTemplateId} {
       allow read: if isAdmin();
       allow create: if isAdmin();
