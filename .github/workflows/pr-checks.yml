@@ -67,6 +67,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build (typecheck)
         run: pnpm --filter openapply-functions build
+      # tsc moves its output under lib/functions/src/ when src imports a file
+      # outside functions/, and deploy then finds no lib/index.js
+      - name: Entry point where package.json says
+        run: test -f functions/lib/index.js
 
   functions-tests:
     name: Functions Tests

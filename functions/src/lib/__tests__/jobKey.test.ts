@@ -1,6 +1,13 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import cases from "../../../../shared/jobKeyCases.json";
 import { jobKey, jobKeyHash, jobKeyPrefix } from "../jobKey";
+
+// Read, not imported: an import would pull shared/ into tsc's build and move
+// lib/index.js to lib/functions/src/index.js
+const cases: { keys: [string, string][]; hashes: [string, string][] } = JSON.parse(
+  readFileSync(join(__dirname, "../../../../shared/jobKeyCases.json"), "utf8"),
+);
 
 describe("jobKey", () => {
   it.each(cases.keys)("%s", (url, key) => {
