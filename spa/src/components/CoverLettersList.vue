@@ -47,7 +47,7 @@
         <CardHeader>
           <CardTitle>
             <RouterLink
-              :to="`/dashboard/applications/${coverLetter.jobApplication.id}`"
+              :to="`/jobs/${coverLetter.jobApplication.id}`"
               class="text-lg text-primary hover:underline"
             >
               {{ coverLetter.jobApplication.position || "Unknown" }}

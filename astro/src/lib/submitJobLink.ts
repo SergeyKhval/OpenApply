@@ -39,7 +39,7 @@ export async function submitJobLink(url: string): Promise<JobLinkResult> {
 
     const params = new URLSearchParams({ job: jobId, from: "lp" });
     const redirectUrl = signedIn
-      ? `${spaBase}/dashboard/applications/new?${params}`
+      ? `${spaBase}/jobs/new?${params}`
       : `${spaBase}/?${params}`;
     return { ok: true, redirectUrl, signedIn };
   } catch (err) {

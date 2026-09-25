@@ -35,7 +35,7 @@
         :parsing-failed="parsingFailed"
         :analytics-source="fromLp ? 'landing_page_parse' : undefined"
         @saved="onSaved"
-        @back="router.push('/dashboard/applications')"
+        @back="router.push('/jobs')"
       />
     </template>
   </div>
@@ -90,7 +90,7 @@ const computedEmploymentType = computed<"full-time" | "part-time" | undefined>((
 });
 
 async function onSaved(applicationId: string) {
-  await router.push(`/dashboard/applications/${applicationId}?created=1`);
+  await router.push(`/jobs/${applicationId}?created=1`);
 }
 </script>
 

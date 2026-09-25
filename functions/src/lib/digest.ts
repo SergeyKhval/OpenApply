@@ -49,7 +49,7 @@ export type DigestStats = {
 };
 
 const FORWARD_STATUSES = ["interviewing", "offered", "hired"];
-const SKIP_ACTIONS_STATUSES = ["hired", "rejected", "archived"];
+const SKIP_ACTIONS_STATUSES = ["hired", "rejected", "withdrew", "archived"];
 
 const WINS_WINDOW_DAYS = 7;
 const OFFERED_DECISION_THRESHOLD_DAYS = 3;

@@ -15,7 +15,7 @@ export const sendWeeklyDigest = onSchedule("0 9 * * 1", async () => {
 
   const activeAppsSnapshot = await db
     .collection("jobApplications")
-    .where("status", "not-in", ["rejected", "archived"])
+    .where("status", "not-in", ["rejected", "withdrew", "archived"])
     .select("userId")
     .get();
 

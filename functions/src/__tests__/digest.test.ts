@@ -97,11 +97,12 @@ describe("categorizeApplications — threshold categorization", () => {
     expect(result.actions[0].daysSinceActivity).toBe(8);
   });
 
-  it("ignores hired, rejected, and archived applications (no actions)", () => {
+  it("ignores hired, rejected, withdrew and archived applications (no actions)", () => {
     const hired = makeApp({ id: "h", status: "hired", updatedAt: daysAgo(20) });
     const rejected = makeApp({ id: "r", status: "rejected", updatedAt: daysAgo(20) });
+    const withdrew = makeApp({ id: "w", status: "withdrew", updatedAt: daysAgo(20) });
     const archived = makeApp({ id: "a", status: "archived", updatedAt: daysAgo(20) });
-    const result = categorizeApplications([hired, rejected, archived], [], NOW);
+    const result = categorizeApplications([hired, rejected, withdrew, archived], [], NOW);
     expect(result.actions).toHaveLength(0);
   });
 
