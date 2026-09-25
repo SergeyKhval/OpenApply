@@ -2,7 +2,7 @@
   <Button :disabled="isUploading" @click="openFileDialog">
     <PhSpinner v-if="isUploading" class="animate-spin" />
     <PhFileArrowUp v-else />
-    <slot>Upload <span class="hidden lg:inline">New Resume</span></slot>
+    <slot><span>Upload<span class="hidden lg:inline"> resume</span></span></slot>
   </Button>
 </template>
 
