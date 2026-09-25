@@ -25,6 +25,20 @@ export type PrivateJobSignals = {
   repostedOnPage?: true;
   openApplication?: true;
   validThrough?: string;
+  // The canonical link, for the weekly listing check
+  link?: string;
+  // When the weekly check should look at it next; absent once closed or uncheckable
+  listingCheckDueAt?: string;
+  listing?: ListingHistory;
+};
+
+export type ListingHistory = {
+  lastCheckedAt?: string;
+  // Last day we know it was up: a save, or the check found it
+  lastListedAt?: string;
+  closedAt?: string;
+  // Checks in a row that couldn't tell
+  unknownStreak?: number;
 };
 
 // jobSignals/{keyHash}.signs: what anyone may read
@@ -37,10 +51,12 @@ export type PublicJobSigns = {
   repostedOnPage?: true;
   openApplication?: true;
   sameRoleReposted?: { count: number; firstSeenAt: string };
+  stillListed?: { since: string; lastListedAt: string };
 };
 
 export type JobObservation = {
   key: string;
+  link?: string;
   company: string;
   title: string;
   posting?: JobPosting;
@@ -54,6 +70,9 @@ const DAY_MS = 86400000;
 const REFRESH_MIN_DAYS = 7;
 // The same role under a new ATS id this much later is a repost
 const REPOST_MIN_DAYS = 30;
+// "Still listed" once it's been up this long since the first save
+const STILL_LISTED_MIN_DAYS = 60;
+const LISTING_CHECK_EVERY_DAYS = 7;
 
 function day(time: number): string {
   return new Date(time).toISOString().slice(0, 10);
@@ -61,6 +80,10 @@ function day(time: number): string {
 
 function daysBetween(from: string, to: string): number {
   return (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS;
+}
+
+export function addDays(from: string, days: number): string {
+  return day(Date.parse(`${from}T00:00:00Z`) + days * DAY_MS);
 }
 
 function isoDay(value: unknown, notAfter?: number): string | null {
@@ -91,7 +114,7 @@ export function sanitizePosting(value: unknown, now = Date.now()): JobPosting | 
 
 const PLACEHOLDERS = new Set(["unknown company", "unknown position"]);
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/\((?:[mfwdx]\s*\/\s*)+[mfwdx]\)/g, " ")
@@ -131,6 +154,18 @@ export function observeJob(previous: PrivateJobSignals | undefined, observation:
   const titleKey = companyTitleKey(observation.company, observation.title);
   if (titleKey) next.companyTitleKey = titleKey;
   if (isOpenApplication(observation.title)) next.openApplication = true;
+
+  if (observation.link) next.link = observation.link;
+
+  // Someone saving it is a sighting of it listed
+  const listing: ListingHistory = { ...next.listing };
+  if (!listing.lastListedAt || seen > listing.lastListedAt) listing.lastListedAt = seen;
+  const reopened = Boolean(listing.closedAt && seen > listing.closedAt);
+  if (reopened) delete listing.closedAt;
+  next.listing = listing;
+  if (!listing.closedAt && (!next.listingCheckDueAt || reopened)) {
+    next.listingCheckDueAt = addDays(seen, LISTING_CHECK_EVERY_DAYS);
+  }
 
   const posting = observation.posting;
   if (posting?.reposted) next.repostedOnPage = true;
@@ -176,6 +211,15 @@ export function publicSigns(signals: PrivateJobSignals, sameRole: SameRoleSighti
     signs.dateRefreshed = { from: signals.earliestPostedAt, to: signals.latestPostedAt };
   }
   if (signals.repostedOnPage) signs.repostedOnPage = true;
+  const listing = signals.listing;
+  const closed = Boolean(listing?.closedAt && listing.lastListedAt && listing.closedAt >= listing.lastListedAt);
+  if (
+    listing?.lastListedAt &&
+    !closed &&
+    daysBetween(signals.firstSeenAt, listing.lastListedAt) >= STILL_LISTED_MIN_DAYS
+  ) {
+    signs.stillListed = { since: signals.firstSeenAt, lastListedAt: listing.lastListedAt };
+  }
   if (signals.openApplication) signs.openApplication = true;
 
   // Only ATS job ids prove a new posting; two links to one page don't

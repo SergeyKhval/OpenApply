@@ -59,6 +59,8 @@ describe("observeJob", () => {
       companyTitleKey: "acme|data analyst",
       firstSeenAt: "2026-09-25",
       lastSeenAt: "2026-09-25",
+      listing: { lastListedAt: "2026-09-25" },
+      listingCheckDueAt: "2026-10-02",
     });
   });
 
@@ -82,6 +84,8 @@ describe("observeJob", () => {
       latestPostedAt: "2026-08-27",
       postedAtSource: "json-ld",
       validThrough: "2026-10-27",
+      listing: { lastListedAt: "2026-09-25" },
+      listingCheckDueAt: "2026-01-10",
     });
   });
 
