@@ -39,10 +39,10 @@
               />
               <div>
                 <p class="font-medium text-foreground">
-                  Paste a link, we do the rest
+                  Paste a link or the description
                 </p>
                 <p class="text-sm text-muted-foreground">
-                  Company, role, and details extracted automatically
+                  Details fill in from public career pages
                 </p>
               </div>
             </div>

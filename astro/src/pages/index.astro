@@ -23,7 +23,7 @@ const steps = [
     title: 'Save a job',
     body: hasExtension
       ? 'One click on any job page with the extension. Or paste a link, or type the company and role.'
-      : 'Paste a link from any job board and we fill in the details. Or type the company and role.',
+      : 'Paste a link to a public careers page and we fill in the details. LinkedIn and Indeed block that, so paste the description. Or type the company and role.',
   },
   {
     icon: 'ph-paper-plane-tilt',
@@ -118,7 +118,7 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
 
 <Layout
   title="OpenApply: a free job application tracker with follow-up reminders and resume checks"
-  description="Keep every job application in one place. Paste a job link and the details are filled in, get a reminder to follow up, and check your resume against the job. Free."
+  description="Keep every job application in one place. Paste a careers page link and the details fill in, get a reminder to follow up, and check your resume against the job. Free."
 >
   {hasExtension && <script is:inline set:html={detectBrowserScript} />}
   <div class="bg-background text-foreground antialiased">
@@ -134,7 +134,7 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
           <p class="m-0 max-w-[540px] text-[17px] leading-normal text-soft-foreground lg:text-xl">
             {hasExtension
               ? 'Save jobs from LinkedIn, Indeed or any career site in one click.'
-              : 'Paste a job link from LinkedIn, Indeed or any career site and the details fill in.'}
+              : 'Paste a link from a company careers page and the details fill in. For LinkedIn or Indeed, paste the job description.'}
             {' '}We remind you to follow up and check your resume against the job. Free.
           </p>
 
@@ -150,7 +150,7 @@ const cardSurface = 'rounded-card bg-card shadow-card border border-transparent 
                 <i class="ph ph-chrome-logo text-[19px]" aria-hidden="true"></i>
                 Add to Chrome, it is free
               </a>
-              <span class="text-sm text-muted-foreground">Works on LinkedIn, Greenhouse, Lever, Workday and most career sites.</span>
+              <span class="text-sm text-muted-foreground">Works on LinkedIn, Indeed, Greenhouse, Lever and most career sites.</span>
             </div>
           )}
 

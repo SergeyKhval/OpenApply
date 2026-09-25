@@ -17,7 +17,7 @@
       <Alert v-if="parsingFailed" variant="destructive" class="mb-6">
         <PhWarningCircle />
         <AlertDescription>
-          {{ errorMessage || "Looks like this job listing was built to keep robots out. The details couldn't be extracted automatically." }}
+          {{ errorMessage || "We couldn't read this page. LinkedIn, Indeed and sites that need a login block us. Paste the job description below and fill in the rest." }}
         </AlertDescription>
       </Alert>
 
