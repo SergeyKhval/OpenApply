@@ -1,0 +1,15 @@
+{
+  "name": "openapply-firestore-rules-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Firestore security rules tests, run against the Firestore emulator",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.3.0",
+    "vitest": "^4.0.18"
+  }
+}

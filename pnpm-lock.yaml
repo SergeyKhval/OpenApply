@@ -53,6 +53,18 @@ importers:
         specifier: ^4.0.18
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.6.2)(jsdom@28.1.0)(vite@7.3.6(@types/node@26.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.1))
 
+  firestore-tests:
+    devDependencies:
+      '@firebase/rules-unit-testing':
+        specifier: ^5.0.2
+        version: 5.0.2(firebase@12.14.0)
+      firebase:
+        specifier: ^12.3.0
+        version: 12.14.0
+      vitest:
+        specifier: ^4.0.18
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.6.2)(jsdom@28.1.0)(vite@7.3.6(@types/node@26.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.1))
+
   functions:
     dependencies:
       '@genkit-ai/googleai':
@@ -1261,6 +1273,12 @@ packages:
     resolution: {integrity: sha512-lslywR5lGvHWTu4z/MPoYs3UwS3CKdeY+ELXY87087VsOpBpkD+9Orra23tA9GW683arPTDOM3CM6eKmtiOO3g==}
     peerDependencies:
       '@firebase/app': 0.x
+
+  '@firebase/rules-unit-testing@5.0.2':
+    resolution: {integrity: sha512-g053AaFcuf4gpAQbwRK/GIIGfPHhpomW3qkIYLi4xnaTUrf65yGP+0TPdojoXfB/ejrfevkXmMs5qXOTSwdN6A==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      firebase: ^12.0.0
 
   '@firebase/storage-compat@0.4.3':
     resolution: {integrity: sha512-gruVqjtUGX8tEoeNbaWXZm0Zfcfcb7fvmDmBxV8yPAbWvExRnZYLO2+qw9idxNE7BvPXt5csyjSYHy//dAizxw==}
@@ -9361,6 +9379,10 @@ snapshots:
       '@firebase/logger': 0.5.1
       '@firebase/util': 1.15.1
       tslib: 2.8.1
+
+  '@firebase/rules-unit-testing@5.0.2(firebase@12.14.0)':
+    dependencies:
+      firebase: 12.14.0
 
   '@firebase/storage-compat@0.4.3(@firebase/app-compat@0.5.13)(@firebase/app-types@0.9.5)(@firebase/app@0.14.13)':
     dependencies:
