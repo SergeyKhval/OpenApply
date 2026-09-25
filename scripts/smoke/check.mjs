@@ -144,8 +144,12 @@ const assertions = {
   // Phosphor stylesheet actually reached the page, so a real computed
   // font-family (not a fallback) is the signal that matters.
   phosphorIcon: () => {
-    const el = document.querySelector('[class*="ph-"]');
-    if (!el) return { pass: false, detail: "no [class*=ph-] element found" };
+    // Check the first visible icon: some icons (the mobile menu) are hidden at desktop widths.
+    const el = Array.from(document.querySelectorAll('[class*="ph-"]')).find((node) => {
+      const r = node.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    if (!el) return { pass: false, detail: "no visible [class*=ph-] element found" };
     const family = getComputedStyle(el, "::before").fontFamily || "";
     const rect = el.getBoundingClientRect();
     const pass =
