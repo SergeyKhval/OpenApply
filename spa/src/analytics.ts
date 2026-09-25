@@ -9,11 +9,11 @@ export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_let
 type EventMap = {
   signup_completed: {
     source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
-    method?: "password" | "google" | "email_code";
+    method?: "google" | "email_code";
   };
   login_completed: {
     source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
-    method?: "password" | "google" | "email_code";
+    method?: "google" | "email_code";
   };
   signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
   job_application_created: {

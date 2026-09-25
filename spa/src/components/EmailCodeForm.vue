@@ -65,7 +65,26 @@
   </form>
 
   <Alert v-if="error" variant="destructive" class="mt-4" role="alert">
-    <AlertDescription>{{ error }}</AlertDescription>
+    <AlertDescription>
+      <p>{{ error }}</p>
+      <div v-if="retryAction" class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+        <button
+          type="button"
+          class="font-semibold underline underline-offset-2 hover:no-underline cursor-pointer disabled:cursor-default disabled:opacity-60"
+          :disabled="loading"
+          @click="handleRetry"
+        >
+          Try again
+        </button>
+        <button
+          type="button"
+          class="font-semibold underline underline-offset-2 hover:no-underline cursor-pointer"
+          @click="emit('google')"
+        >
+          Sign in with Google
+        </button>
+      </div>
+    </AlertDescription>
   </Alert>
 </template>
 
@@ -86,8 +105,8 @@ const { source = "direct", idPrefix = "email-code" } = defineProps<EmailCodeForm
 
 type EmailCodeFormEmits = {
   (event: "signed-in"): void;
-  // The code service is down or not deployed; the parent offers a password
-  (event: "unavailable", email: string): void;
+  // The code service is down; the parent runs its Google sign-in
+  (event: "google"): void;
 };
 
 const emit = defineEmits<EmailCodeFormEmits>();
@@ -96,6 +115,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 // Failures that mean the code flow itself is broken (function missing, email
 // provider or token signing failing), not a wrong code or a rate limit
 const SERVICE_DOWN_CODES = new Set(["functions/not-found", "functions/internal", "functions/unavailable"]);
+const SERVICE_DOWN_MESSAGE = "Email sign-in isn't working right now. Try again in a moment, or use Google.";
 
 const { sendSignInCode, verifySignInCode } = useAuth();
 
@@ -105,6 +125,8 @@ const sentTo = ref("");
 const code = ref("");
 const loading = ref(false);
 const error = ref("");
+// Set while the code service is down, to repeat the step that failed
+const retryAction = ref<(() => void) | null>(null);
 const resendCooldown = ref(0);
 const codeInput = ref<{ $el?: HTMLInputElement } | null>(null);
 let cooldownTimer: ReturnType<typeof setInterval> | undefined;
@@ -120,17 +142,31 @@ function startCooldown() {
 
 onBeforeUnmount(() => clearInterval(cooldownTimer));
 
-async function sendCode(address: string) {
-  loading.value = true;
+function showError(result: { error: string; code?: string }, retry: () => void) {
+  if (result.code && SERVICE_DOWN_CODES.has(result.code)) {
+    error.value = SERVICE_DOWN_MESSAGE;
+    retryAction.value = retry;
+  } else {
+    error.value = result.error;
+  }
+}
+
+function clearError() {
   error.value = "";
+  retryAction.value = null;
+}
+
+function handleRetry() {
+  retryAction.value?.();
+}
+
+async function sendCode(address: string, retry: () => void) {
+  loading.value = true;
+  clearError();
   const result = await sendSignInCode(address);
   loading.value = false;
   if (!result.success) {
-    if (result.code && SERVICE_DOWN_CODES.has(result.code)) {
-      emit("unavailable", address);
-    } else {
-      error.value = result.error;
-    }
+    showError(result, retry);
     return false;
   }
   startCooldown();
@@ -139,7 +175,7 @@ async function sendCode(address: string) {
 
 async function handleSendCode() {
   const address = email.value.trim();
-  if (!(await sendCode(address))) return;
+  if (!(await sendCode(address, handleSendCode))) return;
   sentTo.value = address;
   code.value = "";
   step.value = "code";
@@ -148,26 +184,24 @@ async function handleSendCode() {
 }
 
 async function handleResend() {
-  if (await sendCode(sentTo.value)) code.value = "";
+  if (await sendCode(sentTo.value, handleResend)) code.value = "";
 }
 
 async function handleVerifyCode() {
   loading.value = true;
-  error.value = "";
+  clearError();
   const result = await verifySignInCode(sentTo.value, code.value, { source });
   loading.value = false;
   if (result.success) {
     emit("signed-in");
-  } else if (result.code && SERVICE_DOWN_CODES.has(result.code)) {
-    emit("unavailable", sentTo.value);
   } else {
-    error.value = result.error;
+    showError(result, handleVerifyCode);
   }
 }
 
 function useDifferentEmail() {
   step.value = "email";
   code.value = "";
-  error.value = "";
+  clearError();
 }
 </script>

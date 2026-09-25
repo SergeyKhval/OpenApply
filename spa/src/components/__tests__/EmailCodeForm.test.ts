@@ -97,42 +97,55 @@ describe("EmailCodeForm", () => {
   });
 });
 
+function buttonByText(wrapper: ReturnType<typeof mount>, text: string) {
+  return wrapper.findAll("button").find((button) => button.text() === text);
+}
+
 describe("EmailCodeForm when the code service is down", () => {
   it.each(["functions/not-found", "functions/internal", "functions/unavailable"])(
-    "emits unavailable with the email when sending fails with %s",
+    "offers to try again or use Google when sending fails with %s",
     async (code) => {
       mockSendSignInCode.mockResolvedValue({ success: false, error: "Something went wrong.", code });
       const wrapper = mount(EmailCodeForm);
       await requestCode(wrapper, " sam@example.com ");
 
-      expect(wrapper.emitted("unavailable")).toEqual([["sam@example.com"]]);
+      expect(wrapper.get('[role="alert"]').text()).toContain("Email sign-in isn't working right now");
+      expect(buttonByText(wrapper, "Try again")).toBeDefined();
+      await buttonByText(wrapper, "Sign in with Google")!.trigger("click");
+      expect(wrapper.emitted("google")).toHaveLength(1);
     },
   );
 
-  it("emits unavailable when verifying fails with internal", async () => {
-    mockVerifySignInCode.mockResolvedValue({
+  it("retries verifying the same code when verifying fails with internal", async () => {
+    mockVerifySignInCode.mockResolvedValueOnce({
       success: false,
       error: "We couldn't sign you in.",
       code: "functions/internal",
     });
-    const wrapper = mount(EmailCodeForm);
+    const wrapper = mount(EmailCodeForm, { props: { source: "direct" } });
     await requestCode(wrapper);
     await wrapper.get('input[autocomplete="one-time-code"]').setValue("123456");
     await wrapper.get("form").trigger("submit");
     await flushPromises();
 
-    expect(wrapper.emitted("unavailable")).toEqual([["sam@example.com"]]);
+    expect(wrapper.get('[role="alert"]').text()).toContain("Email sign-in isn't working right now");
+    await buttonByText(wrapper, "Try again")!.trigger("click");
+    await flushPromises();
+
+    expect(mockVerifySignInCode).toHaveBeenLastCalledWith("sam@example.com", "123456", { source: "direct" });
+    expect(wrapper.emitted("signed-in")).toHaveLength(1);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
   });
 
-  it.each(["functions/invalid-argument", "functions/resource-exhausted"])(
-    "keeps the code flow for %s",
+  it.each(["functions/invalid-argument", "functions/resource-exhausted", "functions/permission-denied"])(
+    "shows the server's message without retry options for %s",
     async (code) => {
       mockSendSignInCode.mockResolvedValue({ success: false, error: "Too many codes requested.", code });
       const wrapper = mount(EmailCodeForm);
       await requestCode(wrapper);
 
-      expect(wrapper.emitted("unavailable")).toBeUndefined();
-      expect(wrapper.get('[role="alert"]').text()).toContain("Too many codes requested.");
+      expect(wrapper.get('[role="alert"]').text()).toBe("Too many codes requested.");
+      expect(buttonByText(wrapper, "Try again")).toBeUndefined();
     },
   );
 });

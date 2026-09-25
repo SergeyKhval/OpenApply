@@ -8,6 +8,7 @@ const makeRouter = () =>
   createRouter({
     history: createMemoryHistory(),
     routes: [
+      { path: "/", component: Stub },
       { path: "/jobs", component: Stub },
       { path: "/jobs/new", component: Stub },
       { path: "/jobs/:jobId", component: Stub },
@@ -30,6 +31,21 @@ describe("legacy /dashboard urls", () => {
     ["/dashboard/cover-letters", "/documents?tab=cover-letters"],
     ["/dashboard/cover-letters?dialog-name=generate-cover-letter", "/documents?dialog-name=generate-cover-letter&tab=cover-letters"],
     ["/dashboard/file-import", "/settings/import-export"],
+  ])("%s lands on %s", async (from, to) => {
+    const router = makeRouter();
+    await router.push(from);
+    expect(router.currentRoute.value.fullPath).toBe(to);
+  });
+});
+
+describe("old password auth urls", () => {
+  it.each([
+    ["/login", "/"],
+    ["/sign-in?redirect=/jobs", "/?redirect=/jobs"],
+    ["/forgot-password", "/"],
+    ["/reset-password?oobCode=abc", "/?oobCode=abc"],
+    ["/signup", "/?mode=signup"],
+    ["/sign-up", "/?mode=signup"],
   ])("%s lands on %s", async (from, to) => {
     const router = makeRouter();
     await router.push(from);

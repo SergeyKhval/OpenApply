@@ -4,10 +4,10 @@ import { signInMethodLabel } from "../signInMethod";
 describe("signInMethodLabel", () => {
   it("names the provider", () => {
     expect(signInMethodLabel(["google.com"])).toBe("Signed in with Google");
-    expect(signInMethodLabel(["password"])).toBe("Signed in with email and password");
+    expect(signInMethodLabel(["password"])).toBe("Signed in with a code sent to your email");
   });
   it("lists both when an account has two", () => {
-    expect(signInMethodLabel(["password", "google.com"])).toBe("Signed in with email and password or Google");
+    expect(signInMethodLabel(["password", "google.com"])).toBe("Signed in with a code sent to your email or Google");
   });
   it("falls back to the emailed code for accounts with no provider", () => {
     expect(signInMethodLabel([])).toBe("Signed in with a code sent to your email");
