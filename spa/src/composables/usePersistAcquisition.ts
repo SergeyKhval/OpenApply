@@ -27,19 +27,40 @@ export function acquisitionToPersist(
   return storedAcquisition;
 }
 
+// Decides, one profile snapshot at a time, whether to write the acquisition
+// now. Writes at most once per user, and never after a profile that existed
+// disappears: that is the account being deleted, and a write would bring the
+// profile back.
+export function createAcquisitionGate() {
+  let persistedForUid: string | null = null;
+  let profileSeenForUid: string | null = null;
+
+  return (
+    user: (Pick<User, "isAnonymous" | "metadata"> & { uid: string }) | null | undefined,
+    profile: Record<string, unknown> | null | undefined,
+    storedAcquisition: Acquisition | null,
+    now = Date.now(),
+  ): Acquisition | null => {
+    if (!user || persistedForUid === user.uid) return null;
+    if (profile) profileSeenForUid = user.uid;
+    else if (profile === null && profileSeenForUid === user.uid) return null;
+
+    const acquisition = acquisitionToPersist(user, profile, storedAcquisition, now);
+    if (acquisition) persistedForUid = user.uid;
+    return acquisition;
+  };
+}
+
 export function usePersistAcquisition() {
   const { user, userProfile } = useAuth();
-  let persistedForUid: string | null = null;
+  const nextWrite = createAcquisitionGate();
 
   watch(
     [user, userProfile],
     async ([currentUser, profile]) => {
-      if (!currentUser || persistedForUid === currentUser.uid) return;
+      const acquisition = nextWrite(currentUser, profile, readAcquisitionFromBrowser());
+      if (!currentUser || !acquisition) return;
 
-      const acquisition = acquisitionToPersist(currentUser, profile, readAcquisitionFromBrowser());
-      if (!acquisition) return;
-
-      persistedForUid = currentUser.uid;
       try {
         await setDoc(doc(db, "users", currentUser.uid), { acquisition }, { merge: true });
       } catch (error) {
