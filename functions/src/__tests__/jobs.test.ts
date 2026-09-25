@@ -68,6 +68,33 @@ describe("jobs", () => {
     );
   });
 
+  it("looks up the canonical URL and the link as given", async () => {
+    mockGet.mockResolvedValueOnce({ empty: false, docs: [{ id: "existing-doc-id" }] });
+
+    const result = await callJobs({
+      url: "https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team",
+    });
+    expect(result).toEqual({ id: "existing-doc-id" });
+    expect(mockWhere).toHaveBeenCalledWith("jobDescriptionLink", "in", [
+      "https://zoolatech.com/vacancies/qa-216414-1.html",
+      "https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team",
+    ]);
+  });
+
+  it("caches new jobs under the canonical URL", async () => {
+    mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+    mockAdd.mockResolvedValueOnce({ id: "new-doc-id" });
+
+    await callJobs({ url: "https://example.com/job?utm_source=reddit#apply" });
+    expect(mockWhere).toHaveBeenCalledWith("jobDescriptionLink", "in", [
+      "https://example.com/job",
+      "https://example.com/job?utm_source=reddit#apply",
+    ]);
+    expect(mockAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ jobDescriptionLink: "https://example.com/job" }),
+    );
+  });
+
   it("returns existing doc id for duplicate URLs", async () => {
     mockGet.mockResolvedValueOnce({
       empty: false,
