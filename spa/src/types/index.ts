@@ -8,6 +8,7 @@ export type JobStatus =
   | "offered"
   | "hired"
   | "rejected"
+  | "withdrew"
   | "archived";
 
 export type JobApplication = {
@@ -31,6 +32,8 @@ export type JobApplication = {
   offeredAt?: CalendarDate;
   hiredAt?: CalendarDate;
   archivedAt?: Timestamp;
+  // When to follow up on this job (set by "I applied"); null once done
+  followUpAt?: Timestamp | null;
   userId: string;
   toolMatch?: ToolMatch;
 };

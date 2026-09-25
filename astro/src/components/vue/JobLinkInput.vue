@@ -9,13 +9,13 @@
         autocomplete="off"
         inputmode="url"
         placeholder="https://jobs.example.com/senior-engineer..."
-        class="min-w-0 flex-1 h-11 rounded-md border border-border/60 bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="h-12 w-full min-w-0 shrink-0 sm:flex-1 rounded-full border border-input bg-card px-5 text-[15px] text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         :disabled="isSubmitting"
       />
       <button
         type="submit"
         :disabled="isSubmitting"
-        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-primary/40"
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-[15px] font-semibold h-12 shrink-0 rounded-full px-6 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
       >
         {{ isSubmitting ? "Parsing…" : "Track this job" }}
       </button>

@@ -17,7 +17,7 @@ import { renderWeeklyDigest } from "./emails/WeeklyDigest.js";
 const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
 
-const APP_URL = "https://openapply.app/app/dashboard/applications";
+const APP_URL = "https://openapply.app/app/jobs";
 const FROM_EMAIL = "OpenApply <sergey@openapply.app>";
 const REPLY_TO = "sergey@openapply.app";
 
@@ -47,7 +47,7 @@ export const processUserDigest = onTaskDispatched(
     const appsSnapshot = await db
       .collection("jobApplications")
       .where("userId", "==", userId)
-      .where("status", "not-in", ["rejected", "archived"])
+      .where("status", "not-in", ["rejected", "withdrew", "archived"])
       .get();
 
     if (appsSnapshot.empty) {

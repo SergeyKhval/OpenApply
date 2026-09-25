@@ -199,7 +199,7 @@ WeeklyDigest.PreviewProps = {
     { applicationId: "id-2", companyName: "SlowInc", position: "Engineer", category: "follow-up", daysSinceActivity: 12 },
   ],
   totalActionCount: 2,
-  appUrl: "https://openapply.app/app/dashboard/applications",
+  appUrl: "https://openapply.app/app/jobs",
 } satisfies DigestEmailData;
 
 // --- Public render API ---
