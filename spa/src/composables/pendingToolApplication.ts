@@ -1,4 +1,5 @@
 import type { CreateJobApplicationInput, ToolMatch } from "@/types";
+import { sanitizeJobPosting, type JobPosting } from "../../../shared/jobPosting";
 
 // Written by the landing page (astro/src/lib/pendingToolApplication.ts) when a
 // visitor clicks "Save and track this job" in the resume match tool, or saves a
@@ -20,6 +21,8 @@ export type PendingToolApplication = {
   location?: string;
   // Absent when the extension saved the job without a match check
   match?: Omit<ToolMatch, "checkedAt">;
+  // When the page says the job was posted (extension only)
+  posting?: JobPosting;
 };
 
 export type PendingApplicationSource = "resume_match_tool" | "extension";
@@ -134,6 +137,8 @@ export function toJobApplicationInput(
   if (isWebUrl(pending.jobDescriptionLink)) input.jobDescriptionLink = pending.jobDescriptionLink;
   const remotePolicy = remotePolicyOf(location);
   if (remotePolicy) input.remotePolicy = remotePolicy;
+  const posting = sanitizeJobPosting(pending.posting);
+  if (posting) input.posting = posting;
   return input;
 }
 
