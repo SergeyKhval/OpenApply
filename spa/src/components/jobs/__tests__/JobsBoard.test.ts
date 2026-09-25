@@ -8,6 +8,11 @@ vi.mock("@/composables/useUpdateJobApplicationStatus", () => ({
   useUpdateJobApplicationStatus: () => ({ markApplied, updateJobApplicationStatus }),
 }));
 
+vi.mock("@/composables/useJobSignals", async () => {
+  const { ref } = await import("vue");
+  return { useJobSignals: () => ref([]) };
+});
+
 import JobsBoard from "../JobsBoard.vue";
 
 const NOW = new Date(2026, 8, 25, 10);

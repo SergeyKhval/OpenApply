@@ -15,6 +15,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPPORT_EMAIL?: string;
   // Chrome Web Store page of the extension; first run leads with it when set
   readonly VITE_EXTENSION_URL?: string;
+  // PostHog flags forced on for this build, comma separated
+  readonly VITE_FEATURE_FLAGS?: string;
 }
 
 interface ImportMeta {
