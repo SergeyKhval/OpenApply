@@ -40,4 +40,14 @@ export const legacyRedirects: RouteRecordRaw[] = [
     path: "/dashboard/file-import",
     redirect: (to) => ({ path: "/settings/import-export", query: to.query }),
   },
+  // Password sign-in is gone; old auth urls land on the email code / Google form
+  ...["/login", "/sign-in", "/signin", "/forgot-password", "/reset-password"].map(
+    (path): RouteRecordRaw => ({ path, redirect: (to) => ({ path: "/", query: to.query }) }),
+  ),
+  ...["/signup", "/sign-up"].map(
+    (path): RouteRecordRaw => ({
+      path,
+      redirect: (to) => ({ path: "/", query: { ...to.query, mode: "signup" } }),
+    }),
+  ),
 ];
