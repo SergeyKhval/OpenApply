@@ -72,12 +72,12 @@ describe("jobs", () => {
     mockGet.mockResolvedValueOnce({ empty: false, docs: [{ id: "existing-doc-id" }] });
 
     const result = await callJobs({
-      url: "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us",
+      url: "https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team",
     });
     expect(result).toEqual({ id: "existing-doc-id" });
     expect(mockWhere).toHaveBeenCalledWith("jobDescriptionLink", "in", [
-      "https://job-boards.greenhouse.io/workato/jobs/8181689002",
-      "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us",
+      "https://zoolatech.com/vacancies/qa-216414-1.html",
+      "https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team",
     ]);
   });
 

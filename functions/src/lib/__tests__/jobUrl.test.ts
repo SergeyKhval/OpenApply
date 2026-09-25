@@ -3,11 +3,10 @@ import { canonicalJobUrl } from "../jobUrl";
 
 describe("canonicalJobUrl", () => {
   it.each([
-    // Greenhouse source tag: the same posting cached twice before
-    ["https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us", "https://job-boards.greenhouse.io/workato/jobs/8181689002"],
+    // Source tags can carry referral credit, so they stay
+    ["https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us&utm_source=x", "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us"],
     ["https://example.com/job?utm_source=x&utm_medium=y&id=7", "https://example.com/job?id=7"],
     ["https://example.com/job?gclid=1&fbclid=2", "https://example.com/job"],
-    ["https://jobs.lever.co/acme/123?lever-source=LinkedIn&lever-origin=applied", "https://jobs.lever.co/acme/123"],
     // Plain anchors are the same page; hash routes are not
     ["https://zoolatech.com/vacancies/qa-216414-1.html#block-id-forms-join-our-team", "https://zoolatech.com/vacancies/qa-216414-1.html"],
     ["https://careers.example.com/#/jobs/123", "https://careers.example.com/#/jobs/123"],

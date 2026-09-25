@@ -1,11 +1,11 @@
 // The stable URL of a job posting, so the same job pasted with different
 // tracking params or anchors maps to one cached `jobs` doc. Mirrors
-// canonicalJobUrl in extension/src/links.js.
+// canonicalJobUrl in extension/src/links.js. Source tags (gh_src,
+// lever-source) stay: they can carry referral credit for the applicant.
 
 const TRACKING_PARAMS = [
   /^utm_/i, /^gclid$/i, /^fbclid$/i, /^msclkid$/i, /^mc_[a-z]+$/i, /^_hs[a-z]+$/i,
   /^trk$/i, /^trkInfo$/i, /^refId$/i, /^trackingId$/i, /^lipi$/i, /^ebp$/i,
-  /^gh_src$/i, /^lever-(source|origin)$/i,
 ];
 
 export function canonicalJobUrl(href: string): string | null {
