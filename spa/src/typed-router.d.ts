@@ -59,6 +59,7 @@ declare module 'vue-router/auto-routes' {
       | '/jobs/'
       | '/jobs/[jobId]'
       | '/jobs/new'
+      | '/jobs/report'
     >,
     '/jobs/': RouteRecordInfo<
       '/jobs/',
@@ -77,6 +78,13 @@ declare module 'vue-router/auto-routes' {
     '/jobs/new': RouteRecordInfo<
       '/jobs/new',
       '/jobs/new',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/jobs/report': RouteRecordInfo<
+      '/jobs/report',
+      '/jobs/report',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -186,6 +194,7 @@ declare module 'vue-router/auto-routes' {
         | '/jobs/'
         | '/jobs/[jobId]'
         | '/jobs/new'
+        | '/jobs/report'
       views:
         | 'default'
     }
@@ -204,6 +213,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/jobs/new.vue': {
       routes:
         | '/jobs/new'
+      views:
+        | never
+    }
+    'src/pages/jobs/report.vue': {
+      routes:
+        | '/jobs/report'
       views:
         | never
     }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { signLines, spanLabel, type JobSignalsDoc } from "../jobSignals";
+import fixture from "../../../../shared/jobSignalsCases.json";
 
 const NOW = new Date(2026, 8, 25, 10);
 
@@ -151,5 +152,12 @@ describe("spanLabel", () => {
     expect(spanLabel(60)).toBe("2 months");
     expect(spanLabel(425)).toBe("14 months");
     expect(spanLabel(731)).toBe("2 years");
+  });
+});
+
+// Same cases as extension/test/signs.test.js: the popup must word signs as the app does
+describe("shared cases with the extension", () => {
+  it.each(fixture.cases.map((entry) => [entry.name, entry] as const))("%s", (_name, { doc, company, lines }) => {
+    expect(signLines(doc as JobSignalsDoc, company, new Date(...(fixture.now as [number, number, number, number])))).toEqual(lines);
   });
 });

@@ -9,6 +9,10 @@
     { "source": "/blog/how-to-write-cover-letter-software-engineer", "destination": "/cover-letters/software-engineer", "permanent": true }
   ],
   "rewrites": [
+    {
+      "source": "/api/job-signals",
+      "destination": "https://us-central1-applytrack-a4197.cloudfunctions.net/jobSignalsLookup"
+    },
     { "source": "/app", "destination": "/app/index.html" },
     { "source": "/app/:path*", "destination": "/app/index.html" },
     {

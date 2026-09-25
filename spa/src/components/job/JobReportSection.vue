@@ -55,7 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useCurrentUser, useDocument } from "vuefire";
 import { doc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
@@ -107,6 +108,12 @@ function openDialog() {
   dialogOpen.value = true;
   trackEvent("job_report_started", { surface: "app_page" });
 }
+
+// From the extension's "Report this posting" (via /jobs/report)
+const route = useRoute();
+onMounted(() => {
+  if (route.query.report === "1" && !ownReport.value) openDialog();
+});
 
 async function submit(chosen: ReportReason, from: "dialog" | "prompt") {
   busy.value = true;

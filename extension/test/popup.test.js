@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startPopup } from "../src/popup.js";
+import { jobKeyHash } from "../src/jobKey.js";
 import { decodeExtensionJob } from "../../shared/extensionJob.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -33,6 +34,8 @@ describe("popup", () => {
   beforeEach(() => {
     document.documentElement.innerHTML = popupHtml.replace(/^<!doctype html>/i, "");
     fakeWindow = { close: vi.fn() };
+    // No real network from tests: the signals lookup finds nothing
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
   });
 
   it("prefills what it read and saves it without the server", async () => {
@@ -161,5 +164,70 @@ describe("popup", () => {
     await startPopup({ chrome, document, window: fakeWindow });
     expect(document.querySelector("#job img")).toBeNull();
     expect(document.querySelector(".job-title").textContent).toBe("<img src=x onerror=alert(1)>");
+  });
+});
+
+describe("posting signals", () => {
+  const greenhouseTab = { id: 9, url: "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=abc", title: "Analyst" };
+  let fakeWindow;
+  let hash;
+
+  beforeEach(async () => {
+    document.documentElement.innerHTML = popupHtml.replace(/^<!doctype html>/i, "");
+    fakeWindow = { close: vi.fn() };
+    hash = await jobKeyHash("greenhouse:8181689002");
+  });
+
+  const bucket = (entries) => vi.fn().mockResolvedValue({ ok: true, json: async () => ({ entries }) });
+
+  it("sends only the 4-character prefix and matches the full hash locally", async () => {
+    const fetch = bucket([
+      { hash: `${hash.slice(0, 4)}ffff`, signs: { firstSeenAt: "2026-01-01", openApplication: true }, reports: null },
+      {
+        hash,
+        signs: { firstSeenAt: "2026-01-10", stillListed: { since: "2026-01-10", lastListedAt: "2026-09-20" } },
+        reports: { asked_for_money: { days: [new Date().toISOString().slice(0, 10), new Date().toISOString().slice(0, 10), new Date().toISOString().slice(0, 10)] } },
+      },
+    ]);
+    const chrome = fakeChrome({ tab: greenhouseTab, result: { title: "Analyst", company: "Workato", description, source: "site" } });
+    const { signalsShown } = await startPopup({ chrome, document, window: fakeWindow, fetch });
+    await signalsShown;
+
+    const requested = new URL(fetch.mock.calls[0][0]);
+    expect(requested.origin + requested.pathname).toBe("https://openapply.app/api/job-signals");
+    expect(requested.search).toBe(`?p=${hash.slice(0, 4)}`);
+    expect(fetch.mock.calls[0][0]).not.toContain(hash);
+    expect(fetch.mock.calls[0][0]).not.toContain("greenhouse");
+
+    const items = [...document.querySelectorAll("#signal-list li")];
+    expect(items.map((item) => item.className)).toEqual(["red", ""]);
+    expect(items[0].textContent).toContain("3 people reported being asked to pay");
+    expect(items[1].textContent).toContain("Still listed 8 months after it was first saved on OpenApply");
+    expect(document.getElementById("signals").classList.contains("signals-empty")).toBe(false);
+    // The other job in the bucket isn't shown
+    expect(document.body.textContent).not.toContain("Open application");
+  });
+
+  it("shows just the Report link when there's nothing, and it opens the app", async () => {
+    const chrome = fakeChrome({ tab: greenhouseTab, result: null });
+    const { signalsShown } = await startPopup({ chrome, document, window: fakeWindow, fetch: bucket([]) });
+    await signalsShown;
+    expect(document.getElementById("signal-list").hidden).toBe(true);
+    expect(document.getElementById("signals").classList.contains("signals-empty")).toBe(true);
+
+    document.getElementById("report").click();
+    await vi.waitFor(() => expect(fakeWindow.close).toHaveBeenCalled());
+    const opened = new URL(chrome.tabs.create.mock.calls[0][0].url);
+    expect(opened.pathname).toBe("/app/jobs/report");
+    expect(opened.searchParams.get("job")).toBe(hash);
+  });
+
+  it("stays quiet when the lookup fails or times out", async () => {
+    const chrome = fakeChrome({ tab: greenhouseTab, result: null });
+    const fetch = vi.fn().mockRejectedValue(new Error("offline"));
+    const { signalsShown } = await startPopup({ chrome, document, window: fakeWindow, fetch });
+    await signalsShown;
+    expect(document.getElementById("signal-list").hidden).toBe(true);
+    expect(button("save").disabled).toBe(false);
   });
 });

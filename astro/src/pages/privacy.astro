@@ -80,6 +80,15 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
             the tab you are on. It collects nothing in the background, has no access to other tabs or
             sites, keeps no browsing history, and stores nothing in your browser.
           </p>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            When you open it on a job posting, the extension checks OpenApply for posting signals (for example
+            when the job was first posted, or reports from people who saved it). It does this without telling
+            us which job you're looking at: it turns the posting's address into a code on your device and sends
+            only the first 4 characters of that code, which many other postings share. Our server
+            returns the signals for every posting that starts with those 4 characters, and the extension picks
+            out the one you're on, on your device. The request carries no cookies or account details, and we
+            don't log the code.
+          </p>
           <ul class="list-disc list-inside text-muted-foreground space-y-2">
             <li>
               <strong>Save to OpenApply</strong> shows the job's title, company and location as the extension
@@ -103,7 +112,7 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
           </ul>
           <p class="text-muted-foreground leading-relaxed mt-4">
             We do not sell data from the extension, use it for advertising, or use it for anything other than
-            saving jobs and checking your resume match.
+            saving jobs, checking your resume match and showing posting signals.
           </p>
         </section>
 
