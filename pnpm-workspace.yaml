@@ -3,3 +3,4 @@ packages:
   - spa
   - astro
   - extension
+  - firestore-tests

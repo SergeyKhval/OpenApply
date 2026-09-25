@@ -107,3 +107,23 @@ jobs:
           name: openapply-extension
           path: extension/dist/*.zip
           if-no-files-found: error
+
+  firestore-rules-tests:
+    name: Firestore Rules Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .tool-versions
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+      - name: Run rules tests against the Firestore emulator
+        run: pnpm run test:rules
