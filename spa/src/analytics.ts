@@ -62,6 +62,10 @@ type EventMap = {
   next_up_action: { kind: "follow-up" | "interview" | "stale-saved"; action: "draft" | "done" | "snooze" | "applied" | "let_go" | "open" };
   follow_up_copied: { applicationId?: string };
   account_deleted: void;
+  // Posting signals (flag job-signals) were on screen
+  job_signals_shown: { surface: "app_page"; sign_types: string[] };
+  // Opened "What these mean"
+  job_signals_explained: { surface: "app_page" };
 };
 
 type EventName = keyof EventMap;

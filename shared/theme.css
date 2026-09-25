@@ -60,6 +60,10 @@
   --stage-closed: #8C7B6E;
   --stage-closed-soft: #F3EAE0;
   --stage-closed-text: #5E4E42;
+  /* Posting signals: amber facts, never red */
+  --signal: #C98314;
+  --signal-soft: #FDF3DC;
+  --signal-text: #7A4F0A;
 
   --avatar-1: #F4D7C5;
   --avatar-2: #D9E8F6;
@@ -142,6 +146,9 @@
   --stage-closed: #A8958A;
   --stage-closed-soft: #2A221C;
   --stage-closed-text: #CDBBAE;
+  --signal: #E8B25A;
+  --signal-soft: #342816;
+  --signal-text: #F3CF8F;
 
   --avatar-1: #4A2F22;
   --avatar-2: #223447;
@@ -211,6 +218,9 @@
   --color-stage-closed: var(--stage-closed);
   --color-stage-closed-soft: var(--stage-closed-soft);
   --color-stage-closed-text: var(--stage-closed-text);
+  --color-signal: var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-text: var(--signal-text);
 
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
