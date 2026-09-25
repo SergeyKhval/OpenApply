@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("@/firebase/config", () => ({ db: "mock-db" }));
 vi.mock("@/composables/useAuth", () => ({ useAuth: vi.fn() }));
 
-import { acquisitionToPersist, isNewAccount } from "../usePersistAcquisition";
+import { acquisitionToPersist, createAcquisitionGate, isNewAccount } from "../usePersistAcquisition";
 
 const now = Date.parse("2026-09-23T12:00:00.000Z");
 const acquisition = { utm_source: "reddit", landing_path: "/app/", captured_at: "2026-09-23T10:00:00.000Z" };
@@ -43,5 +43,27 @@ describe("acquisitionToPersist", () => {
 
   it("returns null when nothing was captured", () => {
     expect(acquisitionToPersist(newUser, null, null, now)).toBeNull();
+  });
+});
+
+describe("createAcquisitionGate", () => {
+  const user = { ...newUser, uid: "user-1" };
+
+  it("writes once for a new account", () => {
+    const nextWrite = createAcquisitionGate();
+    expect(nextWrite(user, null, acquisition, now)).toEqual(acquisition);
+    expect(nextWrite(user, { createdAt: "x" }, acquisition, now)).toBeNull();
+  });
+
+  it("does not bring back a profile that was just deleted", () => {
+    const nextWrite = createAcquisitionGate();
+    expect(nextWrite(user, { acquisition: {} }, acquisition, now)).toBeNull();
+    expect(nextWrite(user, null, acquisition, now)).toBeNull();
+  });
+
+  it("still writes when the profile appears without an acquisition", () => {
+    const nextWrite = createAcquisitionGate();
+    expect(nextWrite(user, undefined, acquisition, now)).toBeNull();
+    expect(nextWrite(user, { createdAt: "x" }, acquisition, now)).toEqual(acquisition);
   });
 });
