@@ -1,5 +1,6 @@
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { canonicalJobUrl } from "./lib/jobUrl";
 
 const db = getFirestore();
 
@@ -21,10 +22,13 @@ export const jobs = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Invalid URL format");
   }
 
+  const canonicalUrl = canonicalJobUrl(url) ?? url;
+
   try {
+    // Older docs were cached under the link as pasted
     const existingQuery = await db
       .collection("jobs")
-      .where("jobDescriptionLink", "==", url)
+      .where("jobDescriptionLink", "in", [...new Set([canonicalUrl, url])])
       .limit(1)
       .get();
 
@@ -36,7 +40,7 @@ export const jobs = onCall(async (request) => {
     }
 
     const doc = await db.collection("jobs").add({
-      jobDescriptionLink: url,
+      jobDescriptionLink: canonicalUrl,
       status: "pending",
       createdAt: FieldValue.serverTimestamp(),
     });

@@ -68,6 +68,31 @@ For example, if you're coming from a marketing background, emphasize your experi
 
 Be transparent about your career transition, but frame it as a deliberate choice based on your passion for product and your desire to use your existing skills in a new and impactful way. Enroll in online courses, attend product management workshops, or contribute to open-source projects to demonstrate your commitment to learning and growing in the field. In your cover letter, mention these initiatives to show that you're taking proactive steps to acquire the necessary knowledge and skills.
 
+## Dos and Don'ts
+
+**Dos:**
+*   Keep it to one page
+*   Use action verbs
+*   Quantify achievements
+*   Proofread twice
+*   Ask someone else to read it before you send
+
+**Don'ts:**
+*   Use a generic template
+*   Repeat your resume verbatim
+*   Use buzzwords without evidence ("data-driven," "user-centric")
+*   Make excuses for past roles
+*   Focus on what you want; focus on what you can deliver
+
+## Quick Checklist Before You Submit
+
+*   Tailored to this company and role?
+*   Two or three specific examples with results?
+*   Free of grammar and spelling errors?
+*   Easy to read in 60 seconds?
+*   Does it convey genuine interest?
+*   Clear call to action at the end?
+
 ---
 
 ## Generate Your Own Cover Letter
