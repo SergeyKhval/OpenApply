@@ -111,6 +111,20 @@ describe("extractJob on captured job pages", () => {
     expect(description).not.toContain("Other job card");
   });
 
+  it("reads LinkedIn's 2026 job page, which has no h1 and hashed class names", () => {
+    const job = extractFrom("linkedin-2026");
+    expect(job.title).toBe("Engineering Manager");
+    expect(job.company).toBe("EduGO Prosta Spółka Akcyjna");
+    expect(job.location).toBe("Łódź, Łódzkie, Poland");
+    expect(job.description).toContain("Jesteśmy jedną z najszybciej rozwijających się szkół online");
+    expect(job.description).toContain("Minimum 6–7 lat w inżynierii oprogramowania");
+    expect(job.description).toContain("Etap 4: Rozmowa finalna z Zarządem.");
+    // The rest of the page: top card, upsells, hiring team, company card, more jobs
+    for (const noise of ["18 people clicked apply", "Retry Premium", "Dariusz Lis", "822 followers", "Storyblok", "See more jobs like this"]) {
+      expect(job.description).not.toContain(noise);
+    }
+  });
+
   it("reads every section of a theprotocol.it offer, not just the first", () => {
     const { description } = extractFrom("theprotocol");
     for (const heading of ["Nasze wymagania", "O projekcie", "To oferujemy", "Założona w 1988 roku"]) {

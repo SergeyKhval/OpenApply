@@ -242,8 +242,8 @@ export function extractJob() {
     },
   ];
 
-  // Sentence-length text runs: job descriptions are made of them, while site
-  // chrome (menus, buttons, tags) is short labels
+  // Sentence-length text runs outside links: job descriptions are made of them,
+  // while site chrome (menus, buttons, tags, job cards) is short labels or links
   function proseLength(root) {
     let total = 0;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -251,6 +251,8 @@ export function extractJob() {
       const length = clean(node.nodeValue).length;
       if (length < 30) continue;
       if (node.parentElement?.closest("nav, header, footer, aside, [role=navigation], script, style")) continue;
+      // Links are navigation (job cards, company pages), not the job's own text
+      if (node.parentElement?.closest("a")) continue;
       total += length;
     }
     return total;
@@ -269,6 +271,8 @@ export function extractJob() {
     const after = whole.length - (end + Math.min(150, piece.length));
     return before <= 200 && after > before;
   }
+
+  const CONTROLS = "button, input, select, textarea, [role=button], [role=switch], [role=checkbox]";
 
   // Text outside links: "similar jobs" and "jobs at other companies" lists are
   // links, a job description is prose
@@ -311,7 +315,11 @@ export function extractJob() {
       const parentText = blockText(parent);
       const parentProse = proseLength(parent);
       const addedMostlyProse = parentProse - prose >= (parentText.length - text.length) * 0.5;
-      if (parentText.length > text.length * 1.6 && !addedMostlyProse) break;
+      // Apply, Save and Follow buttons, alert switches: a step that brings them
+      // in without much prose is the page around the job, not more of its text
+      const addsControls = [...parent.querySelectorAll(CONTROLS)]
+        .some((element) => !best.contains(element));
+      if ((addsControls || parentText.length > text.length * 1.6) && !addedMostlyProse) break;
       best = parent;
       text = parentText;
       prose = parentProse;
@@ -339,6 +347,8 @@ export function extractJob() {
   const ogTitle = clean(document.querySelector('meta[property="og:title"]')?.getAttribute("content"));
   const siteName = clean(document.querySelector('meta[property="og:site_name"]')?.getAttribute("content"));
   const hostWord = location.hostname.replace(/^www\./, "");
+  // "linkedin" for www.linkedin.com, "theprotocol" for theprotocol.it
+  const hostName = hostWord.split(".").slice(-2, -1)[0] || hostWord;
 
   // "Account Manager - Careers at Airbnb", "Frontend Engineer | theprotocol.it"
   function withoutSiteSuffix(text) {
@@ -348,13 +358,28 @@ export function extractJob() {
         const suffix = tail.trim().toLowerCase();
         const isSite = /\b(careers?|jobs?|praca|stellenangebote|emplois?)\b/.test(suffix)
           || suffix === siteName.toLowerCase()
-          || suffix === hostWord.toLowerCase();
+          || suffix === hostWord.toLowerCase()
+          || suffix === hostName.toLowerCase();
         return isSite ? "" : whole;
       });
       if (next === value) break;
       value = next;
     }
     return value.trim();
+  }
+
+  // "Engineering Manager | EduGO": pages without an <h1> still show the role on
+  // its own, so the tab title's first part is the title when the page has an
+  // element with exactly that text
+  function titleOnPage(tabTitle) {
+    const first = tabTitle.split(/ [|\-–—] | at | @ /)[0].trim();
+    if (!first || first === tabTitle || first.length > 150) return "";
+    const root = document.querySelector("main, [role=main]") || document.body;
+    for (const element of root.querySelectorAll("h1, h2, h3, p, span, div")) {
+      if (element.closest(OUTSIDE_CONTENT) || element.children.length > 1) continue;
+      if (clean(element.textContent) === first) return first;
+    }
+    return "";
   }
 
   // "Job Application for AI Engineer at GitLab", "Engineer (K/M), ASTEK Polska - Praca w IT"
@@ -369,6 +394,25 @@ export function extractJob() {
       if (company && company.toLowerCase() !== siteName.toLowerCase() && !company.includes(hostWord)) {
         return company.replace(/^(careers|jobs) (at|@) /i, "");
       }
+    }
+    return "";
+  }
+
+  // "Łódź, Łódzkie, Poland · 1 month ago · 18 people clicked apply": the first
+  // part of a job's details line, when it reads as a place
+  const PLACE = /^\p{Lu}[\p{L}.'’ -]*(, \p{Lu}[\p{L}.'’ -]*){1,3}( \((remote|hybrid|on-site)\))?$/u;
+  const WORK_MODE = /^(remote|hybrid|on-site)\b|\((remote|hybrid|on-site)\)$/i;
+  function locationInDetailsLine() {
+    const root = document.querySelector("main, [role=main]");
+    if (!root) return "";
+    for (const element of root.querySelectorAll("p, div, span, li")) {
+      if (element.closest(OUTSIDE_CONTENT)) continue;
+      const text = clean(element.textContent);
+      if (text.length > 160 || !/ [·•] /.test(text)) continue;
+      // The line itself, not a wrapper that runs it into the title and company
+      if ([...element.children].some((child) => / [·•] /.test(clean(child.textContent)))) continue;
+      const first = text.split(/ [·•] /)[0].trim();
+      if (first.length <= 80 && (PLACE.test(first) || WORK_MODE.test(first))) return first;
     }
     return "";
   }
@@ -404,7 +448,9 @@ export function extractJob() {
       .map(visibleText)
       .find((text) => text.length >= 3 && text.length <= 150);
     const confirmed = heading && (pageTitle.includes(heading) || ogTitle.includes(heading));
-    result.title = confirmed ? heading : withoutSiteSuffix(ogTitle || pageTitle) || heading || "";
+    result.title = confirmed
+      ? heading
+      : titleOnPage(withoutSiteSuffix(ogTitle || pageTitle)) || withoutSiteSuffix(ogTitle || pageTitle) || heading || "";
   }
   if (!result.company) {
     result.company = companyAfterTitle(result.title)
@@ -412,7 +458,7 @@ export function extractJob() {
       || siteName.replace(/^(careers|jobs) (at|@) /i, "");
   }
   if (!result.location) {
-    result.location = contentText('[itemprop="jobLocation"], [data-testid*="location" i], [data-test*="location" i], [data-ui*="location" i], [class*="job-location" i], [class*="jobLocation"], [class*="location" i]', 80);
+    result.location = locationInDetailsLine() || contentText('[itemprop="jobLocation"], [data-testid*="location" i], [data-test*="location" i], [data-ui*="location" i], [class*="job-location" i], [class*="jobLocation"], [class*="location" i]', 80);
   }
 
   // Site rules and JSON-LD can miss sections (requirements in a block of their
