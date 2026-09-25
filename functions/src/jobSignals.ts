@@ -1,6 +1,7 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { jobKey, jobKeyHash, jobKeyPrefix } from "./lib/jobKey";
+import { canonicalJobUrl } from "./lib/jobUrl";
 import {
   observeJob,
   publicSigns,
@@ -49,17 +50,31 @@ export async function recordJobSignals(application: Record<string, unknown>): Pr
   // When the user saved it, not when this trigger ran
   const seenAt = application.createdAt instanceof Timestamp ? application.createdAt.toMillis() : Date.now();
 
+  const link = canonicalJobUrl(text(application.jobDescriptionLink)) ?? undefined;
+  await updateJobSignals(hash, (previous) => observeJob(previous, {
+    key,
+    link,
+    company: text(application.companyName),
+    title: text(application.position),
+    posting,
+    seenAt,
+  }));
+  return hash;
+}
+
+/**
+ * Rewrites a job's private signals with `update` and recomputes its public
+ * signs, in one transaction.
+ */
+export async function updateJobSignals(
+  hash: string,
+  update: (previous: PrivateJobSignals | undefined) => PrivateJobSignals,
+): Promise<void> {
   const privateRef = db.collection("jobSignalsPrivate").doc(hash);
   const publicRef = db.collection("jobSignals").doc(hash);
   await db.runTransaction(async (transaction) => {
     const previous = (await transaction.get(privateRef)).data() as PrivateJobSignals | undefined;
-    const signals = observeJob(previous, {
-      key,
-      company: text(application.companyName),
-      title: text(application.position),
-      posting,
-      seenAt,
-    });
+    const signals = update(previous);
     const sameRole = signals.companyTitleKey
       ? (await transaction.get(
         db.collection("jobSignalsPrivate").where("companyTitleKey", "==", signals.companyTitleKey).limit(50),
@@ -79,7 +94,6 @@ export async function recordJobSignals(application: Record<string, unknown>): Pr
       { mergeFields: ["v", "keyPrefix", "signs", "updatedAt"] },
     );
   });
-  return hash;
 }
 
 // Every saved job feeds the public ghost-job signals of its posting. The
