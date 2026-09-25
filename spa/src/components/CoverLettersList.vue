@@ -42,53 +42,50 @@
         </div>
       </template>
     </Empty>
-    <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <Card v-for="coverLetter in coverLetters" :key="coverLetter.id">
-        <CardHeader>
-          <CardTitle>
-            <RouterLink
-              :to="`/jobs/${coverLetter.jobApplication.id}`"
-              class="text-lg text-primary hover:underline"
-            >
-              {{ coverLetter.jobApplication.position || "Unknown" }}
-            </RouterLink>
-          </CardTitle>
-          <CardDescription>
-            {{ coverLetter.jobApplication.companyName || "Unknown" }},
-            {{ formatDate(coverLetter.createdAt) }}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <p class="line-clamp-2">{{ coverLetter.body }}</p>
-        </CardContent>
-
-        <CardFooter>
-          <Button
-            variant="outline"
-            size="sm"
-            @click="
-              $router.replace({
-                query: {
-                  ...$route.query,
-                  'dialog-name': 'cover-letter-preview',
-                  'cover-letter-id': coverLetter.id,
-                },
-              })
-            "
-          >
-            <PhEye />
-            View
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    <!-- Search filters this list (filteredCoverLetters; it used to loop over all of them) -->
+    <ul v-else class="overflow-hidden rounded-card bg-card shadow-card dark:border dark:border-border">
+      <li
+        v-for="coverLetter in filteredCoverLetters"
+        :key="coverLetter.id"
+        class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-5 py-4 last:border-0"
+      >
+        <span class="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
+          <PhEnvelopeSimple :size="22" />
+        </span>
+        <div class="flex min-w-0 grow basis-60 flex-col gap-0.5">
+          <RouterLink :to="`/jobs/${coverLetter.jobApplication.id}`" class="font-bold hover:underline">
+            {{ coverLetter.jobApplication.position || "Untitled job" }}
+          </RouterLink>
+          <p class="text-sm text-muted-foreground">
+            {{ coverLetter.jobApplication.companyName || "Unknown company" }} · {{ formatDate(coverLetter.createdAt) }}
+          </p>
+          <p class="line-clamp-1 text-sm text-soft-foreground">{{ coverLetter.body }}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          @click="
+            $router.replace({
+              query: {
+                ...$route.query,
+                'dialog-name': 'cover-letter-preview',
+                'cover-letter-id': coverLetter.id,
+              },
+            })
+          "
+        >
+          <PhEye />
+          Open
+        </Button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
 import {
+  PhEnvelopeSimple,
   PhEye,
   PhFileText,
   PhMagnifyingGlass,
@@ -108,14 +105,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 const search = inject(
   SearchSymbol,

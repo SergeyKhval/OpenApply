@@ -1,15 +1,17 @@
 <template>
+  <!-- The name always shows; it becomes a link once the file's url loads -->
   <a
     v-if="url"
     :href="url"
     target="_blank"
-    class="text-xl text-primary hover:text-primary/80 hover:underline transition-colors"
+    rel="noopener noreferrer"
+    class="font-bold break-all text-foreground hover:underline"
   >
-    <span class="break-all">
-      {{ resume.fileName || "Resume" }}
-    </span>
+    {{ resume.fileName || "Resume" }}
   </a>
+  <span v-else class="font-bold break-all text-foreground">{{ resume.fileName || "Resume" }}</span>
 </template>
+
 
 <script setup lang="ts">
 import { useStorageFileUrl, useFirebaseStorage } from "vuefire";
