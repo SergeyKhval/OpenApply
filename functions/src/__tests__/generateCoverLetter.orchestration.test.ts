@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { usagePeriod } from "../lib/aiAllowance";
 
 // --- Shared mock state ---
 
@@ -106,7 +107,15 @@ const JOB_APP_ID = "job-app-1";
 const RESUME_ID = "resume-1";
 const COVER_LETTER_ID = "cl-1";
 
-const validBillingProfile = { currentBalance: 100 };
+const CURRENT_PERIOD = usagePeriod(new Date());
+const validBillingProfile = {
+  aiUsage: { period: CURRENT_PERIOD, count: 3 },
+  bonusChecks: 0,
+};
+const exhaustedBillingProfile = {
+  aiUsage: { period: CURRENT_PERIOD, count: 15 },
+  bonusChecks: 0,
+};
 const validJobApplication = {
   userId: USER_ID,
   companyName: "Acme Corp",
@@ -130,7 +139,7 @@ function setupSuccessfulGenerate() {
   mockGenerate.mockResolvedValueOnce({ text: "Generated cover letter body" });
   // 6. Transaction
   mockRunTransaction.mockImplementationOnce(async (callback: Function) => {
-    const transactionBillingSnap = snap(true, { currentBalance: 100 });
+    const transactionBillingSnap = snap(true, validBillingProfile);
     mockTransactionGet.mockResolvedValueOnce(transactionBillingSnap);
     await callback({
       get: mockTransactionGet,
@@ -155,7 +164,7 @@ function setupSuccessfulRegenerate() {
   mockGenerate.mockResolvedValueOnce({ text: "Regenerated cover letter body" });
   // 7. Transaction
   mockRunTransaction.mockImplementationOnce(async (callback: Function) => {
-    const transactionBillingSnap = snap(true, { currentBalance: 100 });
+    const transactionBillingSnap = snap(true, validBillingProfile);
     mockTransactionGet.mockResolvedValueOnce(transactionBillingSnap);
     await callback({
       get: mockTransactionGet,
@@ -167,6 +176,7 @@ function setupSuccessfulRegenerate() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockGet.mockReset();
   docCallIndex = 0;
 });
 
@@ -184,8 +194,23 @@ const callRegenerate = regenerateCoverLetter as unknown as (
 // ============================================================
 
 describe("generateCoverLetter orchestration", () => {
-  describe("Credit safety", () => {
-    it("does not deduct credits when AI generation fails", async () => {
+  describe("Allowance", () => {
+    it("rejects before calling the model when the monthly allowance is used up", async () => {
+      mockGet.mockResolvedValueOnce(snap(true, exhaustedBillingProfile));
+
+      const request = authRequest(USER_ID, {
+        jobApplicationId: JOB_APP_ID,
+        resumeId: RESUME_ID,
+      });
+
+      await expect(callGenerate(request)).rejects.toMatchObject({
+        code: "resource-exhausted",
+        details: { code: "ai-limit-reached" },
+      });
+      expect(mockGenerate).not.toHaveBeenCalled();
+    });
+
+    it("does not count a check when AI generation fails", async () => {
       // Setup: billing OK, job app OK, resume OK, prompt template OK, but AI fails
       mockGet.mockResolvedValueOnce(snap(true, validBillingProfile));
       mockGet.mockResolvedValueOnce(snap(true, validJobApplication));
@@ -202,7 +227,7 @@ describe("generateCoverLetter orchestration", () => {
       expect(mockRunTransaction).not.toHaveBeenCalled();
     });
 
-    it("throws insufficient-credits when balance drops during transaction", async () => {
+    it("throws ai-limit-reached when the allowance runs out during the transaction", async () => {
       // Setup: pre-check passes, but transaction re-check fails
       mockGet.mockResolvedValueOnce(snap(true, validBillingProfile));
       mockGet.mockResolvedValueOnce(snap(true, validJobApplication));
@@ -210,9 +235,9 @@ describe("generateCoverLetter orchestration", () => {
       mockGet.mockResolvedValueOnce(snap(true, validPromptTemplate));
       mockGenerate.mockResolvedValueOnce({ text: "Generated body" });
 
-      // Transaction: balance has dropped to 0
+      // Transaction: another request used the last check
       mockRunTransaction.mockImplementationOnce(async (callback: Function) => {
-        mockTransactionGet.mockResolvedValueOnce(snap(true, { currentBalance: 0 }));
+        mockTransactionGet.mockResolvedValueOnce(snap(true, exhaustedBillingProfile));
         await callback({
           get: mockTransactionGet,
           create: mockTransactionCreate,
@@ -225,13 +250,13 @@ describe("generateCoverLetter orchestration", () => {
         resumeId: RESUME_ID,
       });
 
-      await expect(callGenerate(request)).rejects.toThrow(/coins/);
+      await expect(callGenerate(request)).rejects.toMatchObject({ details: { code: "ai-limit-reached" } });
       // Transaction ran but should NOT have called create/update on the cover letter
       expect(mockTransactionCreate).not.toHaveBeenCalled();
       expect(mockTransactionUpdate).not.toHaveBeenCalled();
     });
 
-    it("deducts credits exactly once and creates cover letter on success", async () => {
+    it("counts exactly one check and creates cover letter on success", async () => {
       setupSuccessfulGenerate();
 
       const request = authRequest(USER_ID, {
@@ -258,15 +283,17 @@ describe("generateCoverLetter orchestration", () => {
 
       // Job application was updated in transaction
       expect(mockTransactionUpdate).toHaveBeenCalledTimes(2); // cover letter update + billing update
-      // The billing profile update uses FieldValue.increment(-10)
       const billingUpdateCall = mockTransactionUpdate.mock.calls.find(
         (call: unknown[]) => {
           const data = call[1] as Record<string, unknown>;
-          return data.currentBalance !== undefined;
+          return data.aiUsage !== undefined;
         },
       );
       expect(billingUpdateCall).toBeDefined();
-      expect((billingUpdateCall![1] as Record<string, unknown>).currentBalance).toEqual({ __increment: -10 });
+      expect((billingUpdateCall![1] as Record<string, unknown>).aiUsage).toEqual({
+        period: CURRENT_PERIOD,
+        count: 4,
+      });
     });
   });
 
@@ -368,8 +395,8 @@ describe("generateCoverLetter orchestration", () => {
 // ============================================================
 
 describe("regenerateCoverLetter orchestration", () => {
-  describe("Credit safety", () => {
-    it("updates existing cover letter and deducts credits on success", async () => {
+  describe("Allowance", () => {
+    it("updates existing cover letter and counts a check on success", async () => {
       setupSuccessfulRegenerate();
 
       const request = authRequest(USER_ID, {
@@ -388,7 +415,7 @@ describe("regenerateCoverLetter orchestration", () => {
       // Should use update (not create) for existing cover letter
       expect(mockTransactionCreate).not.toHaveBeenCalled();
 
-      // Should have 2 updates: cover letter body + billing deduction
+      // Should have 2 updates: cover letter body + AI check count
       expect(mockTransactionUpdate).toHaveBeenCalledTimes(2);
 
       const coverLetterUpdateCall = mockTransactionUpdate.mock.calls.find(
@@ -401,7 +428,7 @@ describe("regenerateCoverLetter orchestration", () => {
       expect((coverLetterUpdateCall![1] as Record<string, unknown>).body).toBe("Regenerated cover letter body");
     });
 
-    it("does not deduct credits when AI fails during regeneration", async () => {
+    it("does not count a check when AI fails during regeneration", async () => {
       // Billing OK
       mockGet.mockResolvedValueOnce(snap(true, validBillingProfile));
       // Cover letter ownership OK
@@ -425,7 +452,7 @@ describe("regenerateCoverLetter orchestration", () => {
       expect(mockRunTransaction).not.toHaveBeenCalled();
     });
 
-    it("aborts when balance drops between pre-check and transaction", async () => {
+    it("aborts when the allowance runs out between pre-check and transaction", async () => {
       // Billing pre-check passes
       mockGet.mockResolvedValueOnce(snap(true, validBillingProfile));
       // Cover letter ownership OK
@@ -439,9 +466,9 @@ describe("regenerateCoverLetter orchestration", () => {
       // AI succeeds
       mockGenerate.mockResolvedValueOnce({ text: "New body" });
 
-      // Transaction: balance dropped to 5 (below 10 required)
+      // Transaction: another request used the last check
       mockRunTransaction.mockImplementationOnce(async (callback: Function) => {
-        mockTransactionGet.mockResolvedValueOnce(snap(true, { currentBalance: 5 }));
+        mockTransactionGet.mockResolvedValueOnce(snap(true, exhaustedBillingProfile));
         await callback({
           get: mockTransactionGet,
           create: mockTransactionCreate,
@@ -455,7 +482,7 @@ describe("regenerateCoverLetter orchestration", () => {
         resumeId: RESUME_ID,
       });
 
-      await expect(callRegenerate(request)).rejects.toThrow(/coins/);
+      await expect(callRegenerate(request)).rejects.toMatchObject({ details: { code: "ai-limit-reached" } });
       expect(mockTransactionUpdate).not.toHaveBeenCalled();
     });
   });

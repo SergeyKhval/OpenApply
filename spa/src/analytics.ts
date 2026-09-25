@@ -4,6 +4,8 @@ function isLoaded(): boolean {
   return posthog.__loaded;
 }
 
+export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter";
+
 type EventMap = {
   signup_completed: {
     source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
@@ -34,7 +36,10 @@ type EventMap = {
   cover_letter_regenerated: void;
   resume_uploaded: void;
   resume_upload_failed: { error: string };
-  checkout_started: { priceId: string };
+  checkout_started: { plan: "pro"; source: AiLimitSource };
+  ai_limit_reached: { plan: "free" | "pro"; source: AiLimitSource };
+  upgrade_clicked: { source: AiLimitSource };
+  billing_portal_opened: void;
   status_changed: { applicationId: string; status: string };
   csv_import_completed: { rowCount: number };
   jobs_exported: { rowCount: number };

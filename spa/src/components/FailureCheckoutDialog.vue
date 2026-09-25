@@ -2,17 +2,12 @@
   <Dialog :open="isOpen" @update:open="updateDialogOpenState">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Payment canceled!</DialogTitle>
+        <DialogTitle>Checkout canceled</DialogTitle>
 
         <div class="flex flex-col items-center">
           <PhXCircle size="96" class="text-destructive" />
-          <p class="text-center text-lg mb-4">Your payment did not succeed!</p>
+          <p class="text-center text-lg mb-4">You weren't charged.</p>
 
-          <p class="text-2xl flex items-center gap-2">
-            <PhCoins />
-            {{ userProfile?.billingProfile?.currentBalance }}
-          </p>
-          <p class="text-muted-foreground mb-4">current coins balance</p>
           <p class="text-center">
             If you think this is an error on our side please reach out via
             <a
@@ -46,10 +41,7 @@
 
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
-import {
-  PhCoins,
-  PhXCircle,
-} from "@phosphor-icons/vue";
+import { PhXCircle } from "@phosphor-icons/vue";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +50,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { omit } from "lodash";
-import { useAuth } from "@/composables/useAuth.ts";
 import { useRoute, useRouter } from "vue-router";
 
 type SuccessCheckoutDialogProps = {
@@ -69,7 +60,6 @@ const { isOpen } = defineProps<SuccessCheckoutDialogProps>();
 
 const router = useRouter();
 const route = useRoute();
-const { userProfile } = useAuth();
 
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL;
 

@@ -37,8 +37,6 @@ const steps = [
   },
 ];
 
-// Pricing and FAQ copy belong to the billing change (oa-7zn.1); it replaces
-// these entries when Pro launches. Everything else on the page is layout.
 const pricingPlans = [
   {
     name: 'Free',
@@ -50,19 +48,20 @@ const pricingPlans = [
       'Notes, due dates, and tags',
       'Resume and document storage',
       'Spreadsheet/CSV import',
+      '15 AI checks a month (resume match or cover letter)',
     ],
     cta: 'Start free',
     featured: true,
   },
   {
-    name: 'AI Features',
-    price: 'From $0.12',
-    summary: 'Pay-as-you-go. No subscription.',
+    name: 'Pro',
+    price: '$9/month',
+    summary: 'For an active search. Cancel anytime.',
     features: [
-      'AI resume review from $0.12',
-      'AI cover letter from $0.12',
-      'Pay only when you use AI',
-      'No subscriptions, no lock-in',
+      'Everything in Free',
+      '150 AI checks a month',
+      'AI resume match and cover letters for every job you track',
+      'Manage or cancel yourself, no emails needed',
     ],
     cta: null,
     featured: false,
@@ -71,8 +70,8 @@ const pricingPlans = [
 
 const faqs = [
   {
-    question: 'How do coins work?',
-    answer: 'Coins are only spent on AI features like resume reviews and cover letters; tracking is free. Each review or cover letter costs 10 coins, and coin packs range from $0.012 to $0.02 per coin depending on pack size, so a review costs $0.12 to $0.20.',
+    question: 'What counts as an AI check?',
+    answer: 'Each AI resume match or cover letter (including a regenerate) is one check. Tracking, job link import and resume upload are free and unlimited. Free accounts get 15 checks a month; Pro gets 150 for $9 a month. Checks reset on the 1st of each month.',
   },
   {
     question: 'How do AI resume reviews work?',
@@ -96,7 +95,7 @@ const faqs = [
   },
   {
     question: 'Which currencies do you support?',
-    answer: 'Billing is pay‑as‑you‑go; currency and pricing are shown at checkout.',
+    answer: 'Pro is billed monthly through Stripe. Your currency and any local taxes are shown at checkout.',
   },
 ];
 

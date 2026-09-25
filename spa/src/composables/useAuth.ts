@@ -10,16 +10,17 @@ import {
   type UserCredential
 } from "firebase/auth";
 import { computed, type Ref } from "vue";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, type Timestamp } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
+import type { AllowanceProfile } from "@/lib/aiAllowance";
 import { db, functions } from "@/firebase/config.ts";
 import { identifyUser, resetUser, trackEvent } from "@/analytics";
 
-type BillingProfile = {
-  currentBalance: number;
-  lifetimeCreditsPurchased: number;
+type BillingProfile = AllowanceProfile & {
   stripeCustomerId: string;
-  welcomeCreditsGrantedAt?: unknown;
+  stripeSubscriptionId?: string | null;
+  currentPeriodEnd?: Timestamp | null;
+  cancelAtPeriodEnd?: boolean;
 };
 
 type UserProfileWithBilling<T = Record<string, unknown>> =

@@ -171,29 +171,17 @@
                 </div>
               </div>
               <div v-else>
-                <AvailableCoins
-                  :current-balance="currentBalance"
-                  cost-text="10 coins per AI review"
+                <AiChecksLeft
+                  v-if="allowance && canUseAi"
+                  :allowance="allowance"
                   class="mb-6"
                 />
 
-                <div v-if="!hasSufficientCredits" class="space-y-6">
-                  <div
-                    class="rounded-lg border border-border bg-muted/10 p-6 space-y-2"
-                  >
-                    <p class="text-lg font-semibold">
-                      Add more coins to continue
-                    </p>
-                    <p class="text-sm text-muted-foreground">
-                      You need at least {{ requiredCredits }} coins to generate
-                      an AI resume review. Choose a pack below to keep going.
-                    </p>
-                  </div>
-                  <CreditPackOptions
-                    :loading="generatingStripeLink"
-                    @purchase="startCheckout"
-                  />
-                </div>
+                <AiLimitReached
+                  v-if="allowance && !canUseAi"
+                  :allowance="allowance"
+                  source="ai_review"
+                />
 
                 <div v-else class="flex flex-col">
                   <ul
@@ -273,10 +261,9 @@ import { Resume, ResumeJobMatch } from "@/types";
 import { httpsCallable } from "firebase/functions";
 import ResumeLink from "@/components/ResumeLink.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "@/composables/useAuth";
-import { useCreditsCheckout } from "@/composables/useCreditsCheckout";
-import CreditPackOptions from "@/components/CreditPackOptions.vue";
-import AvailableCoins from "@/components/AvailableCoins.vue";
+import { useAiAllowance } from "@/composables/useAiAllowance";
+import AiChecksLeft from "@/components/AiChecksLeft.vue";
+import AiLimitReached from "@/components/AiLimitReached.vue";
 
 type ResumeAttachmentCardProps = {
   resume: Resume;
@@ -291,22 +278,10 @@ const {
 } = defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
-const { userProfile } = useAuth();
-const { startCheckout, isProcessing: generatingStripeLink } =
-  useCreditsCheckout();
+const { allowance, canUseAi } = useAiAllowance();
 
 const isMatchingResume = ref(false);
 const errorMessage = ref("");
-
-const requiredCredits = 10;
-
-const currentBalance = computed(
-  () => userProfile.value?.billingProfile?.currentBalance ?? 0,
-);
-
-const hasSufficientCredits = computed(
-  () => currentBalance.value >= requiredCredits,
-);
 
 const matchResumeWithJobApplication = httpsCallable(
   functions,
@@ -327,21 +302,9 @@ async function handleReviewResume() {
   } catch (err: unknown) {
     console.error("Error generating resume review:", err);
 
-    const maybeError = err as {
-      code?: string;
-      message?: string;
-      details?: { code?: string };
-    };
-
-    // Check for insufficient credits error
-    const errorCode =
-      maybeError.code?.replace("functions/", "") ||
-      (maybeError.details as { code?: string })?.code;
-
-    if (errorCode !== "insufficient-credits") {
-      errorMessage.value =
-        maybeError.message || "Failed to generate AI resume review";
-    }
+    errorMessage.value =
+      (err as { message?: string })?.message ||
+      "Failed to generate AI resume review";
   } finally {
     isMatchingResume.value = false;
   }

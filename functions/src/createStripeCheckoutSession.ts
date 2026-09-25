@@ -1,67 +1,73 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
-import { getFirestore } from "firebase-admin/firestore";
 import Stripe from "stripe";
-import { CREDIT_PACKS_MAP as CREDIT_PACKS } from "./constants/creditPacks";
+import { isProStatus } from "./lib/aiAllowance";
+import {
+  APP_HOME_URL,
+  getBillingProfileOrThrow,
+  safeReturnUrl,
+} from "./lib/billingProfile";
 
 const STRIPE_API_KEY = defineString("STRIPE_API_KEY");
 
-const db = getFirestore();
+/**
+ * Read from the environment at runtime rather than declared with
+ * defineString: a declared param missing from the deploy dotenv file fails a
+ * non-interactive `firebase deploy`, default or not. Unset means Pro isn't
+ * on sale yet.
+ */
+const proPriceId = () => process.env.STRIPE_PRO_PRICE_ID || "";
 
+/**
+ * Starts a Stripe Checkout for the Pro subscription. The name is kept from the
+ * coin pack era so deploys don't have to delete a function; a `priceId` sent
+ * by old clients is ignored.
+ */
 export const createStripeCheckoutSession = onCall<{
-  priceId: string;
-  success_url: string;
-  cancel_url: string;
+  success_url?: string;
+  cancel_url?: string;
+  priceId?: string;
 }>(async (request) => {
-  const stripeClient = new Stripe(STRIPE_API_KEY.value());
-
-  const { priceId, success_url = "", cancel_url = "" } = request.data;
-
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
 
-  if (!priceId || !CREDIT_PACKS[priceId]) {
-    throw new HttpsError("invalid-argument", "Unknown credit pack requested");
-  }
+  const uid = request.auth.uid;
+  const { success_url, cancel_url } = request.data ?? {};
 
   try {
-    // Get the user's Stripe customer ID
-    const billingProfileRef = db
-      .collection("users")
-      .doc(request.auth.uid)
-      .collection("billingProfile")
-      .doc("profile");
-    const billingProfileSnap = await billingProfileRef.get();
+    const billingProfile = await getBillingProfileOrThrow(uid);
 
-    if (!billingProfileSnap.exists) {
+    if (isProStatus(billingProfile.subscriptionStatus)) {
+      throw new HttpsError("already-exists", "You're already on Pro");
+    }
+
+    const priceId = proPriceId();
+    if (!priceId) {
       throw new HttpsError(
         "failed-precondition",
-        "Billing profile not initialized",
+        "Pro isn't available yet. Try again later.",
       );
     }
 
-    const billingProfile = billingProfileSnap.data();
-
-    if (!billingProfile?.stripeCustomerId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "User does not have a Stripe customer ID",
-      );
-    }
-
+    const stripeClient = new Stripe(STRIPE_API_KEY.value());
     const session = await stripeClient.checkout.sessions.create({
-      mode: "payment",
+      mode: "subscription",
       customer: billingProfile.stripeCustomerId,
-      customer_update: { address: "auto" },
-      client_reference_id: request.auth.uid,
-      metadata: {
-        creditPackPriceId: priceId,
-      },
+      client_reference_id: uid,
       line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: { metadata: { firebaseUid: uid } },
       automatic_tax: { enabled: true },
-      success_url,
-      cancel_url,
+      customer_update: { address: "auto", name: "auto" },
+      tax_id_collection: { enabled: true },
+      success_url: safeReturnUrl(
+        success_url,
+        `${APP_HOME_URL}?dialog-name=checkout-success`,
+      ),
+      cancel_url: safeReturnUrl(
+        cancel_url,
+        `${APP_HOME_URL}?dialog-name=checkout-canceled`,
+      ),
     });
 
     return { url: session.url };

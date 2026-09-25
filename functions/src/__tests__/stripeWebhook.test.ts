@@ -1,51 +1,52 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockUpdate = vi.fn();
-const mockTransactionGet = vi.fn();
-const mockTransactionUpdate = vi.fn();
-const mockRunTransaction = vi.fn();
-const mockBillingGet = vi.fn();
+const mockSet = vi.fn();
 const mockCollectionGroupGet = vi.fn();
-const mockListLineItems = vi.fn();
+const mockCollectionGroupWhere = vi.fn();
+const mockRetrieve = vi.fn();
 const mockConstructEvent = vi.fn();
+const profileRefs: Record<string, { path: string; set: typeof mockSet }> = {};
+
+const profileRef = (uid: string) => {
+  profileRefs[uid] ??= { path: `users/${uid}/billingProfile/profile`, set: mockSet };
+  return profileRefs[uid];
+};
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
-    collectionGroup: () => ({
-      where: () => ({
-        limit: () => ({
-          get: mockCollectionGroupGet,
-        }),
+    collection: () => ({
+      doc: (uid: string) => ({
+        collection: () => ({ doc: () => profileRef(uid) }),
       }),
     }),
-    runTransaction: (fn: Function) => mockRunTransaction(fn),
+    collectionGroup: () => ({
+      where: (...args: unknown[]) => {
+        mockCollectionGroupWhere(...args);
+        return { limit: () => ({ get: mockCollectionGroupGet }) };
+      },
+    }),
   }),
   FieldValue: {
-    increment: (n: number) => ({ _increment: n }),
     serverTimestamp: () => "mock-timestamp",
   },
 }));
 
 vi.mock("firebase-functions/params", () => ({
   defineString: (name: string) => ({
-    value: () => name === "STRIPE_API_KEY" ? "sk_test_key" : "whsec_test",
+    value: () => (name === "STRIPE_API_KEY" ? "sk_test_key" : "whsec_test"),
   }),
 }));
 
-vi.mock("stripe", () => {
-  return {
-    default: class Stripe {
-      webhooks = {
-        constructEvent: (...args: unknown[]) => mockConstructEvent(...args),
-      };
-      checkout = {
-        sessions: {
-          listLineItems: (...args: unknown[]) => mockListLineItems(...args),
-        },
-      };
-    },
-  };
-});
+vi.mock("stripe", () => ({
+  default: class Stripe {
+    webhooks = {
+      constructEvent: (...args: unknown[]) => mockConstructEvent(...args),
+    };
+    subscriptions = {
+      retrieve: (...args: unknown[]) => mockRetrieve(...args),
+    };
+  },
+}));
 
 vi.mock("firebase-functions/v2/https", () => ({
   onRequest: (fn: Function) => fn,
@@ -53,11 +54,18 @@ vi.mock("firebase-functions/v2/https", () => ({
 
 import { stripeWebhook } from "../stripeWebhook";
 
+const stripeSubscription = (overrides: Record<string, unknown> = {}) => ({
+  id: "sub_1",
+  customer: "cus_1",
+  status: "active",
+  cancel_at_period_end: false,
+  metadata: { firebaseUid: "user-1" },
+  items: { data: [{ current_period_end: 1790000000 }] },
+  ...overrides,
+});
+
 describe("stripeWebhook", () => {
-  let mockReq: {
-    headers: Record<string, string>;
-    rawBody: string;
-  };
+  let mockReq: { headers: Record<string, string>; rawBody: string };
   let mockRes: {
     status: ReturnType<typeof vi.fn>;
     send: ReturnType<typeof vi.fn>;
@@ -66,10 +74,7 @@ describe("stripeWebhook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReq = {
-      headers: {},
-      rawBody: "raw-body",
-    };
+    mockReq = { headers: { "stripe-signature": "valid-sig" }, rawBody: "raw-body" };
     mockRes = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -77,156 +82,136 @@ describe("stripeWebhook", () => {
     };
   });
 
-  const callWebhook = () =>
-    (stripeWebhook as unknown as Function)(mockReq, mockRes);
+  const callWebhook = () => (stripeWebhook as unknown as Function)(mockReq, mockRes);
+
+  const givenEvent = (type: string, object: Record<string, unknown>) =>
+    mockConstructEvent.mockReturnValue({ id: "evt_1", type, data: { object } });
 
   it("rejects missing signature", async () => {
+    mockReq.headers = {};
     await callWebhook();
     expect(mockRes.status).toHaveBeenCalledWith(400);
     expect(mockRes.send).toHaveBeenCalledWith("Missing signature");
   });
 
   it("rejects invalid signature", async () => {
-    mockReq.headers["stripe-signature"] = "invalid-sig";
     mockConstructEvent.mockImplementation(() => {
       throw new Error("Invalid signature");
     });
 
     await callWebhook();
     expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.send).toHaveBeenCalledWith(
-      expect.stringContaining("Webhook Error"),
+    expect(mockRes.send).toHaveBeenCalledWith(expect.stringContaining("Webhook Error"));
+  });
+
+  it("syncs the subscription as Stripe has it now, not as the event says", async () => {
+    givenEvent("customer.subscription.updated", stripeSubscription({ status: "active" }));
+    mockRetrieve.mockResolvedValue(stripeSubscription({ status: "canceled" }));
+
+    await callWebhook();
+
+    expect(mockRetrieve).toHaveBeenCalledWith("sub_1");
+    expect(mockSet).toHaveBeenCalledWith(
+      {
+        subscriptionStatus: "canceled",
+        stripeSubscriptionId: "sub_1",
+        currentPeriodEnd: new Date(1790000000 * 1000),
+        cancelAtPeriodEnd: false,
+        lastStripeEventId: "evt_1",
+        updatedAt: "mock-timestamp",
+      },
+      { merge: true },
+    );
+    expect(profileRefs["user-1"]).toBeDefined();
+    expect(mockCollectionGroupGet).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+  });
+
+  it.each(["customer.subscription.created", "customer.subscription.deleted"])(
+    "handles %s",
+    async (type) => {
+      givenEvent(type, stripeSubscription());
+      mockRetrieve.mockResolvedValue(stripeSubscription());
+
+      await callWebhook();
+
+      expect(mockSet).toHaveBeenCalledTimes(1);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+    },
+  );
+
+  it("falls back to the customer ID when the subscription has no uid", async () => {
+    givenEvent("customer.subscription.updated", stripeSubscription());
+    mockRetrieve.mockResolvedValue(stripeSubscription({ metadata: {} }));
+    const fallbackSet = vi.fn();
+    mockCollectionGroupGet.mockResolvedValue({
+      empty: false,
+      docs: [{ ref: { set: fallbackSet } }],
+    });
+
+    await callWebhook();
+
+    expect(mockCollectionGroupWhere).toHaveBeenCalledWith("stripeCustomerId", "==", "cus_1");
+    expect(fallbackSet).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriptionStatus: "active" }),
+      { merge: true },
+    );
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+  });
+
+  it("acknowledges subscriptions for unknown customers without writing", async () => {
+    givenEvent("customer.subscription.updated", stripeSubscription());
+    mockRetrieve.mockResolvedValue(stripeSubscription({ metadata: {} }));
+    mockCollectionGroupGet.mockResolvedValue({ empty: true, docs: [] });
+
+    await callWebhook();
+
+    expect(mockSet).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+  });
+
+  it("syncs on a completed subscription checkout", async () => {
+    givenEvent("checkout.session.completed", {
+      id: "cs_1",
+      mode: "subscription",
+      subscription: "sub_1",
+    });
+    mockRetrieve.mockResolvedValue(stripeSubscription());
+
+    await callWebhook();
+
+    expect(mockRetrieve).toHaveBeenCalledWith("sub_1");
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriptionStatus: "active" }),
+      { merge: true },
     );
   });
 
-  it("rejects unknown price IDs", async () => {
-    mockReq.headers["stripe-signature"] = "valid-sig";
-    mockConstructEvent.mockReturnValue({
-      type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_123",
-          customer: "cus_123",
-        },
-      },
-    });
-    mockListLineItems.mockResolvedValue({
-      data: [{ price: { id: "price_unknown" } }],
-    });
+  it("ignores one-off payment checkouts", async () => {
+    givenEvent("checkout.session.completed", { id: "cs_1", mode: "payment" });
 
     await callWebhook();
-    expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.send).toHaveBeenCalledWith("Unknown credit pack");
+
+    expect(mockRetrieve).not.toHaveBeenCalled();
+    expect(mockSet).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(200);
   });
 
-  it("processes valid checkout with correct credit increment", async () => {
-    mockReq.headers["stripe-signature"] = "valid-sig";
-    mockConstructEvent.mockReturnValue({
-      type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_123",
-          customer: "cus_123",
-        },
-      },
-    });
-    mockListLineItems.mockResolvedValue({
-      data: [{ price: { id: "price_1SJE8pAZ6qTVMaZC4YZ6FC0m" } }],
-    });
-
-    const mockBillingDocRef = { parent: { parent: { id: "user-1" } } };
-    mockCollectionGroupGet.mockResolvedValue({
-      empty: false,
-      docs: [{ ref: mockBillingDocRef }],
-    });
-
-    mockRunTransaction.mockImplementation(async (fn: Function) => {
-      const transaction = {
-        get: mockTransactionGet.mockResolvedValue({
-          get: () => null, // lastCheckoutSessionId doesn't match
-        }),
-        update: mockTransactionUpdate,
-      };
-      await fn(transaction);
-    });
+  it("ignores unrelated events", async () => {
+    givenEvent("invoice.paid", { id: "in_1" });
 
     await callWebhook();
-    expect(mockRes.status).toHaveBeenCalledWith(200);
+
+    expect(mockRetrieve).not.toHaveBeenCalled();
     expect(mockRes.json).toHaveBeenCalledWith({ received: true });
-    expect(mockTransactionUpdate).toHaveBeenCalledWith(
-      mockBillingDocRef,
-      expect.objectContaining({
-        currentBalance: { _increment: 100 },
-        lifetimeCreditsPurchased: { _increment: 100 },
-        lastCheckoutSessionId: "cs_123",
-      }),
-    );
   });
 
-  it("skips duplicate session IDs (idempotency)", async () => {
-    mockReq.headers["stripe-signature"] = "valid-sig";
-    mockConstructEvent.mockReturnValue({
-      type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_already_processed",
-          customer: "cus_123",
-        },
-      },
-    });
-    mockListLineItems.mockResolvedValue({
-      data: [{ price: { id: "price_1SJE8pAZ6qTVMaZC4YZ6FC0m" } }],
-    });
-
-    const mockBillingDocRef = { parent: { parent: { id: "user-1" } } };
-    mockCollectionGroupGet.mockResolvedValue({
-      empty: false,
-      docs: [{ ref: mockBillingDocRef }],
-    });
-
-    mockRunTransaction.mockImplementation(async (fn: Function) => {
-      const transaction = {
-        get: mockTransactionGet.mockResolvedValue({
-          get: (field: string) =>
-            field === "lastCheckoutSessionId" ? "cs_already_processed" : null,
-        }),
-        update: mockTransactionUpdate,
-      };
-      await fn(transaction);
-    });
+  it("returns 500 so Stripe retries when the sync fails", async () => {
+    givenEvent("customer.subscription.updated", stripeSubscription());
+    mockRetrieve.mockRejectedValue(new Error("stripe down"));
 
     await callWebhook();
-    expect(mockRes.status).toHaveBeenCalledWith(200);
-    // Transaction update should NOT be called due to idempotency check
-    expect(mockTransactionUpdate).not.toHaveBeenCalled();
-  });
 
-  it("rejects when session has no customer ID", async () => {
-    mockReq.headers["stripe-signature"] = "valid-sig";
-    mockConstructEvent.mockReturnValue({
-      type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_123",
-          customer: null,
-        },
-      },
-    });
-
-    await callWebhook();
-    expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.send).toHaveBeenCalledWith("No customer ID");
-  });
-
-  it("returns 200 for non-checkout events", async () => {
-    mockReq.headers["stripe-signature"] = "valid-sig";
-    mockConstructEvent.mockReturnValue({
-      type: "payment_intent.succeeded",
-      data: { object: {} },
-    });
-
-    await callWebhook();
-    expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.json).toHaveBeenCalledWith({ received: true });
+    expect(mockRes.status).toHaveBeenCalledWith(500);
   });
 });
