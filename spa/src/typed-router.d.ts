@@ -87,11 +87,27 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       Record<never, never>,
       | '/settings/'
+      | '/settings/appearance'
+      | '/settings/email'
       | '/settings/import-export'
     >,
     '/settings/': RouteRecordInfo<
       '/settings/',
       '/settings',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/settings/appearance': RouteRecordInfo<
+      '/settings/appearance',
+      '/settings/appearance',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/settings/email': RouteRecordInfo<
+      '/settings/email',
+      '/settings/email',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -172,6 +188,8 @@ declare module 'vue-router/auto-routes' {
       routes:
         | '/settings'
         | '/settings/'
+        | '/settings/appearance'
+        | '/settings/email'
         | '/settings/import-export'
       views:
         | 'default'
@@ -179,6 +197,18 @@ declare module 'vue-router/auto-routes' {
     'src/pages/settings/index.vue': {
       routes:
         | '/settings/'
+      views:
+        | never
+    }
+    'src/pages/settings/appearance.vue': {
+      routes:
+        | '/settings/appearance'
+      views:
+        | never
+    }
+    'src/pages/settings/email.vue': {
+      routes:
+        | '/settings/email'
       views:
         | never
     }

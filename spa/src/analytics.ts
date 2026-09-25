@@ -37,6 +37,7 @@ type EventMap = {
   checkout_started: { priceId: string };
   status_changed: { applicationId: string; status: string };
   csv_import_completed: { rowCount: number };
+  jobs_exported: { rowCount: number };
   resume_match_started: { resumeId: string; jobApplicationId: string };
   resume_match_completed: { resumeId: string; jobApplicationId: string };
   resume_match_failed: { error: string };

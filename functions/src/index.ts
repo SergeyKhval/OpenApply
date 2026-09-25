@@ -23,3 +23,4 @@ export * from "./matchResumeTool";
 export * from "./sendWeeklyDigest";
 export * from "./processUserDigest";
 export * from "./signInCode";
+export * from "./emailPreferences";
