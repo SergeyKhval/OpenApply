@@ -33,6 +33,15 @@ describe("friendlyRequestError", () => {
     expect(friendlyRequestError(err)).toBe("Paste both your resume and the job description.");
   });
 
+  it("passes through a rate-limit message so the specific limit is visible", () => {
+    const err = Object.assign(new Error("You've hit today's limit for new job lookups. Come back tomorrow."), {
+      code: "functions/resource-exhausted",
+    });
+    expect(friendlyRequestError(err)).toBe(
+      "You've hit today's limit for new job lookups. Come back tomorrow.",
+    );
+  });
+
   it("maps deadline-exceeded to plain language", () => {
     const err = Object.assign(new Error("deadline-exceeded"), { code: "functions/deadline-exceeded" });
     expect(friendlyRequestError(err)).toBe("That took too long. Enter the details yourself instead.");
