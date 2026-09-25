@@ -72,6 +72,13 @@ export function useUpdateJobApplicationStatus() {
     });
   }
 
+  function scheduleFollowUp(applicationId: string, days = FOLLOW_UP_AFTER_APPLYING_DAYS) {
+    return updateDoc(doc(db, "jobApplications", applicationId), {
+      followUpAt: daysFromToday(days),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
   function snoozeFollowUp(applicationId: string) {
     return updateDoc(doc(db, "jobApplications", applicationId), {
       followUpAt: daysFromToday(SNOOZE_FOLLOW_UP_DAYS),
@@ -86,5 +93,5 @@ export function useUpdateJobApplicationStatus() {
     });
   }
 
-  return { updateJobApplicationStatus, markApplied, snoozeFollowUp, clearFollowUp };
+  return { updateJobApplicationStatus, markApplied, scheduleFollowUp, snoozeFollowUp, clearFollowUp };
 }

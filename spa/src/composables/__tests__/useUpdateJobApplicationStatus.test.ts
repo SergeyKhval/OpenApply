@@ -90,7 +90,7 @@ describe("useUpdateJobApplicationStatus", () => {
   });
 
   describe("follow-ups", () => {
-    const { markApplied, snoozeFollowUp, clearFollowUp } = useUpdateJobApplicationStatus();
+    const { markApplied, snoozeFollowUp, clearFollowUp, scheduleFollowUp } = useUpdateJobApplicationStatus();
 
     it("I applied sets Applied, the applied date and a follow-up a week out", async () => {
       await markApplied("app-1");
@@ -105,6 +105,11 @@ describe("useUpdateJobApplicationStatus", () => {
       await snoozeFollowUp("app-1");
       const updates = mockUpdateDoc.mock.calls[0][1];
       expect(updates).toEqual({ followUpAt: new Date("2025-01-18"), updatedAt: "mock-timestamp" });
+    });
+
+    it("schedules a follow-up a week out by default", async () => {
+      await scheduleFollowUp("app-1");
+      expect(mockUpdateDoc.mock.calls[0][1]).toEqual({ followUpAt: new Date("2025-01-22"), updatedAt: "mock-timestamp" });
     });
 
     it("done clears the follow-up", async () => {
