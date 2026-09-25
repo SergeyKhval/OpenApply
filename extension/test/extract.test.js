@@ -11,8 +11,9 @@ const source = readFileSync(join(here, "../src/extract.js"), "utf8")
 
 // Runs the extractor inside a page built from a saved fixture, the way
 // chrome.scripting.executeScript runs it in the real tab
-function extractFrom(fixture, { select, withoutJsonLd = false, url: pageUrl } = {}) {
+function extractFrom(fixture, { select, withoutJsonLd = false, withoutSiteRules = false, extractor = source, url: pageUrl } = {}) {
   let html = readFileSync(join(here, `fixtures/${fixture}.html`), "utf8");
+  const code = withoutSiteRules ? extractor.replace("SITES.find(", "[].find(") : extractor;
   if (withoutJsonLd) html = html.replace(/<script[^>]*ld\+json[^>]*>[\s\S]*?<\/script>/g, "");
   const url = pageUrl ?? html.match(/Captured (\S+)/)[1];
   const dom = new JSDOM(html, { url, runScripts: "outside-only" });
@@ -21,7 +22,7 @@ function extractFrom(fixture, { select, withoutJsonLd = false, url: pageUrl } = 
     range.selectNodeContents(dom.window.document.querySelector(select));
     dom.window.getSelection().addRange(range);
   }
-  return dom.window.eval(`${source}; extractJob()`);
+  return dom.window.eval(`${code}; extractJob()`);
 }
 
 describe("extractJob on captured job pages", () => {
@@ -66,6 +67,61 @@ describe("extractJob on captured job pages", () => {
     if (fixture === "workable-netguru") {
       expect(title).toBe("(Senior) Data Engineer with AI - Freelance");
       expect(company).toBe("Netguru");
+    }
+  });
+
+  // Any job page, not just the boards we have rules for: every real capture read
+  // with no site rules and no JSON-LD
+  it.each([
+    ["greenhouse", "GitLab is the intelligent orchestration platform", 8000],
+    ["lever", "We design Spotify’s consumer experience", 5000],
+    ["ashby", "Ramp is building the smart infrastructure", 4000],
+    ["workable", "More about Hugging Face", 5000],
+    ["workable-netguru", "3+ years of hands-on Snowflake experience", 2500],
+    ["linkedin", "Circle (NYSE: CRCL)", 4000],
+    ["airbnb", "Airbnb was born in 2007", 5000],
+    ["theprotocol", "Rozwój i utrzymanie aplikacji webowych", 3000],
+  ])("reads the whole job on %s from the page alone", (fixture, snippet, minChars) => {
+    const job = extractFrom(fixture, { withoutSiteRules: true, withoutJsonLd: true });
+    expect(job.source).toBe("page");
+    expect(job.description).toContain(snippet);
+    expect(job.description.length).toBeGreaterThan(minChars);
+  });
+
+  it("ignores lists of job links when finding the description", () => {
+    // LinkedIn's public page has "Regions Bank jobs", "Medpace jobs" link lists
+    const { description } = extractFrom("linkedin", { withoutSiteRules: true, withoutJsonLd: true });
+    expect(description).not.toContain("Regions Bank jobs");
+  });
+
+  it("adds the sections a site rule misses from the page", () => {
+    // Workable's rule as it was: the description section only, no requirements or benefits
+    const extractor = source.replace(/\{ all: '\[data-ui="job-description"\][^}]*\},/, `'[data-ui="job-description"]',`);
+    expect(extractor).not.toBe(source);
+    const { description, source: sourceKind } = extractFrom("workable-netguru", { extractor });
+    expect(sourceKind).toBe("page");
+    expect(description).toContain("Netguru is a trusted partner");
+    expect(description).toContain("3+ years of hands-on Snowflake experience");
+    expect(description).toContain("100% remote work;");
+  });
+
+  it("keeps a site rule's text when the page adds a job list before it", () => {
+    const { description, source: sourceKind } = extractFrom("linkedin-signed-in-synthetic");
+    expect(sourceKind).toBe("site");
+    expect(description).not.toContain("Other job card");
+  });
+
+  it("reads LinkedIn's 2026 job page, which has no h1 and hashed class names", () => {
+    const job = extractFrom("linkedin-2026");
+    expect(job.title).toBe("Engineering Manager");
+    expect(job.company).toBe("EduGO Prosta Spółka Akcyjna");
+    expect(job.location).toBe("Łódź, Łódzkie, Poland");
+    expect(job.description).toContain("Jesteśmy jedną z najszybciej rozwijających się szkół online");
+    expect(job.description).toContain("Minimum 6–7 lat w inżynierii oprogramowania");
+    expect(job.description).toContain("Etap 4: Rozmowa finalna z Zarządem.");
+    // The rest of the page: top card, upsells, hiring team, company card, more jobs
+    for (const noise of ["18 people clicked apply", "Retry Premium", "Dariusz Lis", "822 followers", "Storyblok", "See more jobs like this"]) {
+      expect(job.description).not.toContain(noise);
     }
   });
 
@@ -172,5 +228,69 @@ describe("extractJob limits", () => {
     );
     const job = dom.window.eval(`${source}; extractJob()`);
     expect(job).toMatchObject({ title: "Example", description: "", source: "none" });
+  });
+});
+
+// Posting dates feed the ghost-job signals: only this job's own date, never
+// one from a "similar jobs" list on the same page
+describe("extractJob posting dates", () => {
+  const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+
+  it.each([
+    ["ashby", "2026-04-07", undefined],
+    ["lever", "2026-06-23", undefined],
+    ["workable", "2026-09-21", undefined],
+    ["workable-netguru", "2026-09-16", undefined],
+    ["theprotocol", "2026-09-16", "2026-10-16"],
+    ["linkedin", "2026-09-22", "2026-10-31"],
+  ])("%s: datePosted from JSON-LD", (fixture, postedAt, validThrough) => {
+    const expected = { postedAt, postedAtSource: "json-ld" };
+    if (validThrough) expected.validThrough = validThrough;
+    expect(extractFrom(fixture).posting).toEqual(expected);
+  });
+
+  it("reads validThrough from JSON-LD", () => {
+    expect(extractFrom("jsonld-synthetic").posting).toEqual({
+      postedAt: "2025-05-16",
+      postedAtSource: "json-ld",
+      validThrough: "2026-12-31",
+    });
+  });
+
+  it("has no date when the page shows none", () => {
+    expect(extractFrom("greenhouse").posting).toEqual({});
+    expect(extractFrom("linkedin-signed-in-synthetic").posting).toEqual({});
+  });
+
+  it("LinkedIn without JSON-LD: the top card's own age", () => {
+    expect(extractFrom("linkedin", { withoutJsonLd: true }).posting).toEqual({
+      postedAt: daysAgo(1),
+      postedAtSource: "page",
+    });
+  });
+
+  it("LinkedIn: a reposted job, not the similar jobs' ages", () => {
+    expect(extractFrom("linkedin-reposted-synthetic").posting).toEqual({
+      postedAt: daysAgo(14),
+      postedAtSource: "page",
+      reposted: true,
+    });
+  });
+
+  it("Workday: 30+ days is an upper bound on the date", () => {
+    expect(extractFrom("workday-synthetic").posting).toEqual({
+      postedAt: daysAgo(30),
+      postedAtSource: "page",
+      postedOrEarlier: true,
+    });
+  });
+
+  it("ignores an unparseable or future JSON-LD date", () => {
+    const page = (date) => new JSDOM(
+      `<script type="application/ld+json">{"@type":"JobPosting","title":"X","datePosted":"${date}"}</script><main><p>Short.</p></main>`,
+      { url: "https://careers.example.com/jobs/1", runScripts: "outside-only" },
+    ).window.eval(`${source}; extractJob()`);
+    expect(page("next week").posting).toEqual({});
+    expect(page("2999-01-01").posting).toEqual({});
   });
 });

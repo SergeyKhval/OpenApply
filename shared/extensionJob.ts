@@ -3,6 +3,8 @@
 // a server, and compression keeps a 15,000-character description at a few KB.
 // The encoder is extension/src/links.js (encodeJob); keep the two in step.
 
+import { sanitizeJobPosting, type JobPosting } from "./jobPosting";
+
 export const EXTENSION_JOB_PARAM = "job";
 
 export const EXTENSION_JOB_LIMITS = {
@@ -22,6 +24,8 @@ export type ExtensionJob = {
   company: string;
   location: string;
   description: string;
+  // When the page says it was posted; absent when it doesn't
+  posting?: JobPosting;
 };
 
 function base64UrlToBytes(value: string): Uint8Array | null {
@@ -112,5 +116,7 @@ export async function decodeExtensionJob(hash: string): Promise<ExtensionJob | n
     description: text(data.description, EXTENSION_JOB_LIMITS.description),
   };
   if (!isWebUrl(job.url) || !job.description) return null;
+  const posting = sanitizeJobPosting(data.posting);
+  if (posting) job.posting = posting;
   return job;
 }

@@ -7,7 +7,7 @@ author: 'OpenApply Team'
 role: 'Software Engineer'
 slug: 'software-engineer'
 relatedResumeGuide: '/resumes/software-engineer'
-relatedCoverLetter: '/blog/how-to-write-cover-letter-software-engineer'
+relatedCoverLetter: '/cover-letters/software-engineer'
 tags: ["Resume Keywords", "Software Engineer", "ATS"]
 ---
 

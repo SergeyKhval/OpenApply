@@ -78,6 +78,7 @@ export async function startPopup({ chrome, document, window }) {
         company: fields.company.value,
         location: fields.location.value,
         description,
+        posting: job.posting,
       })
       : saveUrl(jobUrl);
     await openAndClose(url);
