@@ -8,7 +8,7 @@ export type TimelineEntry =
   | { kind: "note"; id: string; date: Date; title: string; note: JobApplicationNote; upcoming: false }
   | { kind: "interview"; id: string; date: Date; title: string; interview: Interview; upcoming: boolean }
   | { kind: "contact"; id: string; date: Date; title: string; contact: Contact; upcoming: false }
-  | { kind: "stage"; id: string; date: Date; title: string; upcoming: false };
+  | { kind: "stage"; id: string; date: Date; title: string; upcoming: false; order: number };
 
 type TimelineSources = {
   job: JobApplication;
@@ -29,16 +29,16 @@ const STAGE_EVENTS: { field: keyof JobApplication; title: string }[] = [
 export function buildTimeline({ job, notes, interviews, contacts }: TimelineSources, now: Date): TimelineEntry[] {
   const entries: TimelineEntry[] = [];
 
-  for (const { field, title } of STAGE_EVENTS) {
+  STAGE_EVENTS.forEach(({ field, title }, order) => {
     const date = toJsDate(job[field]);
-    if (date) entries.push({ kind: "stage", id: `stage-${field}`, date, title, upcoming: false });
-  }
+    if (date) entries.push({ kind: "stage", id: `stage-${field}`, date, title, upcoming: false, order });
+  });
 
   // Rejected and withdrew have no date field of their own: use the last update
   const reason = closedReason(job.status);
   if (reason === "rejected" || reason === "withdrew") {
     const date = toJsDate(job.updatedAt) ?? now;
-    entries.push({ kind: "stage", id: "stage-closed", date, title: `Closed as ${CLOSED_REASON_LABELS[reason]}`, upcoming: false });
+    entries.push({ kind: "stage", id: "stage-closed", date, title: `Closed as ${CLOSED_REASON_LABELS[reason]}`, upcoming: false, order: STAGE_EVENTS.length });
   }
 
   // A note just written has no server timestamp yet: treat it as now
@@ -57,6 +57,11 @@ export function buildTimeline({ job, notes, interviews, contacts }: TimelineSour
   }
 
   const upcoming = entries.filter((entry) => entry.upcoming).sort((a, b) => a.date.getTime() - b.date.getTime());
-  const past = entries.filter((entry) => !entry.upcoming).sort((a, b) => b.date.getTime() - a.date.getTime());
+  // Stage changes on the same moment (applied the day it was saved) keep
+  // lifecycle order, latest stage first
+  const stageOrder = (entry: TimelineEntry) => (entry.kind === "stage" ? entry.order : 0);
+  const past = entries
+    .filter((entry) => !entry.upcoming)
+    .sort((a, b) => b.date.getTime() - a.date.getTime() || stageOrder(b) - stageOrder(a));
   return [...upcoming, ...past];
 }

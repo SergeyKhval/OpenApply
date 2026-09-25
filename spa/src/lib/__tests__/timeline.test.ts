@@ -76,4 +76,13 @@ describe("buildTimeline", () => {
     );
     expect(entries.map((entry) => entry.title)).toEqual(["Applied", "Saved"]);
   });
+
+  it("keeps stage changes in lifecycle order when they share a timestamp", () => {
+    const sameMoment = day(-5);
+    const entries = buildTimeline(
+      { job: job({ status: "applied", createdAt: ts(sameMoment), appliedAt: ts(sameMoment) }), notes: [], interviews: [], contacts: [] },
+      NOW,
+    );
+    expect(entries.map((entry) => entry.title)).toEqual(["Applied", "Saved"]);
+  });
 });
