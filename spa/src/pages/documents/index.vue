@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageHeader>
-      <h2 class="text-2xl font-semibold whitespace-nowrap">Documents</h2>
+      <h1 class="text-2xl font-extrabold whitespace-nowrap lg:text-3xl">Documents</h1>
       <div class="grow">
         <AppSearch v-if="tab === 'cover-letters'" v-model="search" />
       </div>

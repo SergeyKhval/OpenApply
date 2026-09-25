@@ -16,12 +16,13 @@
     <template v-else-if="!signedInUser">
       <!-- LEFT PANEL (desktop only, or mobile with pending job handled separately) -->
       <div
-        class="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary/10 via-background to-primary/5 items-center justify-center p-12"
+        class="relative hidden md:flex md:w-1/2 bg-muted items-center justify-center p-12"
       >
+        <a href="/" class="absolute top-8 left-12 font-display text-xl font-extrabold text-foreground">OpenApply</a>
         <!-- Variant A: Value pitch (no pending job) -->
         <div v-if="!hasPendingJob && !pendingToolApplication" class="max-w-md space-y-8">
           <div class="space-y-3">
-            <h1 class="text-3xl font-bold text-foreground">
+            <h1 class="text-4xl font-extrabold text-foreground">
               Your job search, organized
             </h1>
             <p class="text-lg text-muted-foreground">
@@ -68,10 +69,10 @@
               />
               <div>
                 <p class="font-medium text-foreground">
-                  Free to track, no subscription
+                  Free to track
                 </p>
                 <p class="text-sm text-muted-foreground">
-                  Pay only for AI features, when you want them
+                  Unlimited jobs, reminders and export
                 </p>
               </div>
             </div>
@@ -84,7 +85,7 @@
           <h2 class="text-2xl font-bold text-foreground">
             Sign up and this job is saved to your tracker
           </h2>
-          <div class="rounded-lg border border-border bg-card p-4 text-left flex items-center gap-4">
+          <div class="rounded-card bg-card p-5 text-left flex items-center gap-4 shadow-card dark:border dark:border-border">
             <ResumeScore
               v-if="pendingToolApplication.match"
               class="size-14 shrink-0"
@@ -137,7 +138,7 @@
                 jobSnapshot?.parsedData?.companyName ||
                 jobSnapshot?.parsedData?.position
               "
-              class="rounded-lg border border-border bg-card p-4 text-left"
+              class="rounded-card bg-card p-5 text-left shadow-card dark:border dark:border-border"
             >
               <p
                 v-if="jobSnapshot?.parsedData?.companyName"
@@ -169,7 +170,7 @@
       <!-- Mobile banner for a job saved from the match tool -->
       <div
         v-if="pendingToolApplication && !hasPendingJob"
-        class="md:hidden flex items-center gap-3 px-4 py-3 bg-primary/10 border-b border-primary/20"
+        class="md:hidden flex items-center gap-3 px-4 py-3 bg-secondary"
       >
         <PhCheckCircle class="text-primary shrink-0" :size="20" />
         <p class="text-sm text-foreground">
@@ -182,7 +183,7 @@
       <!-- Mobile banner for pending job (visible only on mobile) -->
       <div
         v-if="hasPendingJob"
-        class="md:hidden flex items-center gap-3 px-4 py-3 bg-primary/10 border-b border-primary/20"
+        class="md:hidden flex items-center gap-3 px-4 py-3 bg-secondary"
       >
         <template v-if="isParsing">
           <div
@@ -209,7 +210,7 @@
       <!-- RIGHT PANEL: auth form -->
       <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-4 p-8">
         <a href="/" class="md:hidden flex flex-col items-center gap-1 mb-2 text-center">
-          <span class="text-2xl font-bold text-foreground">OpenApply</span>
+          <span class="font-display text-2xl font-extrabold text-foreground">OpenApply</span>
           <span class="text-sm text-muted-foreground">Track every job application. Free.</span>
         </a>
         <SignInForm

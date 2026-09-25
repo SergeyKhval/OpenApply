@@ -2,52 +2,66 @@
   <div class="w-full">
     <div
       v-if="resumes && resumes.length > 0"
-      class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      class="flex flex-col gap-3"
     >
-      <Card v-for="resume in resumes" :key="resume.id" class="relative">
-        <Button
-          size="sm"
-          variant="secondary"
-          class="absolute right-2 top-2"
-          @click="handleDelete(resume)"
-          :disabled="deletingIds.includes(resume.id)"
+      <ul class="overflow-hidden rounded-card bg-card shadow-card dark:border dark:border-border">
+        <li
+          v-for="resume in resumes"
+          :key="resume.id"
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-5 py-4 last:border-0"
         >
-          <PhTrash :size="16" />
-        </Button>
-        <CardContent class="flex flex-col gap-1 mb-3">
-          <div class="flex items-start gap-3">
-            <PhFilePdf :size="36" class="shrink-0 text-primary" />
-            <div class="flex flex-col gap-1">
-              <ResumeLink :resume="resume" />
-              <p class="text-muted-foreground text-xs">
-                {{ formatFileSize(resume.fileSize) }} •
-                {{ formatDate(resume.createdAt) }}
-              </p>
-            </div>
+          <span class="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
+            <PhFilePdf :size="22" />
+          </span>
+          <div class="flex min-w-0 grow basis-60 flex-col gap-0.5">
+            <ResumeLink :resume="resume" />
+            <p class="text-sm text-muted-foreground">
+              Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template>
+            </p>
           </div>
-        </CardContent>
-        <CardFooter>
-          <Alert v-if="resume.status === 'parse-failed'" variant="destructive">
-            <PhXCircle class="text-destructive" weight="fill" :size="16" />
-            <AlertDescription>
-              Parsing Error, try uploading again
-            </AlertDescription>
-          </Alert>
-        </CardFooter>
-      </Card>
+          <Badge v-if="resume.status === 'parsed'" variant="success"><PhCheck weight="bold" />Read OK</Badge>
+          <Badge v-else-if="resume.status === 'parse-failed'" variant="destructive"><PhX weight="bold" />Couldn't read it</Badge>
+          <Badge v-else variant="secondary">Reading…</Badge>
+          <RouterLink
+            v-if="usage.get(resume.id)"
+            to="/jobs"
+            class="text-sm font-semibold text-secondary-foreground hover:underline sm:w-32"
+          >
+            {{ usageLabel(usage.get(resume.id) ?? 0) }}
+          </RouterLink>
+          <span v-else class="text-sm text-muted-foreground sm:w-32">{{ usageLabel(0) }}</span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            class="ml-auto"
+            :aria-label="`Delete ${resume.fileName}`"
+            :disabled="deletingIds.includes(resume.id)"
+            @click="handleDelete(resume)"
+          >
+            <PhTrash :size="18" />
+          </Button>
+          <p v-if="resume.status === 'parse-failed'" class="basis-full text-sm text-destructive sm:pl-15">
+            We couldn't read the text in this PDF, so matches won't work with it. Try exporting it again and uploading the new file.
+          </p>
+        </li>
+      </ul>
+      <p class="flex items-center gap-2 text-sm text-muted-foreground">
+        <PhInfo :size="16" />
+        Read OK means we could read the text in the PDF. That text is what the resume match uses.
+      </p>
     </div>
     <Empty v-else class="py-12">
       <EmptyIcon>
         <PhFilePdf :size="32" />
       </EmptyIcon>
       <div class="space-y-2">
-        <EmptyTitle>No resumes uploaded yet</EmptyTitle>
+        <EmptyTitle>No resumes yet</EmptyTitle>
         <EmptyDescription>
-          Click the "Upload New Resume" button to add your first resume
+          Upload a PDF to check it against jobs and keep track of which version you sent where.
         </EmptyDescription>
       </div>
       <EmptyAction>
-        <UploadResumeButton>Upload First Resume</UploadResumeButton>
+        <UploadResumeButton>Upload your resume</UploadResumeButton>
       </EmptyAction>
     </Empty>
   </div>
@@ -66,7 +80,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import { PhFilePdf, PhTrash, PhXCircle } from "@phosphor-icons/vue";
+import { PhCheck, PhFilePdf, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
 import type { Resume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
@@ -78,8 +92,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
+import { countResumeUsage, formatFileSize, usageLabel } from "@/lib/resumeUsage";
 import ResumeLink from "@/components/ResumeLink.vue";
 
 const user = useCurrentUser();
@@ -98,24 +113,14 @@ const q = computed(() =>
 
 const { data: resumes } = useCollection<Resume>(q);
 
-const formatFileSize = (bytes?: number): string => {
-  if (!bytes) return "N/A";
-  if (bytes < 1024) return bytes + " B";
-  const kb = bytes / 1024;
-  if (kb < 1024) return kb.toFixed(2) + " KB";
-  const mb = kb / 1024;
-  return mb.toFixed(2) + " MB";
-};
+const { jobApplications } = useJobApplicationsData();
+const usage = computed(() => countResumeUsage(jobApplications.value ?? []));
 
 const formatDate = (timestamp: any): string => {
   if (!timestamp) return "N/A";
   try {
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   } catch {
     return "N/A";
   }

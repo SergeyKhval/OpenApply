@@ -3,14 +3,11 @@ import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // Colors come from the theme tokens (shared/theme.css). Files owned by the
-// billing and email-code sign-in work are restyled once those land.
+// billing work are restyled once that lands.
 const ROOTS = [resolve(__dirname, "../.."), resolve(__dirname, "../../../../astro/src")];
 const SKIP = [
   "components/SuccessCheckoutDialog.vue",
   "components/FailureCheckoutDialog.vue",
-  "components/SignInForm.vue",
-  "components/SignUpForm.vue",
-  "pages/index.vue",
   "content/",
   "__tests__/",
 ];
