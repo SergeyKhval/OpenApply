@@ -1,16 +1,17 @@
 <template>
-  <Card class="w-full max-w-md">
-    <CardHeader>
+  <Card class="w-full max-w-md gap-2 border-0 bg-transparent py-0 shadow-none dark:border-0">
+    <CardHeader class="px-0">
       <CardTitle>
-        <h2 class="text-2xl font-bold mb-6">{{ pendingJob ? "Sign up to save this job" : "Sign up" }}</h2>
+        <h2 class="text-3xl font-extrabold mb-4">{{ pendingJob ? "Sign up to save this job" : "Sign up" }}</h2>
       </CardTitle>
     </CardHeader>
 
-    <CardContent>
+    <CardContent class="px-0">
       <div class="mb-4">
         <Button
           @click="handleGoogleLogin"
           :disabled="loading"
+          size="lg"
           class="w-full"
         >
           <PhGoogleLogo weight="bold" />
@@ -18,7 +19,9 @@
         </Button>
       </div>
 
-      <div class="text-center text-sm text-muted-foreground mb-4">or</div>
+      <div class="mb-4 flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
+        <span class="h-px grow bg-border" />or<span class="h-px grow bg-border" />
+      </div>
 
       <EmailCodeForm
         v-if="!usePassword"
