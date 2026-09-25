@@ -66,11 +66,15 @@ service cloud.firestore {
       allow delete: if canDeleteOwn();
     }
     
+    // A shared cache, not per-user data: the client only ever fetches one
+    // job by the id the "jobs" callable (or a link/param already in hand)
+    // handed back, and never lists the collection. Only Cloud Functions
+    // (Admin SDK, which bypasses these rules) write to it, so client writes
+    // are denied outright rather than scoped by userId, which these docs
+    // don't carry and which a crafted create() could otherwise satisfy.
     match /jobs/{jobId} {
-      allow read: if canRead();
-      allow create: if canCreateOwn();
-      allow update: if canUpdateOwn();
-      allow delete: if canDeleteOwn();
+      allow get: if canRead();
+      allow list, create, update, delete: if false;
     }
     
     match /coverLetters/{coverLetterId} {

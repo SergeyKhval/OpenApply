@@ -9,7 +9,11 @@ type BackfillRequest = { dryRun?: unknown; limit?: unknown; cursor?: unknown };
 // Feeds applications saved before the jobSignals trigger into the signals, a
 // page at a time, oldest first. Dry run unless called with { dryRun: false }.
 // Pass back nextCursor until it is null.
-export const backfillJobSignals = onCall({ timeoutSeconds: 540 }, async (request) => {
+// Applications carry whole job descriptions: 500 per page ran out of 256MiB
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 50;
+
+export const backfillJobSignals = onCall({ timeoutSeconds: 540, memory: "512MiB" }, async (request) => {
   const uid = request.auth?.uid;
   const user = uid ? await db.collection("users").doc(uid).get() : null;
   if (!user || user.get("admin") !== true) {
@@ -18,7 +22,7 @@ export const backfillJobSignals = onCall({ timeoutSeconds: 540 }, async (request
 
   const data = (typeof request.data === "object" && request.data !== null ? request.data : {}) as BackfillRequest;
   const dryRun = data.dryRun !== false;
-  const limit = typeof data.limit === "number" && data.limit > 0 ? Math.min(data.limit, 500) : 200;
+  const limit = typeof data.limit === "number" && data.limit > 0 ? Math.min(data.limit, MAX_LIMIT) : DEFAULT_LIMIT;
 
   let query = db.collection("jobApplications").orderBy("createdAt").limit(limit);
   if (typeof data.cursor === "string" && data.cursor) {
