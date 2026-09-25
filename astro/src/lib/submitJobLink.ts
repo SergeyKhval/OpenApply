@@ -1,15 +1,27 @@
 import { getFirebaseAuth, getFirebaseFunctions } from "./firebase";
 
-// Starts parsing a job link and returns where the app picks it up: straight to
-// the new application form for signed-in users, or signup with the job pending.
-// Used by the landing page link input and by /save (the browser extension).
+// Starts parsing a job link, or a pasted job description, and returns where the
+// app picks it up: straight to the new application form for signed-in users,
+// or signup with the job pending. Used by the landing page job input and by
+// /save (the browser extension).
 export type JobLinkResult =
   | { ok: true; redirectUrl: string; signedIn: boolean }
   | { ok: false; errorMessage: string };
 
 const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";
 
-export async function submitJobLink(url: string): Promise<JobLinkResult> {
+// A link to scrape, or a pasted description with the posting's link if known
+type JobRequest = { url: string } | { text: string; url?: string };
+
+export function submitJobLink(url: string): Promise<JobLinkResult> {
+  return submitJob({ url });
+}
+
+export function submitJobDescription(text: string, url?: string | null): Promise<JobLinkResult> {
+  return submitJob(url ? { text, url } : { text });
+}
+
+async function submitJob(request: JobRequest): Promise<JobLinkResult> {
   try {
     const auth = await getFirebaseAuth();
     const currentUser = auth.currentUser;
@@ -26,8 +38,8 @@ export async function submitJobLink(url: string): Promise<JobLinkResult> {
 
     const fns = await getFirebaseFunctions();
     const { httpsCallable } = await import("firebase/functions");
-    const callable = httpsCallable<{ url: string }, { id: string }>(fns, "jobs");
-    const result = await callable({ url });
+    const callable = httpsCallable<JobRequest, { id: string }>(fns, "jobs");
+    const result = await callable(request);
     const jobId = result.data.id;
 
     if (!jobId) {
@@ -49,6 +61,11 @@ export async function submitJobLink(url: string): Promise<JobLinkResult> {
         ok: false,
         errorMessage: "Looks like the internet gremlins got in the way. Check your connection and try again.",
       };
+    }
+    const code = (err as { code?: string })?.code ?? "";
+    // The server's own wording for a pasted description that's too short or too long
+    if ("text" in request && code === "functions/invalid-argument" && rawMessage) {
+      return { ok: false, errorMessage: rawMessage };
     }
     if (rawMessage.includes("INVALID_ARGUMENT") || rawMessage.includes("invalid")) {
       return {

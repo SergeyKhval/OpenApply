@@ -1,10 +1,15 @@
 import posthog from "posthog-js";
+import type { BlockedJobBoard } from "@/lib/jobInput";
 
 function isLoaded(): boolean {
   return posthog.__loaded;
 }
 
 export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan";
+
+type JobCreationMethod = "link_parse" | "paste" | "manual" | "match_tool" | "extension";
+// "landing" events come from astro/src/components/vue/JobLinkInput.vue
+export type JobInputSurface = "landing" | "first_run" | "add_dialog";
 
 type EventMap = {
   signup_completed: {
@@ -17,17 +22,21 @@ type EventMap = {
   };
   signup_view_shown: { source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct" };
   job_application_created: {
-    method: "link_parse" | "manual" | "match_tool" | "extension";
+    method: JobCreationMethod;
     company?: string;
     position?: string;
     source?: "landing_page_parse" | "resume_match_tool" | "extension";
   };
   first_job_application_created: {
-    method: "link_parse" | "manual" | "match_tool" | "extension";
+    method: JobCreationMethod;
     source?: "landing_page_parse" | "resume_match_tool" | "extension";
     minutesSinceSignup?: number;
   };
   lp_job_parse_started: void;
+  // The job input got a link or a pasted description
+  job_input_submitted: { input: "link" | "text"; surface: JobInputSurface; board?: BlockedJobBoard };
+  // A LinkedIn/Indeed link skipped the scrape and asked for the description
+  job_board_shortcut_shown: { board: BlockedJobBoard; surface: JobInputSurface };
   lp_auth_skipped: void;
   job_parse_succeeded: { company?: string; position?: string };
   job_parse_failed: { error?: string };
