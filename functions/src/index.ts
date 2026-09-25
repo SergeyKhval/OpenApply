@@ -27,3 +27,4 @@ export * from "./processUserDigest";
 export * from "./signInCode";
 export * from "./emailPreferences";
 export * from "./deleteAccount";
+export * from "./jobSignals";
