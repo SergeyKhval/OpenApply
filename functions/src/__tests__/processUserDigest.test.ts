@@ -27,10 +27,12 @@ let mockInterviewsSnapshot = { docs: [] as unknown[] };
 
 const mockWhere = vi.fn();
 const mockGet = vi.fn();
+const mockUserGet = vi.fn();
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
     collection: (name: string) => ({
+      doc: () => ({ get: mockUserGet }),
       where: (...args: unknown[]) => {
         mockWhere(name, ...args);
         return {
@@ -84,6 +86,19 @@ describe("processUserDigest", () => {
     mockAppsSnapshot = { empty: true, docs: [] };
     mockInterviewsSnapshot = { docs: [] };
     mockGet.mockImplementation(() => Promise.resolve(mockAppsSnapshot));
+    mockUserGet.mockResolvedValue({ data: () => undefined });
+  });
+
+  it("skips people who turned the Monday summary off", async () => {
+    mockUserGet.mockResolvedValue({ data: () => ({ emailPrefs: { weeklyDigest: false } }) });
+    mockAppsSnapshot = { empty: false, docs: [makeAppDoc("app-1", "user-1", "applied", 17, now)] };
+
+    await (processUserDigest as unknown as (req: unknown) => Promise<void>)({
+      data: { userId: "user-1" },
+    });
+
+    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockGet).not.toHaveBeenCalled();
   });
 
   it("sends email when user has actionable applications", async () => {

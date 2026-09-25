@@ -13,6 +13,7 @@ import {
   DigestInterview,
 } from "./lib/digest";
 import { renderWeeklyDigest } from "./emails/WeeklyDigest.js";
+import { wantsWeeklyDigest } from "./lib/emailPrefs";
 
 const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
@@ -43,6 +44,13 @@ export const processUserDigest = onTaskDispatched(
     const { userId } = request.data as { userId: string };
     const now = new Date();
     const resend = new Resend(RESEND_API_KEY.value());
+
+    // Settings > Email > Monday summary
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!wantsWeeklyDigest(userDoc.data())) {
+      console.log(`User ${userId} turned the Monday summary off. Skipping.`);
+      return;
+    }
 
     const appsSnapshot = await db
       .collection("jobApplications")
