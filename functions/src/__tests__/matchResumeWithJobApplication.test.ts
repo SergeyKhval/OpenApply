@@ -103,11 +103,6 @@ const makeBillingSnap = (checksUsed: number) => ({
   }),
 });
 
-const makePromptSnap = (template?: string) => ({
-  exists: !!template,
-  data: () => (template ? { template } : undefined),
-});
-
 const makeResumeSnap = (userId: string, text?: string) => ({
   exists: true,
   data: () => ({ userId, text }),
@@ -123,22 +118,56 @@ const missingSnap = () => ({
   data: () => undefined,
 });
 
+const RESUME_TEXT = `Maya Chen, Frontend Engineer
+Built a Vue 3 design system used by 40 engineers.
+Led the migration from JavaScript to TypeScript across 12 services.`;
+
 const MOCK_AI_OUTPUT = {
-  match_summary: { overall_match_percent: 85, summary: "Good match" },
-  skills_comparison: { matched_skills: [] },
-  recommendations: {},
+  companyName: "Acme",
+  position: "Frontend Engineer",
+  parseCheck: { status: "clean", note: "" },
+  matchScore: 72,
+  verdict: "Strong Vue work, no GraphQL.",
+  requirements: [
+    {
+      requirement: "Vue 3",
+      status: "matched",
+      importance: "must-have",
+      evidence: "Built a Vue 3 design system used by 40 engineers.",
+    },
+    {
+      requirement: "TypeScript",
+      status: "partial",
+      importance: "must-have",
+      evidence: "Led the migration from JavaScript to TypeScript",
+    },
+    {
+      requirement: "GraphQL",
+      status: "missing",
+      importance: "nice-to-have",
+      evidence: "",
+    },
+  ],
+  missingKeywords: ["GraphQL"],
+  fixes: [
+    {
+      gap: "GraphQL",
+      where: "Skills",
+      action: "Name GraphQL only if you have used it.",
+    },
+  ],
+  technologies: ["Vue", "TypeScript", "GraphQL"],
 };
 
 /**
  * The source makes these .get() calls in order:
  * 1. billingProfileRef.get()
- * 2. Promise.all([promptTemplate.get(), resume.get(), jobApplication.get()])
+ * 2. Promise.all([resume.get(), jobApplication.get()])
  *
- * Since all use the same mockGet, we set up 4 sequential return values.
+ * Since all use the same mockGet, we set up 3 sequential return values.
  */
 function setupGetMocks(opts: {
   checksUsed?: number;
-  promptTemplate?: string;
   resumeUserId?: string;
   resumeText?: string;
   appUserId?: string;
@@ -149,9 +178,8 @@ function setupGetMocks(opts: {
 }) {
   const {
     checksUsed = 0,
-    promptTemplate = "Resume: {{ resumeText }} JD: {{ jobDescriptionText }}",
     resumeUserId = USER_ID,
-    resumeText = "My resume text",
+    resumeText = RESUME_TEXT,
     appUserId = USER_ID,
     appJobDescription = "Software Engineer job description",
     resumeMissing = false,
@@ -162,9 +190,6 @@ function setupGetMocks(opts: {
   mockGet
     .mockResolvedValueOnce(
       billingMissing ? missingSnap() : makeBillingSnap(checksUsed),
-    )
-    .mockResolvedValueOnce(
-      promptTemplate ? makePromptSnap(promptTemplate) : makePromptSnap(undefined),
     )
     .mockResolvedValueOnce(
       resumeMissing ? missingSnap() : makeResumeSnap(resumeUserId, resumeText),
@@ -263,21 +288,6 @@ describe("matchResumeWithJobApplication", () => {
   // --- Data existence ---
 
   describe("data existence", () => {
-    it("throws when prompt template is missing", async () => {
-      // Manually set up mocks to return missing prompt template data
-      mockGet
-        .mockResolvedValueOnce(makeBillingSnap(0))
-        .mockResolvedValueOnce({ exists: false, data: () => undefined })
-        .mockResolvedValueOnce(makeResumeSnap(USER_ID, "text"))
-        .mockResolvedValueOnce(makeAppSnap(USER_ID, "desc"));
-
-      await expect(callHandler()).rejects.toMatchObject({
-        code: "failed-precondition",
-      });
-
-      expect(mockGenerate).not.toHaveBeenCalled();
-    });
-
     it("throws when resume does not exist", async () => {
       setupGetMocks({ resumeMissing: true });
 
@@ -362,7 +372,139 @@ describe("matchResumeWithJobApplication", () => {
       expect(createData.userId).toBe(USER_ID);
       expect(createData.resumeId).toBe(RESUME_ID);
       expect(createData.jobApplicationId).toBe(APP_ID);
-      expect(createData.matchResult).toEqual(MOCK_AI_OUTPUT);
+      expect(createData.matchResult).toMatchObject({
+        match_summary: { overall_match_percent: 72 },
+      });
+    });
+  });
+
+  // --- Evidence-verified engine (same as the free tool) ---
+
+  describe("evidence", () => {
+    function storedMatch(writes: { creates: unknown[] }) {
+      const createArgs = writes.creates[0] as unknown[];
+      return createArgs[1] as {
+        matchResult: {
+          match_summary: { overall_match_percent: number; summary: string };
+          skills_comparison: Record<
+            string,
+            { skill: string; status: string; evidence?: string }[] | undefined
+          >;
+          recommendations: { improvement_areas?: string[] };
+        };
+        analysis: { requirements: { requirement: string; status: string; evidence: string }[] };
+      };
+    }
+
+    it("builds the prompt in code with the never-invent rule, not from Firestore", async () => {
+      setupHappyPath();
+
+      await callHandler();
+
+      // billing + resume + job application; no promptTemplates read
+      expect(mockGet).toHaveBeenCalledTimes(3);
+      const { prompt } = mockGenerate.mock.calls[0][0] as { prompt: string };
+      expect(prompt).toContain("never invent anything");
+      expect(prompt).toContain(RESUME_TEXT);
+      expect(prompt).toContain("Software Engineer job description");
+    });
+
+    it("keeps requirements whose evidence is verbatim in the resume", async () => {
+      const { writes } = setupHappyPath();
+
+      await callHandler();
+
+      const { matchResult } = storedMatch(writes);
+      expect(matchResult.match_summary).toEqual({
+        overall_match_percent: 72,
+        summary: "Strong Vue work, no GraphQL.",
+      });
+      expect(matchResult.skills_comparison.matched_skills).toEqual([
+        {
+          skill: "Vue 3",
+          status: "matched",
+          evidence: "Built a Vue 3 design system used by 40 engineers.",
+        },
+      ]);
+      expect(matchResult.skills_comparison.partially_matched_skills).toEqual([
+        {
+          skill: "TypeScript",
+          status: "partial",
+          evidence: "Led the migration from JavaScript to TypeScript",
+        },
+      ]);
+      expect(matchResult.skills_comparison.missing_skills).toEqual([
+        { skill: "GraphQL", status: "missing" },
+      ]);
+      expect(matchResult.recommendations.improvement_areas).toEqual([
+        "GraphQL: Name GraphQL only if you have used it.",
+      ]);
+    });
+
+    it("downgrades Met and Partly requirements whose evidence is not in the resume", async () => {
+      setupGetMocks({});
+      mockGenerate.mockResolvedValue({
+        output: {
+          ...MOCK_AI_OUTPUT,
+          requirements: [
+            {
+              requirement: "German (fluent)",
+              status: "matched",
+              importance: "must-have",
+              evidence: "Native German speaker",
+            },
+            {
+              requirement: "Kubernetes",
+              status: "partial",
+              importance: "nice-to-have",
+              evidence: "Deployed services on Kubernetes",
+            },
+            MOCK_AI_OUTPUT.requirements[0],
+          ],
+        },
+      });
+      const writes = setupTransaction(0);
+
+      await callHandler();
+
+      const { matchResult, analysis } = storedMatch(writes);
+      expect(matchResult.skills_comparison.matched_skills).toEqual([
+        {
+          skill: "Vue 3",
+          status: "matched",
+          evidence: "Built a Vue 3 design system used by 40 engineers.",
+        },
+      ]);
+      expect(matchResult.skills_comparison.partially_matched_skills).toEqual([]);
+      expect(matchResult.skills_comparison.missing_skills).toEqual([
+        { skill: "German (fluent)", status: "missing" },
+        { skill: "Kubernetes", status: "missing" },
+      ]);
+      expect(JSON.stringify(matchResult)).not.toContain("Native German speaker");
+      expect(JSON.stringify(analysis)).not.toContain("Deployed services on Kubernetes");
+      expect(analysis.requirements.map((requirement) => requirement.status)).toEqual([
+        "missing",
+        "missing",
+        "matched",
+      ]);
+    });
+
+    it("clamps the score to 0-100", async () => {
+      setupGetMocks({});
+      mockGenerate.mockResolvedValue({ output: { ...MOCK_AI_OUTPUT, matchScore: 104.4 } });
+      const writes = setupTransaction(0);
+
+      await callHandler();
+
+      expect(storedMatch(writes).matchResult.match_summary.overall_match_percent).toBe(100);
+    });
+
+    it("does not count a check when the model returns nothing", async () => {
+      setupGetMocks({});
+      mockGenerate.mockResolvedValue({ output: null });
+
+      await expect(callHandler()).rejects.toMatchObject({ code: "internal" });
+      expect(mockRunTransaction).not.toHaveBeenCalled();
     });
   });
 });
