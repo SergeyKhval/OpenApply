@@ -119,8 +119,13 @@ const assertions = {
   signInForm: () => {
     const missing = [];
     if (!document.querySelector("#signin-email")) missing.push("#signin-email");
-    if (!document.querySelector("#signin-password"))
-      missing.push("#signin-password");
+    // Sign-in defaults to the emailed-code form; the password form is the fallback.
+    const hasPassword = !!document.querySelector("#signin-password");
+    const hasCodeButton = [...document.querySelectorAll("button")].some((b) =>
+      /code/i.test(b.textContent || ""),
+    );
+    if (!hasPassword && !hasCodeButton)
+      missing.push("#signin-password or an email-code button");
     if (!document.querySelector('button[type="submit"]'))
       missing.push('button[type="submit"]');
     return {
