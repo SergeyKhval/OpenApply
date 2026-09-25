@@ -1,34 +1,22 @@
 <!-- Signed-in layout shared by Jobs, Documents and Settings: sidebar on
-     desktop, drawer on mobile, page content in the router view. -->
+     desktop, tab bar on phones, page content in the router view. -->
 <template>
-  <div class="flex h-screen bg-background">
-    <div class="hidden w-64 bg-sidebar border-r border-sidebar-border lg:block">
-      <AppNavigation />
-    </div>
+  <div class="flex h-dvh bg-background">
+    <AppSidebar class="hidden lg:flex" />
 
-    <div class="flex-1 overflow-auto translate-z-0">
+    <div class="flex-1 overflow-auto translate-z-0 pb-[calc(4.5rem+max(0.5rem,env(safe-area-inset-bottom)))] lg:pb-0">
       <RouterView v-slot="{ Component }">
         <KeepAlive include="index">
           <Component :is="Component" />
         </KeepAlive>
       </RouterView>
     </div>
-  </div>
 
-  <Sheet
-    :open="drawerNavigationStore.isOpen"
-    @update:open="drawerNavigationStore.update"
-  >
-    <SheetContent side="left">
-      <AppNavigation @close-nav="drawerNavigationStore.close" />
-    </SheetContent>
-  </Sheet>
+    <MobileTabBar />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useDrawerNavigationStore } from "@/stores/drawerNavigationStore.ts";
-import AppNavigation from "@/components/AppNavigation.vue";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-
-const drawerNavigationStore = useDrawerNavigationStore();
+import AppSidebar from "@/components/shell/AppSidebar.vue";
+import MobileTabBar from "@/components/shell/MobileTabBar.vue";
 </script>
