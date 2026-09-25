@@ -5,6 +5,7 @@
         Migrate job descriptions
       </Button>
     </div>
+    <SignalDisputeQueue class="col-span-8 lg:col-span-6" />
     <div class="col-span-8 grid-cols-subgrid grid">
       <Card v-if="jobParserTemplate" class="col-span-3">
         <CardContent>
@@ -53,6 +54,7 @@ import { useDocument } from "vuefire";
 import { collection, doc, updateDoc } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import SignalDisputeQueue from "@/components/admin/SignalDisputeQueue.vue";
 
 const parserTemplate = ref("");
 const jobParserDocRef = doc(collection(db, "promptTemplates"), "jobParser");

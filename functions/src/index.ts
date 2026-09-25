@@ -32,3 +32,4 @@ export * from "./backfillJobSignals";
 export * from "./jobListingRecheck";
 export * from "./jobReports";
 export * from "./jobSignalsLookup";
+export * from "./signalDisputes";
