@@ -66,6 +66,12 @@ type EventMap = {
   job_signals_shown: { surface: "app_page"; sign_types: string[] };
   // Opened "What these mean"
   job_signals_explained: { surface: "app_page" };
+  // Reports on a posting (flag job-signals)
+  job_report_started: { surface: "app_page" };
+  job_report_submitted: { reason: string; surface: "app_page" | "no_reply_prompt" };
+  job_report_blocked: { cause: string };
+  job_report_withdrawn: { reason: string };
+  signal_dispute_submitted: void;
 };
 
 type EventName = keyof EventMap;

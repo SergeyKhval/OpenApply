@@ -51,9 +51,7 @@
           <JobPostingSignals
             v-if="signs.length && !isWide"
             :lines="signs"
-            :company-name="application.companyName"
-            :position="application.position"
-            :link="application.jobDescriptionLink"
+            :key-hash="application.jobKeyHash ?? ''"
           />
           <ToolMatchCard
             v-if="application.toolMatch"
@@ -92,9 +90,7 @@
           <JobPostingSignals
             v-if="signs.length && isWide"
             :lines="signs"
-            :company-name="application.companyName"
-            :position="application.position"
-            :link="application.jobDescriptionLink"
+            :key-hash="application.jobKeyHash ?? ''"
           />
           <JobApplicationAttachments :application="application" />
           <JobApplicationDescription :application="application" />
@@ -107,6 +103,7 @@
                   <dd class="text-right font-semibold">{{ detail.value }}</dd>
                 </div>
               </dl>
+              <JobReportSection v-if="signalsEnabled && application.jobKeyHash" :job="application" :now="now" class="mt-3" />
             </CardContent>
           </Card>
         </div>
@@ -139,12 +136,14 @@ import ToolMatchCard from "@/components/ToolMatchCard.vue";
 import CompanyAvatar from "@/components/jobs/CompanyAvatar.vue";
 import FollowUpDialog from "@/components/jobs/FollowUpDialog.vue";
 import JobPostingSignals from "@/components/job/JobPostingSignals.vue";
+import JobReportSection from "@/components/job/JobReportSection.vue";
 import JobStageStepper from "@/components/job/JobStageStepper.vue";
 import JobTimeline from "@/components/job/JobTimeline.vue";
 import NextStepCard from "@/components/job/NextStepCard.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { useJobSignals } from "@/composables/useJobSignals";
 import { useJobTimeline } from "@/composables/useJobTimeline";
 import { useResumes } from "@/composables/useResumes";
@@ -164,6 +163,7 @@ const now = ref(new Date());
 useIntervalFn(() => (now.value = new Date()), 60_000);
 
 const signs = useJobSignals(application, now);
+const signalsEnabled = useFeatureFlag("job-signals");
 // Before the timeline on phones, where the side column ends up last
 const isWide = useMediaQuery("(min-width: 1024px)");
 

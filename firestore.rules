@@ -96,6 +96,15 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
+    // Community reports: the reporter may read their own ({keyHash}_{uid},
+    // so a get of one not made yet is allowed too). Written only by the
+    // reportJob / withdrawJobReport callables. signalDisputes and the
+    // dispute rate-limit counters fall through to the deny-all rule below.
+    match /jobReports/{reportId} {
+      allow get: if request.auth != null && reportId.matches('[0-9a-f]+_' + request.auth.uid);
+      allow list, write: if false;
+    }
+
     match /promptTemplates/{promptTemplateId} {
       allow read: if isAdmin();
       allow create: if isAdmin();

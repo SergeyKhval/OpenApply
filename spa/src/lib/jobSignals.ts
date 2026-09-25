@@ -21,15 +21,50 @@ export type PublicJobSigns = {
   stillListed?: { since: string; lastListedAt: string };
 };
 
+// Mirrors functions/src/lib/jobReports.ts
+export const REPORT_REASONS = ["no_reply_30d", "reposted_after_rejection", "filled_still_listed", "asked_for_money"] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+// Only reasons that reached the threshold when written; days of the active reports
+export type PublicReports = Partial<Record<ReportReason, { days: string[] }>>;
+
 export type JobSignalsDoc = {
   signs?: PublicJobSigns;
+  reports?: PublicReports;
+  // A review request is open: community reports are hidden meanwhile
+  reportsHidden?: boolean;
   // Admin kill switch for one job
   hidden?: boolean;
 };
 
-export type SignType = "posted" | "date_refreshed" | "same_role" | "still_listed" | "open_application";
+export type SignType =
+  | "posted"
+  | "date_refreshed"
+  | "same_role"
+  | "still_listed"
+  | "open_application"
+  | `report_${ReportReason}`;
 
-export type SignLine = { type: SignType; text: string; source: string };
+// Red is reserved for people reporting a request for money, never for rules
+export type SignLine = { type: SignType; text: string; source: string; tone: "amber" | "red" };
+
+export const REPORT_THRESHOLD = 3;
+export const REPORT_WINDOW_DAYS = 180;
+
+// "3 people reported …": what was reported, never what it means
+const REPORT_WORDING: Record<ReportReason, string> = {
+  asked_for_money: "reported being asked to pay (for equipment, training or a check)",
+  no_reply_30d: "reported no reply 30+ days after applying",
+  reposted_after_rejection: "reported seeing it reposted after being rejected",
+  filled_still_listed: "reported being told the role was filled or on hold while it stayed listed",
+};
+
+// The labels people pick from when reporting
+export const REPORT_LABELS: Record<ReportReason, string> = {
+  no_reply_30d: "Applied, no reply after 30+ days",
+  reposted_after_rejection: "Rejected, then saw it reposted",
+  filled_still_listed: "Told the role was filled or on hold, still listed",
+  asked_for_money: "Asked me to pay (equipment, training, a check)",
+};
 
 const DAY_MS = 86400000;
 // A fresh posting date is normal; only an old one is worth a line
@@ -66,9 +101,10 @@ export function spanLabel(days: number): string {
 
 /** The signs to show for a job, most telling first. Empty when there are none. */
 export function signLines(doc: JobSignalsDoc | null | undefined, companyName: string, now: Date): SignLine[] {
-  if (!doc?.signs || doc.hidden) return [];
+  if (!doc || doc.hidden) return [];
+  const lines: SignLine[] = doc.reportsHidden ? [] : reportLines(doc.reports, now);
   const signs = doc.signs;
-  const lines: SignLine[] = [];
+  if (!signs) return lines;
 
   const stillListed = signs.stillListed;
   const since = stillListed && parseDay(stillListed.since);
@@ -79,6 +115,7 @@ export function signLines(doc: JobSignalsDoc | null | undefined, companyName: st
       type: "still_listed",
       text: `Still listed ${spanLabel(days)} after it was first saved on OpenApply (${monthYear(since)})`,
       source: `Saves and OpenApply's weekly check, last seen listed ${dayMonth(lastListed)}`,
+      tone: "amber",
     });
   }
 
@@ -89,6 +126,7 @@ export function signLines(doc: JobSignalsDoc | null | undefined, companyName: st
       type: "posted",
       text: `First posted ${spanLabel(daysSince(posted, now))} ago (${fullDay(posted)})`,
       source: "The posting's own date (schema.org datePosted)",
+      tone: "amber",
     });
   }
 
@@ -99,6 +137,7 @@ export function signLines(doc: JobSignalsDoc | null | undefined, companyName: st
       type: "date_refreshed",
       text: `Posted date moved from ${fullDay(refreshedFrom)} to ${fullDay(refreshedTo)}`,
       source: "The posting's own date, read on two different days",
+      tone: "amber",
     });
   }
 
@@ -110,6 +149,7 @@ export function signLines(doc: JobSignalsDoc | null | undefined, companyName: st
       type: "same_role",
       text: `Same title at ${company} saved under ${plural(sameRole.count, "older job ID", "older job IDs")}, first in ${monthYear(sameRoleSince)}`,
       source: "Jobs saved on OpenApply",
+      tone: "amber",
     });
   }
 
@@ -118,6 +158,28 @@ export function signLines(doc: JobSignalsDoc | null | undefined, companyName: st
       type: "open_application",
       text: "Open application, not a specific opening",
       source: "The job title",
+      tone: "amber",
+    });
+  }
+  return lines;
+}
+
+/** Report reasons with enough recent reports to show, money requests first. */
+function reportLines(reports: PublicReports | undefined, now: Date): SignLine[] {
+  if (!reports) return [];
+  const from = todayUtc(now).getTime() - REPORT_WINDOW_DAYS * DAY_MS;
+  const lines: SignLine[] = [];
+  for (const reason of ["asked_for_money", "no_reply_30d", "reposted_after_rejection", "filled_still_listed"] as const) {
+    const days = (reports[reason]?.days ?? [])
+      .map(parseDay)
+      .filter((date): date is Date => date !== null && date.getTime() >= from);
+    if (days.length < REPORT_THRESHOLD) continue;
+    const latest = days.reduce((a, b) => (a > b ? a : b));
+    lines.push({
+      type: `report_${reason}`,
+      text: `${days.length} people ${REPORT_WORDING[reason]} (latest ${dayMonth(latest)})`,
+      source: "Reports from people who saved this job on OpenApply",
+      tone: reason === "asked_for_money" ? "red" : "amber",
     });
   }
   return lines;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // A tiny in-memory Firestore: collection name -> docs (id + userId)
-let store: Record<string, { id: string; userId: string }[]>;
+let store: Record<string, { id: string; userId: string; keyHash?: string }[]>;
 let billingStatus: string | undefined;
 const deletedDocs: string[] = [];
 const recursiveDeletes: string[] = [];
@@ -22,7 +22,10 @@ function queryFor(name: string, uid: string, limit = Infinity) {
       return {
         empty: docs.length === 0,
         size: docs.length,
-        docs: docs.map((doc) => ({ ref: { path: `${name}/${doc.id}`, collection: name, id: doc.id } })),
+        docs: docs.map((doc) => ({
+          ref: { path: `${name}/${doc.id}`, collection: name, id: doc.id },
+          get: (field: string) => doc[field as keyof typeof doc],
+        })),
       };
     },
   };
@@ -63,6 +66,9 @@ vi.mock("firebase-admin/firestore", () => ({
     },
   }),
 }));
+
+const mockRefreshPublicReports = vi.fn();
+vi.mock("../jobReports", () => ({ refreshPublicReports: (...args: unknown[]) => mockRefreshPublicReports(...args) }));
 
 vi.mock("firebase-admin/storage", () => ({
   getStorage: () => ({ bucket: () => ({ deleteFiles: mockDeleteFiles }) }),
@@ -110,6 +116,11 @@ describe("deleteAccount", () => {
       ]),
     );
     store.jobs = [{ id: "shared-job", userId: "user-1" }];
+    store.jobReports = [
+      { id: "h1_user-1", userId: "user-1", keyHash: "h1" },
+      { id: "h2_user-1", userId: "user-1", keyHash: "h2" },
+      { id: "h1_user-2", userId: "user-2", keyHash: "h1" },
+    ];
   });
 
   it("covers every per-user collection", () => {
@@ -135,6 +146,12 @@ describe("deleteAccount", () => {
     expect(recursiveDeletes).toEqual(["users/user-1"]);
     expect(mockDeleteFiles).toHaveBeenCalledWith({ prefix: "resumes/user-1/" });
     expect(mockDeleteUser).toHaveBeenCalledWith("user-1");
+  });
+
+  it("deletes their posting reports and redoes the public counts they fed", async () => {
+    await call(signedIn({ confirm: "DELETE" }));
+    expect(store.jobReports.map((doc) => doc.id)).toEqual(["h1_user-2"]);
+    expect(mockRefreshPublicReports.mock.calls).toEqual([["h1"], ["h2"]]);
   });
 
   it("removes the sign-in last, so a failed run can be retried", async () => {
