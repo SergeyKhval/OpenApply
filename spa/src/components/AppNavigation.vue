@@ -2,7 +2,7 @@
   <div class="lg:max-w-64 flex flex-col h-full">
     <div class="p-6 border-b border-sidebar-border h-20 flex items-center">
       <h2 class="text-xl font-semibold">
-        <RouterLink to="/dashboard/applications">OpenApply</RouterLink>
+        <RouterLink to="/jobs">OpenApply</RouterLink>
       </h2>
     </div>
 
@@ -108,6 +108,12 @@
             </div>
           </div>
           <DropdownMenuSeparator />
+          <DropdownMenuItem as-child>
+            <RouterLink to="/settings" @click="emit('close-nav')">
+              <PhGear />
+              Settings
+            </RouterLink>
+          </DropdownMenuItem>
           <DropdownMenuItem @click="handleLogout">
             <PhSignOut />
             Logout
@@ -123,13 +129,12 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth.ts";
 import {
-  PhArchive,
   PhBriefcase,
   PhCaretUp,
   PhCoins,
   PhDiscordLogo,
-  PhEnvelopeSimple,
-  PhReadCvLogo,
+  PhFiles,
+  PhGear,
   PhSignOut,
   PhUser,
 } from "@phosphor-icons/vue";
@@ -168,20 +173,8 @@ const { user, userProfile, logout } = useAuth();
 const router = useRouter();
 
 const navLinks = [
-  {
-    id: 1,
-    name: "Applications",
-    to: "/dashboard/applications",
-    icon: PhBriefcase,
-  },
-  { id: 2, name: "Resumes", to: "/dashboard/resumes", icon: PhReadCvLogo },
-  {
-    id: 3,
-    name: "Cover letters",
-    to: "/dashboard/cover-letters",
-    icon: PhEnvelopeSimple,
-  },
-  { id: 4, name: "Archive", to: "/dashboard/archive", icon: PhArchive },
+  { id: 1, name: "Jobs", to: "/jobs", icon: PhBriefcase },
+  { id: 2, name: "Documents", to: "/documents", icon: PhFiles },
 ];
 
 const { startCheckout, isProcessing } = useCreditsCheckout();

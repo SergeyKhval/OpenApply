@@ -248,7 +248,7 @@ function handleManualEntry() {
 async function onJobApplicationSaved(id: string) {
   toggleDialog(false);
   resetForm();
-  await router.push(`/dashboard/applications/${id}?created=1`);
+  await router.push(`/jobs/${id}?created=1`);
 }
 
 function handleBack() {

@@ -13,7 +13,7 @@
     >
       <p
         v-if="prefilledFromExtension"
-        class="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground"
+        class="rounded-field bg-secondary px-4 py-3 text-sm text-foreground"
       >
         Job description added from the page you were on.
         {{ resumeText ? "Check it, then run the match." : "Add your resume, then run the match." }}
@@ -25,7 +25,7 @@
               Your resume
             </label>
             <label
-              class="inline-flex items-center gap-2 h-11 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground hover:bg-muted cursor-pointer has-[:disabled]:opacity-60 has-[:disabled]:pointer-events-none"
+              class="inline-flex items-center gap-2 h-11 rounded-full border border-input bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted cursor-pointer has-[:disabled]:opacity-60 has-[:disabled]:pointer-events-none"
             >
               <i
                 :class="isReadingPdf ? 'ph ph-circle-notch animate-spin' : 'ph ph-upload-simple'"
@@ -49,7 +49,7 @@
             :disabled="isSubmitting"
             required
             placeholder="Upload your PDF, or paste your resume text here."
-            class="h-56 lg:h-80 w-full resize-y rounded-md border border-border/60 bg-background/80 p-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+            class="h-56 lg:h-80 w-full resize-y rounded-card border border-input bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
           ></textarea>
           <p class="text-xs text-muted-foreground flex justify-between gap-2">
             <span v-if="resumeSource === 'pdf'">This is the text a parser gets from your PDF. Read the order.</span>
@@ -81,7 +81,7 @@
             :disabled="isSubmitting"
             required
             placeholder="Paste the full job posting: title, company, responsibilities, requirements."
-            class="h-56 lg:h-80 w-full resize-y rounded-md border border-border/60 bg-background/80 p-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+            class="h-56 lg:h-80 w-full resize-y rounded-card border border-input bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
           ></textarea>
           <p class="text-xs text-muted-foreground flex justify-end">
             <span :class="counterClass(jobDescription)" class="tabular-nums">
@@ -96,7 +96,7 @@
           ref="submitButton"
           type="submit"
           :disabled="isSubmitting || isReadingPdf"
-          class="inline-flex w-full sm:w-auto min-w-64 items-center justify-center gap-2 whitespace-nowrap text-base font-semibold h-12 rounded-md px-8 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:pointer-events-none shadow-lg shadow-primary/40"
+          class="inline-flex w-full sm:w-auto min-w-64 items-center justify-center gap-2 whitespace-nowrap text-base font-semibold h-13 rounded-full px-8 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:pointer-events-none"
         >
           <i v-if="isSubmitting" class="ph ph-circle-notch animate-spin" aria-hidden="true"></i>
           {{ isSubmitting ? loadingMessage : "Check my match" }}
@@ -117,7 +117,7 @@
       <p class="sr-only" aria-live="polite">{{ resultSummary }}</p>
 
       <!-- Score + verdict -->
-      <div class="rounded-lg border border-border/60 bg-card/80 p-6 flex flex-col sm:flex-row items-center gap-6">
+      <div class="rounded-card bg-card shadow-card dark:border dark:border-border p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
         <div class="relative h-32 w-32 shrink-0">
           <svg viewBox="0 0 36 36" class="h-32 w-32 -rotate-90" aria-hidden="true">
             <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="3" class="stroke-muted" />
@@ -133,18 +133,18 @@
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-4xl font-bold tabular-nums" :class="scoreTone.text">{{ analysis.matchScore }}</span>
+            <span class="font-display text-4xl font-extrabold tabular-nums" :class="scoreTone.text">{{ analysis.matchScore }}</span>
             <span class="text-xs text-muted-foreground">match</span>
           </div>
         </div>
         <div class="flex flex-col gap-2 text-center sm:text-left">
-          <p class="text-sm font-semibold uppercase tracking-wide" :class="scoreTone.text">
+          <p class="text-sm font-bold" :class="scoreTone.text">
             {{ scoreTone.label }}
-            <span class="text-muted-foreground normal-case font-normal tracking-normal">
+            <span class="text-muted-foreground font-normal">
               · {{ mustHaveSummary }}
             </span>
           </p>
-          <h2 v-if="jobLabel" class="text-xl font-bold text-foreground">{{ jobLabel }}</h2>
+          <h2 v-if="jobLabel" class="text-2xl font-extrabold text-foreground">{{ jobLabel }}</h2>
           <p class="text-muted-foreground">{{ analysis.verdict }}</p>
           <a
             :href="ctaHref"
@@ -159,7 +159,7 @@
 
       <!-- Parse check -->
       <div
-        class="rounded-lg border p-4 flex gap-3"
+        class="rounded-card border p-5 flex gap-3"
         :class="parseTone.box"
       >
         <i :class="[parseTone.icon, parseTone.text]" class="ph text-xl shrink-0" aria-hidden="true"></i>
@@ -170,51 +170,52 @@
             <summary class="cursor-pointer text-muted-foreground hover:text-foreground">
               See what a parser saw
             </summary>
-            <pre class="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-md border border-border/60 bg-background/80 p-3 font-mono text-xs text-foreground">{{ submittedResume }}</pre>
+            <pre class="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-field border border-border bg-card p-3 font-mono text-xs text-foreground">{{ submittedResume }}</pre>
           </details>
         </div>
       </div>
 
       <!-- Requirements -->
-      <div class="rounded-lg border border-border/60 bg-card/80 p-6">
-        <h3 class="font-semibold text-foreground mb-4">Requirement by requirement</h3>
+      <div class="rounded-card bg-card shadow-card dark:border dark:border-border p-6">
+        <h3 class="text-lg font-bold text-foreground mb-4">Requirement by requirement</h3>
         <ul class="flex flex-col divide-y divide-border/60">
           <li
             v-for="requirement in analysis.requirements"
             :key="requirement.requirement"
-            class="flex gap-3 py-3 first:pt-0 last:pb-0"
+            class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:gap-3"
           >
-            <i
-              :class="REQUIREMENT_TONES[requirement.status].icon"
-              class="ph text-lg shrink-0 mt-0.5"
-              aria-hidden="true"
-            ></i>
+            <span
+              class="mt-0.5 inline-flex h-6 w-20 shrink-0 items-center justify-center gap-1 rounded-full text-xs font-semibold"
+              :class="REQUIREMENT_TONES[requirement.status].pill"
+            >
+              <i :class="REQUIREMENT_TONES[requirement.status].icon" class="ph text-sm" aria-hidden="true"></i>
+              {{ REQUIREMENT_TONES[requirement.status].label }}
+            </span>
             <div class="min-w-0 flex-1">
-              <p class="text-sm text-foreground">
-                <span class="sr-only">{{ REQUIREMENT_TONES[requirement.status].label }}:</span>
+              <p class="text-[15px] font-semibold text-foreground">
                 {{ requirement.requirement }}
                 <span
                   v-if="requirement.importance === 'must-have'"
-                  class="ml-1 whitespace-nowrap rounded-full border border-border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  class="ml-1 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
                 >must-have</span>
               </p>
-              <p v-if="requirement.evidence" class="mt-1 text-xs text-muted-foreground border-l-2 border-border pl-2 italic">
+              <p v-if="requirement.evidence" class="mt-1 text-sm text-muted-foreground italic leading-relaxed">
                 “{{ requirement.evidence }}”
               </p>
-              <p v-else class="mt-1 text-xs text-destructive/80">No evidence in your resume</p>
+              <p v-else class="mt-1 text-sm text-muted-foreground italic">Not in your resume</p>
             </div>
           </li>
         </ul>
       </div>
 
       <!-- Missing keywords -->
-      <div v-if="analysis.missingKeywords.length" class="rounded-lg border border-border/60 bg-card/80 p-6">
-        <h3 class="font-semibold text-foreground mb-3">Keywords from the posting that aren't in your resume</h3>
+      <div v-if="analysis.missingKeywords.length" class="rounded-card bg-card shadow-card dark:border dark:border-border p-6">
+        <h3 class="text-lg font-bold text-foreground mb-3">Keywords from the posting that aren't in your resume</h3>
         <ul class="flex flex-wrap gap-2">
           <li
             v-for="missingKeyword in analysis.missingKeywords"
             :key="missingKeyword"
-            class="px-2.5 py-1 text-xs font-medium rounded-full border border-destructive/40 bg-destructive-soft text-destructive"
+            class="px-3 py-1 text-sm font-medium rounded-full bg-destructive-soft text-destructive"
           >
             {{ missingKeyword }}
           </li>
@@ -223,16 +224,16 @@
       </div>
 
       <!-- Fixes -->
-      <div class="rounded-lg border border-border/60 bg-card/80 p-6">
-        <h3 class="font-semibold text-foreground mb-4">3 places to fix before you apply</h3>
+      <div class="rounded-card bg-card shadow-card dark:border dark:border-border p-6">
+        <h3 class="text-lg font-bold text-foreground mb-4">3 places to fix before you apply</h3>
         <ol class="flex flex-col gap-5">
           <li v-for="(fix, index) in analysis.fixes" :key="index" class="flex gap-4">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 text-sm font-bold text-primary">
+            <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">
               {{ index + 1 }}
             </span>
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-              <p class="font-medium text-foreground">{{ fix.gap }}</p>
-              <p class="text-xs text-muted-foreground border-l-2 border-border pl-2">{{ fix.where }}</p>
+              <p class="font-semibold text-foreground">{{ fix.gap }}</p>
+              <p class="text-sm text-muted-foreground italic">{{ fix.where }}</p>
               <p class="text-sm text-muted-foreground">{{ fix.action }}</p>
             </div>
           </li>
@@ -240,18 +241,18 @@
       </div>
 
       <!-- CTA -->
-      <div class="rounded-card border border-primary/30 bg-secondary p-6 flex flex-col md:flex-row md:items-center gap-4">
+      <div class="rounded-card bg-secondary p-6 sm:p-8 flex flex-col md:flex-row md:items-center gap-4">
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-foreground">Applying to this one? Don't lose track of it.</h3>
-          <p class="text-sm text-muted-foreground mt-1">
+          <h3 class="text-xl font-extrabold text-foreground">Applying to this one? Don't lose track of it.</h3>
+          <p class="text-[15px] text-soft-foreground mt-1">
             Sign up and {{ jobLabel || "this job" }} is already in your tracker, with this match
             check attached. Track status, interviews, and follow-ups. Free, no credit card, sign in
-            with Google in one click. Open source.
+            with Google in one click.
           </p>
         </div>
         <a
           :href="ctaHref"
-          class="hidden md:inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold h-11 rounded-md px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/40"
+          class="hidden md:inline-flex items-center justify-center gap-2 whitespace-nowrap text-[15px] font-semibold h-12 rounded-full px-6 bg-primary text-primary-foreground hover:bg-primary/90"
           @click="saveAndTrackCta('result_card')"
         >
           Save and track this job
@@ -262,7 +263,7 @@
       <div class="flex justify-center">
         <button
           type="button"
-          class="inline-flex items-center gap-2 h-11 px-4 text-sm text-muted-foreground hover:text-foreground"
+          class="inline-flex items-center gap-2 h-11 px-4 rounded-full text-sm font-semibold text-soft-foreground hover:bg-muted hover:text-foreground"
           @click="startOver"
         >
           <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i>
@@ -274,7 +275,7 @@
       <div class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur p-3">
         <a
           :href="ctaHref"
-          class="flex w-full items-center justify-center gap-2 text-sm font-semibold h-12 rounded-md bg-primary text-primary-foreground shadow-lg shadow-primary/40"
+          class="flex w-full items-center justify-center gap-2 text-sm font-semibold h-12 rounded-full bg-primary text-primary-foreground"
           @click="saveAndTrackCta('mobile_sticky')"
         >
           Save and track this job, free
@@ -325,10 +326,10 @@ const LOADING_MESSAGES = [
   "Looking for evidence…",
   "Being honest with you…",
 ];
-const REQUIREMENT_TONES: Record<RequirementStatus, { icon: string; label: string }> = {
-  matched: { icon: "ph-check-circle text-success", label: "Matched" },
-  partial: { icon: "ph-circle-half text-stage-interviewing-text", label: "Partially matched" },
-  missing: { icon: "ph-x-circle text-destructive", label: "Missing" },
+const REQUIREMENT_TONES: Record<RequirementStatus, { icon: string; label: string; pill: string }> = {
+  matched: { icon: "ph-check", label: "Met", pill: "bg-success-soft text-success" },
+  partial: { icon: "ph-circle-half", label: "Partly", pill: "bg-stage-interviewing-soft text-stage-interviewing-text" },
+  missing: { icon: "ph-x", label: "Missing", pill: "bg-destructive-soft text-destructive" },
 };
 
 const spaBase = import.meta.env.PUBLIC_SPA_BASE_URL || "/app";

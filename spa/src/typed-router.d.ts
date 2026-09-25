@@ -37,64 +37,68 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/dashboard': RouteRecordInfo<
-      '/dashboard',
-      '/dashboard',
+    '/documents': RouteRecordInfo<
+      '/documents',
+      '/documents',
       Record<never, never>,
       Record<never, never>,
-      | '/dashboard/applications/'
-      | '/dashboard/applications/[applicationId]'
-      | '/dashboard/applications/new'
-      | '/dashboard/archive'
-      | '/dashboard/cover-letters'
-      | '/dashboard/file-import'
-      | '/dashboard/resumes'
+      | '/documents/'
     >,
-    '/dashboard/applications/': RouteRecordInfo<
-      '/dashboard/applications/',
-      '/dashboard/applications',
+    '/documents/': RouteRecordInfo<
+      '/documents/',
+      '/documents',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    '/dashboard/applications/[applicationId]': RouteRecordInfo<
-      '/dashboard/applications/[applicationId]',
-      '/dashboard/applications/:applicationId',
-      { applicationId: ParamValue<true> },
-      { applicationId: ParamValue<false> },
-      | never
-    >,
-    '/dashboard/applications/new': RouteRecordInfo<
-      '/dashboard/applications/new',
-      '/dashboard/applications/new',
+    '/jobs': RouteRecordInfo<
+      '/jobs',
+      '/jobs',
       Record<never, never>,
       Record<never, never>,
-      | never
+      | '/jobs/'
+      | '/jobs/[jobId]'
+      | '/jobs/new'
     >,
-    '/dashboard/archive': RouteRecordInfo<
-      '/dashboard/archive',
-      '/dashboard/archive',
+    '/jobs/': RouteRecordInfo<
+      '/jobs/',
+      '/jobs',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    '/dashboard/cover-letters': RouteRecordInfo<
-      '/dashboard/cover-letters',
-      '/dashboard/cover-letters',
+    '/jobs/[jobId]': RouteRecordInfo<
+      '/jobs/[jobId]',
+      '/jobs/:jobId',
+      { jobId: ParamValue<true> },
+      { jobId: ParamValue<false> },
+      | never
+    >,
+    '/jobs/new': RouteRecordInfo<
+      '/jobs/new',
+      '/jobs/new',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    '/dashboard/file-import': RouteRecordInfo<
-      '/dashboard/file-import',
-      '/dashboard/file-import',
+    '/settings': RouteRecordInfo<
+      '/settings',
+      '/settings',
+      Record<never, never>,
+      Record<never, never>,
+      | '/settings/'
+      | '/settings/import-export'
+    >,
+    '/settings/': RouteRecordInfo<
+      '/settings/',
+      '/settings',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    '/dashboard/resumes': RouteRecordInfo<
-      '/dashboard/resumes',
-      '/dashboard/resumes',
+    '/settings/import-export': RouteRecordInfo<
+      '/settings/import-export',
+      '/settings/import-export',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -124,58 +128,63 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
-    'src/pages/dashboard.vue': {
+    'src/pages/documents.vue': {
       routes:
-        | '/dashboard'
-        | '/dashboard/applications/'
-        | '/dashboard/applications/[applicationId]'
-        | '/dashboard/applications/new'
-        | '/dashboard/archive'
-        | '/dashboard/cover-letters'
-        | '/dashboard/file-import'
-        | '/dashboard/resumes'
+        | '/documents'
+        | '/documents/'
       views:
         | 'default'
     }
-    'src/pages/dashboard/applications/index.vue': {
+    'src/pages/documents/index.vue': {
       routes:
-        | '/dashboard/applications/'
+        | '/documents/'
       views:
         | never
     }
-    'src/pages/dashboard/applications/[applicationId].vue': {
+    'src/pages/jobs.vue': {
       routes:
-        | '/dashboard/applications/[applicationId]'
+        | '/jobs'
+        | '/jobs/'
+        | '/jobs/[jobId]'
+        | '/jobs/new'
+      views:
+        | 'default'
+    }
+    'src/pages/jobs/index.vue': {
+      routes:
+        | '/jobs/'
       views:
         | never
     }
-    'src/pages/dashboard/applications/new.vue': {
+    'src/pages/jobs/[jobId].vue': {
       routes:
-        | '/dashboard/applications/new'
+        | '/jobs/[jobId]'
       views:
         | never
     }
-    'src/pages/dashboard/archive.vue': {
+    'src/pages/jobs/new.vue': {
       routes:
-        | '/dashboard/archive'
+        | '/jobs/new'
       views:
         | never
     }
-    'src/pages/dashboard/cover-letters.vue': {
+    'src/pages/settings.vue': {
       routes:
-        | '/dashboard/cover-letters'
+        | '/settings'
+        | '/settings/'
+        | '/settings/import-export'
+      views:
+        | 'default'
+    }
+    'src/pages/settings/index.vue': {
+      routes:
+        | '/settings/'
       views:
         | never
     }
-    'src/pages/dashboard/file-import.vue': {
+    'src/pages/settings/import-export.vue': {
       routes:
-        | '/dashboard/file-import'
-      views:
-        | never
-    }
-    'src/pages/dashboard/resumes.vue': {
-      routes:
-        | '/dashboard/resumes'
+        | '/settings/import-export'
       views:
         | never
     }

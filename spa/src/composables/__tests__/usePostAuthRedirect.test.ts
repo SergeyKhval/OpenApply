@@ -57,8 +57,8 @@ describe("usePostAuthRedirect", () => {
     await Promise.all([redirect(), redirect()]);
 
     expect(mockAddJobApplication).toHaveBeenCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/app123?from=tool");
-    expect(mockPush).not.toHaveBeenCalledWith("/dashboard/applications");
+    expect(mockPush).toHaveBeenCalledWith("/jobs/app123?from=tool");
+    expect(mockPush).not.toHaveBeenCalledWith("/jobs");
     expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).toBeNull();
   });
 
@@ -71,7 +71,7 @@ describe("usePostAuthRedirect", () => {
     await redirect();
 
     expect(mockAddJobApplication).toHaveBeenCalledWith(expect.anything(), { source: "extension" });
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/app456?created=1");
+    expect(mockPush).toHaveBeenCalledWith("/jobs/app456?created=1");
   });
 
   it("falls back to the default redirect and keeps the job when creation fails", async () => {
@@ -81,7 +81,7 @@ describe("usePostAuthRedirect", () => {
 
     await redirect();
 
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications");
+    expect(mockPush).toHaveBeenCalledWith("/jobs");
     expect(localStorage.getItem(PENDING_TOOL_APPLICATION_KEY)).not.toBeNull();
   });
 
@@ -89,14 +89,14 @@ describe("usePostAuthRedirect", () => {
     mockQuery.value = { job: "HA5pNcg3AjtPuDRWtqds" };
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=HA5pNcg3AjtPuDRWtqds");
+    expect(mockPush).toHaveBeenCalledWith("/jobs/new?job=HA5pNcg3AjtPuDRWtqds");
   });
 
   it("includes from=lp when LP source param is present", () => {
     mockQuery.value = { job: "HA5pNcg3AjtPuDRWtqds", from: "lp" };
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications/new?job=HA5pNcg3AjtPuDRWtqds&from=lp");
+    expect(mockPush).toHaveBeenCalledWith("/jobs/new?job=HA5pNcg3AjtPuDRWtqds&from=lp");
   });
 
   it("redirects to saved redirect path when present", () => {
@@ -110,14 +110,14 @@ describe("usePostAuthRedirect", () => {
     mockQuery.value = { redirect: "https://evil.com" };
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications");
+    expect(mockPush).toHaveBeenCalledWith("/jobs");
   });
 
-  it("redirects to dashboard when no job or redirect query param", () => {
+  it("redirects to jobs when no job or redirect query param", () => {
     mockQuery.value = {};
     const { redirect } = usePostAuthRedirect();
     redirect();
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/applications");
+    expect(mockPush).toHaveBeenCalledWith("/jobs");
   });
 
   it("returns hasPendingJob true when job param exists", () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderWeeklyDigest, DigestEmailData } from "../emails/WeeklyDigest";
 
-const APP_URL = "https://openapply.app/app/dashboard/applications";
+const APP_URL = "https://openapply.app/app/jobs";
 
 const fullData: DigestEmailData = {
   greeting: "great-week",
