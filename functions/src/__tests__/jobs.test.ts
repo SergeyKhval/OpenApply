@@ -68,6 +68,33 @@ describe("jobs", () => {
     );
   });
 
+  it("looks up the canonical URL and the link as given", async () => {
+    mockGet.mockResolvedValueOnce({ empty: false, docs: [{ id: "existing-doc-id" }] });
+
+    const result = await callJobs({
+      url: "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us",
+    });
+    expect(result).toEqual({ id: "existing-doc-id" });
+    expect(mockWhere).toHaveBeenCalledWith("jobDescriptionLink", "in", [
+      "https://job-boards.greenhouse.io/workato/jobs/8181689002",
+      "https://job-boards.greenhouse.io/workato/jobs/8181689002?gh_src=zp8esh8k2us",
+    ]);
+  });
+
+  it("caches new jobs under the canonical URL", async () => {
+    mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+    mockAdd.mockResolvedValueOnce({ id: "new-doc-id" });
+
+    await callJobs({ url: "https://example.com/job?utm_source=reddit#apply" });
+    expect(mockWhere).toHaveBeenCalledWith("jobDescriptionLink", "in", [
+      "https://example.com/job",
+      "https://example.com/job?utm_source=reddit#apply",
+    ]);
+    expect(mockAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ jobDescriptionLink: "https://example.com/job" }),
+    );
+  });
+
   it("returns existing doc id for duplicate URLs", async () => {
     mockGet.mockResolvedValueOnce({
       empty: false,
