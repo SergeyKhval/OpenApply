@@ -104,11 +104,20 @@
 
     <template v-if="!isRunning && !showLimit" #footer>
       <AiChecksLeft v-if="allowance" :allowance="allowance" />
+      <p v-if="tailored" class="text-[13px] text-muted-foreground">
+        Save as PDF opens your browser's print dialog: pick “Save as PDF” as the printer.
+        <button type="button" class="font-medium text-secondary-foreground hover:underline" @click="create">Make a new version · 1 check</button>
+      </p>
       <div class="flex flex-col gap-2 sm:flex-row">
         <template v-if="tailored">
-          <Button variant="outline" @click="create">
-            <PhArrowsClockwise />
-            Make a new version · 1 check
+          <Button :disabled="isExporting" @click="downloadDocx">
+            <Spinner v-if="isExporting" />
+            <PhFileDoc v-else />
+            Download .docx
+          </Button>
+          <Button variant="outline" @click="savePdf">
+            <PhFilePdf />
+            Save as PDF
           </Button>
           <Button variant="outline" @click="copyText">
             <PhCopy />
@@ -129,7 +138,7 @@ import { computed, ref, watch } from "vue";
 import { useCollection, useCurrentUser, useDocument } from "vuefire";
 import { collection, doc as docRef, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { PhArrowsClockwise, PhCopy, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
+import { PhCopy, PhFileDoc, PhFilePdf, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
 import AiChecksLeft from "@/components/AiChecksLeft.vue";
 import AiLimitReached from "@/components/AiLimitReached.vue";
 import ResumeLink from "@/components/ResumeLink.vue";
@@ -142,6 +151,7 @@ import { db, functions } from "@/firebase/config";
 import { trackEvent } from "@/analytics";
 import { useAiAllowance } from "@/composables/useAiAllowance";
 import { assembleTailoredResume, docText, toChangeRows, type ChangeKind } from "@/lib/tailoredResume";
+import { exportFileName, printTailoredResume, saveBlob, tailoredResumeDocx } from "@/lib/tailoredResumeExport";
 import type { JobApplication, Resume, ResumeJobMatch, TailoredResume } from "@/types";
 
 type TailoredResumeSheetProps = {
@@ -301,6 +311,35 @@ async function create() {
   } finally {
     isRunning.value = false;
   }
+}
+
+const isExporting = ref(false);
+const includedCount = () => rows.value.changes.filter((row) => row.included).length;
+const exportMeta = () => ({ companyName: application.companyName, position: application.position });
+
+async function downloadDocx() {
+  if (!doc.value) return;
+  isExporting.value = true;
+  errorMessage.value = "";
+  try {
+    const blob = await tailoredResumeDocx(doc.value);
+    saveBlob(blob, exportFileName(doc.value, exportMeta(), "docx"));
+    trackEvent("tailored_resume_downloaded", { format: "docx", changesIncluded: includedCount() });
+  } catch {
+    errorMessage.value = "The .docx didn't build. Try again, or use Save as PDF or Copy text.";
+  } finally {
+    isExporting.value = false;
+  }
+}
+
+function savePdf() {
+  if (!doc.value) return;
+  errorMessage.value = "";
+  if (!printTailoredResume(doc.value, exportFileName(doc.value, exportMeta(), "pdf"))) {
+    errorMessage.value = "Your browser blocked the print tab. Allow pop-ups for OpenApply, or use Download .docx.";
+    return;
+  }
+  trackEvent("tailored_resume_downloaded", { format: "pdf", changesIncluded: includedCount() });
 }
 
 async function copyText() {
