@@ -33,6 +33,8 @@ export type RevertReason =
   | "term_not_in_source"
   | "term_already_listed"
   | "qualified_source"
+  | "others_work"
+  | "dropped_specifier"
   | "dropped_qualifier"
   | "scope_change"
   | "job_word";
@@ -347,13 +349,44 @@ const QUALIFIERS: [family: string, pattern: RegExp][] = [
   ["partial", /\b(partial|partially|partly|some|part-time|temporary|temp|contract basis)\b/],
   ["junior", /\b(junior|intern|interns|internship|trainee|apprentice|apprenticeship|entry)\b/],
   ["attempt", /\b(tried|attempted|aimed|proposed|suggested|planned|drafted)\b/],
+  ["observe", /\b(sat in on|sit in on|sits in on|attended|attend|attending|shadowed|shadowing|shadow|observed|observing|observe|watched|listened in)\b/],
 ];
 
 // Qualifiers that describe how well the candidate knows a skill. A line with
 // one can't put that skill under Skills. ("Supporting order processing" or
 // "ad-hoc state" say nothing about skill level, so the other families don't
 // count here.)
-const SKILL_LEVEL_QUALIFIERS = new Set(["basic", "learning", "not-shipped", "exposure", "coursework", "candidate"]);
+const SKILL_LEVEL_QUALIFIERS = new Set(["basic", "learning", "not-shipped", "exposure", "coursework", "candidate", "observe"]);
+
+// Nouns for people. "the ML team" or "Salesforce admins" names someone
+// else's work, not the candidate's skill.
+const PEOPLE_NOUN = "(team|teams|squad|squads|group|groups|department|departments|org|organization|engineers|engineer|scientists|scientist|researchers|specialists|staff|colleagues|admins|administrators|analysts|consultants|contractors|vendor|vendors|partner|partners|experts|lead|leads|managers|people)";
+
+/** True when the term appears in the line only as part of a name for other people. */
+export function namesOthersWork(lineText: string, term: string): boolean {
+  const line = canonicalize(lineText);
+  const needle = wordsOf(canonicalize(term)).join(" ");
+  if (!needle) return false;
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const occurrences = line.match(new RegExp(`(?<![\\w+#.])${escaped}(?![\\w+#])`, "g"))?.length ?? 0;
+  const asPeople = line.match(new RegExp(`(?<![\\w+#.])${escaped}(?:\\s+[a-z-]+)?\\s+${PEOPLE_NOUN}\\b`, "g"))?.length ?? 0;
+  return occurrences > 0 && asPeople >= occurrences;
+}
+
+/**
+ * A modifier the rewrite drops from a noun it keeps: "the invoice API" →
+ * "the API" turns one API into all of them.
+ */
+export function droppedSpecifiers(text: string, sourceText: string): string[] {
+  const source = wordsOf(canonicalize(sourceText)).join(" ");
+  const rewrite = ` ${wordsOf(canonicalize(text)).join(" ")} `;
+  const dropped: string[] = [];
+  for (const [, modifier, noun] of source.matchAll(/\b(?:the|a|an|our|their)\s+([a-z][a-z-]*)\s+([a-z0-9][a-z0-9.+#-]*)/g)) {
+    if (rewrite.includes(` ${modifier} `)) continue;
+    if (new RegExp(` (?:the|a|an|our|their) ${noun.replace(/[.+#]/g, "\\$&")} `).test(rewrite)) dropped.push(`specifier:${modifier} ${noun}`);
+  }
+  return dropped;
+}
 
 /**
  * Scope the rewrite quietly widens: a number from the source that it drops
@@ -483,6 +516,8 @@ export function verifyTailorOps(ops: TailorOp[], context: VerifyContext): Verifi
       if (invented.length) return revert("new_fact", invented);
       const dropped = droppedQualifiers(text, sourceText);
       if (dropped.length) return revert("dropped_qualifier", dropped);
+      const unspecified = droppedSpecifiers(text, sourceText);
+      if (unspecified.length) return revert("dropped_specifier", unspecified);
       const widened = scopeChanges(text, sourceText);
       if (widened.length) return revert("scope_change", widened);
       const borrowed = unsupportedJobWords(text, sourceText, context.vocabulary.requirementTexts ?? []);
@@ -501,6 +536,7 @@ export function verifyTailorOps(ops: TailorOp[], context: VerifyContext): Verifi
         ([family, pattern]) => SKILL_LEVEL_QUALIFIERS.has(family) && pattern.test(canonicalize(line.text)),
       ).map(([family]) => `qual:${family}`);
       if (qualifiers.length) return revert("qualified_source", qualifiers);
+      if (namesOthersWork(line.text, term)) return revert("others_work");
       const key = wordsOf(canonicalize(term)).join(" ");
       const skills = skillsSectionText(context.lines);
       const overlaps = [...surfaced].some((listed) => containsPhrase(listed, key) || containsPhrase(key, listed));
