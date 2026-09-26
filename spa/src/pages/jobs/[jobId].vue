@@ -196,6 +196,7 @@ const details = computed(() => {
   return [
     { label: "Work", value: job.remotePolicy ? REMOTE_LABELS[job.remotePolicy] : "Not listed" },
     { label: "Type", value: job.employmentType ? EMPLOYMENT_LABELS[job.employmentType] : "Not listed" },
+    { label: "Salary", value: job.salary || "Not listed" },
     { label: "Saved", value: job.createdAt?.toDate().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) ?? "" },
   ];
 });

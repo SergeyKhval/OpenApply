@@ -142,6 +142,7 @@ export async function startPopup({ chrome, document, window, fetch: fetchImpl = 
         company: fields.company.value,
         location: fields.location.value,
         description,
+        salary: job.salary,
         posting: job.posting,
       })
       : saveUrl(jobUrl);

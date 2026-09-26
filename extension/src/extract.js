@@ -9,6 +9,7 @@
  * @property {string} company       company name, "" when not found
  * @property {string} location      where the job is ("Warsaw, Poland", "Remote"), "" when not found
  * @property {string} description   plain-text job description, "" when not found
+ * @property {string} salary        formatted from schema.org baseSalary ("$120,000–$140,000/yr"), "" when not found
  * @property {"selection"|"site"|"json-ld"|"page"|"none"} source where the description came from
  * @property {Posting} posting      when the job was posted, {} when the page doesn't say
  */
@@ -122,6 +123,37 @@ export function extractJob() {
     return parts.join(", ") || clean(place.name);
   }
 
+  const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£" };
+  const UNIT_SUFFIX = { YEAR: "/yr", MONTH: "/mo", WEEK: "/wk", DAY: "/day", HOUR: "/hr" };
+
+  // schema.org amounts are sometimes numbers, sometimes strings ("120000",
+  // "120,000"), sometimes garbage ("competitive", "120k"); null for the latter
+  function formatAmount(amount, currency) {
+    const numeric = Number(typeof amount === "string" ? amount.replace(/,/g, "") : amount);
+    if (!Number.isFinite(numeric)) return null;
+    const number = Math.round(numeric).toLocaleString("en-US");
+    return CURRENCY_SYMBOLS[currency] ? `${CURRENCY_SYMBOLS[currency]}${number}` : `${number} ${currency || ""}`.trim();
+  }
+
+  // schema.org JobPosting.baseSalary: a MonetaryAmount or MonetaryAmountDistribution
+  function formatSalary(baseSalary) {
+    if (!baseSalary || typeof baseSalary !== "object") return "";
+    const amount = Array.isArray(baseSalary) ? baseSalary[0] : baseSalary;
+    const currency = amount?.currency;
+    const value = amount?.value;
+    const { minValue, maxValue, value: single } = typeof value === "object" && value ? value : {};
+    const unit = UNIT_SUFFIX[value?.unitText] || "";
+    if (minValue != null && maxValue != null && minValue !== maxValue) {
+      const min = formatAmount(minValue, currency);
+      const max = formatAmount(maxValue, currency);
+      return min && max ? `${min}–${max}${unit}` : "";
+    }
+    const amountValue = single ?? minValue ?? maxValue ?? (typeof value === "number" || typeof value === "string" ? value : undefined);
+    if (amountValue == null) return "";
+    const formatted = formatAmount(amountValue, currency);
+    return formatted ? `${formatted}${unit}` : "";
+  }
+
   // schema.org JobPosting: Greenhouse, Lever, Ashby, Workable and many career sites publish it
   function jsonLdJob() {
     const candidates = [];
@@ -158,6 +190,7 @@ export function extractJob() {
       company: clean(typeof organization === "string" ? organization : organization?.name),
       location: [...new Set([...places.slice(0, 3), remote])].filter(Boolean).join(" · "),
       description: typeof job.description === "string" ? htmlToText(job.description) : "",
+      salary: formatSalary(job.baseSalary),
     };
   }
 
@@ -492,7 +525,7 @@ export function extractJob() {
 
   const url = location.href;
   const host = location.hostname;
-  const result = { url, title: "", company: "", location: "", description: "", source: "none", posting: {} };
+  const result = { url, title: "", company: "", location: "", description: "", source: "none", posting: {}, salary: "" };
 
   const site = SITES.find((candidate) => candidate.host.test(host));
   if (site) {
@@ -509,6 +542,7 @@ export function extractJob() {
     result.title = result.title || structured.title;
     result.company = result.company || structured.company;
     result.location = result.location || structured.location;
+    result.salary = result.salary || structured.salary;
     if (!result.description && structured.description.length >= MIN_DESCRIPTION_CHARS) {
       result.description = structured.description;
       result.source = "json-ld";

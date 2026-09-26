@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autofill profile · OpenApply</title>
+    <link rel="stylesheet" href="profile.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>OpenApply</span>
+      </header>
+
+      <h1>Autofill profile</h1>
+      <p class="lead">
+        OpenApply fills these into Greenhouse, Lever and Ashby application forms when you click Fill.
+        It leaves questions, dropdowns and anything about work authorization or demographics to you, and it never submits.
+      </p>
+
+      <form id="profile-form" class="card" novalidate>
+        <div id="fields" class="fields"></div>
+
+        <div class="resume">
+          <span class="resume-label">Resume</span>
+          <p id="resume-name" class="resume-name">No file yet</p>
+          <div class="resume-actions">
+            <label class="button secondary file-button">
+              <span id="resume-choose">Choose file</span>
+              <input id="resume-input" type="file" accept=".pdf,.doc,.docx" />
+            </label>
+            <button id="resume-remove" type="button" class="button link" hidden>Remove</button>
+          </div>
+          <p id="resume-error" class="error" role="alert" hidden></p>
+          <p class="help">PDF or Word, up to 5 MB. It's attached to the form's resume field.</p>
+        </div>
+
+        <div class="form-actions">
+          <button id="save" type="submit" class="button primary">Save</button>
+          <p id="status" class="status" role="status"></p>
+        </div>
+      </form>
+
+      <section class="card privacy">
+        <h2>Where this is kept</h2>
+        <p>
+          Only in this browser, on this device. OpenApply's servers never receive it.
+          When you click Fill, the details go into that form, and the employer's hiring system gets them the same way it would if you typed them.
+        </p>
+        <button id="clear" type="button" class="button danger">Delete my autofill profile</button>
+      </section>
+    </main>
+
+    <script type="module" src="profile.js"></script>
+  </body>
+</html>

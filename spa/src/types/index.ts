@@ -22,6 +22,7 @@ export type JobApplication = {
   technologies: string[];
   employmentType?: "full-time" | "part-time";
   remotePolicy?: "remote" | "in-office" | "hybrid";
+  salary?: string;
   jobId?: string;
   resumeId?: string | null;
   coverLetterId?: string;
