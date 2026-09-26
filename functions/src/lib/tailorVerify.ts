@@ -349,6 +349,7 @@ const QUALIFIERS: [family: string, pattern: RegExp][] = [
   ["partial", /\b(partial|partially|partly|some|part-time|temporary|temp|contract basis)\b/],
   ["junior", /\b(junior|intern|interns|internship|trainee|apprentice|apprenticeship|entry)\b/],
   ["attempt", /\b(tried|attempted|aimed|proposed|suggested|planned|drafted)\b/],
+  ["reuse", /\b(existing|pre-existing|prebuilt|pre-built|off-the-shelf|provided|ready-made)\b/],
   ["observe", /\b(sat in on|sit in on|sits in on|attended|attend|attending|shadowed|shadowing|shadow|observed|observing|observe|watched|listened in)\b/],
 ];
 
@@ -358,19 +359,42 @@ const QUALIFIERS: [family: string, pattern: RegExp][] = [
 // count here.)
 const SKILL_LEVEL_QUALIFIERS = new Set(["basic", "learning", "not-shipped", "exposure", "coursework", "candidate", "observe"]);
 
-// Nouns for people. "the ML team" or "Salesforce admins" names someone
-// else's work, not the candidate's skill.
-const PEOPLE_NOUN = "(team|teams|squad|squads|group|groups|department|departments|org|organization|engineers|engineer|scientists|scientist|researchers|specialists|staff|colleagues|admins|administrators|analysts|consultants|contractors|vendor|vendors|partner|partners|experts|lead|leads|managers|people)";
+// Nouns for people. "the ML team" or "the Data Science team's Python and
+// machine learning engineers" names someone else's work, not the
+// candidate's skill.
+const PEOPLE_NOUNS = new Set(
+  // Not "group" (AWS security groups) or "leads" (sales leads)
+  ("team teams squad squads department departments org organization engineers engineer " +
+    "scientists scientist researchers specialists staff colleagues admins administrators analysts " +
+    "consultants contractors vendor vendors partner partners experts managers people developers").split(" "),
+);
+// Words that end the phrase a term belongs to: past one of these, a people
+// noun describes something else ("AWS ECS with the platform team's templates")
+const PHRASE_BREAKS = new Set(
+  "with for to by from at in on using via into onto through across of under over while and-then".split(" "),
+);
+const OTHERS_WINDOW = 5;
 
-/** True when the term appears in the line only as part of a name for other people. */
+/** True when every mention of the term in the line is part of a name for other people. */
 export function namesOthersWork(lineText: string, term: string): boolean {
-  const line = canonicalize(lineText);
-  const needle = wordsOf(canonicalize(term)).join(" ");
-  if (!needle) return false;
-  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const occurrences = line.match(new RegExp(`(?<![\\w+#.])${escaped}(?![\\w+#])`, "g"))?.length ?? 0;
-  const asPeople = line.match(new RegExp(`(?<![\\w+#.])${escaped}(?:\\s+[a-z-]+)?\\s+${PEOPLE_NOUN}\\b`, "g"))?.length ?? 0;
-  return occurrences > 0 && asPeople >= occurrences;
+  const tokens = canonicalize(lineText)
+    .replace(/[,.;:!?()]/g, " | ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => token.replace(/'s$|'$/, ""));
+  const needle = wordsOf(canonicalize(term));
+  if (!needle.length) return false;
+  const starts = tokens
+    .map((_, index) => index)
+    .filter((index) => needle.every((word, offset) => tokens[index + offset] === word));
+  if (!starts.length) return false;
+  return starts.every((index) => {
+    for (const token of tokens.slice(index + needle.length, index + needle.length + OTHERS_WINDOW)) {
+      if (token === "|" || PHRASE_BREAKS.has(token)) return false;
+      if (PEOPLE_NOUNS.has(token)) return true;
+    }
+    return false;
+  });
 }
 
 /**

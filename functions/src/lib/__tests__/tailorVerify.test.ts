@@ -338,6 +338,34 @@ describe("verifyTailorOps: gate run 3 inflations", () => {
   });
 });
 
+// The inflations gate run 4 (fresh pairs) let through
+describe("verifyTailorOps: gate run 4 inflations", () => {
+  const job = (bullet: string) => `Name\nExperience\nRole, Company\n2020 – 2024\n• ${bullet}`;
+  const context = (resume: string) => ({ lines: segmentResume(resume), vocabulary: { terms: [] }, requirementCount: 1 });
+  const surface = (bullet: string, term: string) =>
+    verifyTailorOps([op({ kind: "surfaceKeyword", lineIds: ["L5"], term })], context(job(bullet)))[0];
+
+  it("won't list a skill named a few words before the people it belongs to", () => {
+    const result = surface("Coordinated delivery timelines with the Data Science team's Python and machine learning engineers.", "Python");
+    expect(result.revertReason).toBe("others_work");
+  });
+
+  it("still lists a tool when the people noun belongs to a later phrase", () => {
+    expect(surface("Deployed services to AWS ECS with the platform team's templates.", "AWS").status).toBe("applied");
+    expect(surface("Built the Looker explores for the finance team.", "Looker").status).toBe("applied");
+    expect(surface("Troubleshoot EC2 instance and security group issues for the dev teams.", "EC2").status).toBe("applied");
+    expect(surface("Converted Salesforce leads into booked demos.", "Salesforce").status).toBe("applied");
+  });
+
+  it("keeps 'existing' through a rewrite", () => {
+    const result = verifyTailorOps(
+      [op({ kind: "rephrase", lineIds: ["L5"], text: "Deployed services to Kubernetes using Helm charts." })],
+      context(job("Deployed services to the company's Kubernetes cluster using existing Helm charts.")),
+    )[0];
+    expect(result).toMatchObject({ revertReason: "dropped_qualifier", offendingTokens: ["qual:reuse"] });
+  });
+});
+
 describe("verifyTailorOps: qualifiers and job words that are fine", () => {
   const context = (resume: string, requirementTexts: string[] = []) => ({
     lines: segmentResume(resume),
