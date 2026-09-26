@@ -42,7 +42,7 @@
     <Button
       v-if="hasJobs"
       size="icon"
-      class="fixed right-5 bottom-6 z-20 size-15 shadow-pop md:hidden"
+      class="fixed right-5 bottom-[calc(5.5rem+max(0.5rem,env(safe-area-inset-bottom)))] z-20 size-15 shadow-pop md:hidden"
       aria-label="Add job"
       @click="openAddJob"
     >
