@@ -1,6 +1,7 @@
 // One shape for the resume match sheet, from the stored in-app match result
 // (resumeJobMatches.matchResult).
 import type { ResumeJobMatch } from "@/types";
+import { plural } from "@/lib/plural";
 
 export type RequirementStatus = "met" | "partly" | "missing";
 
@@ -36,7 +37,7 @@ export function toMatchView(result: ResumeJobMatch["matchResult"]): MatchView {
   const counts = { met: 0, partly: 0, missing: 0 };
   for (const requirement of requirements) counts[requirement.status] += 1;
 
-  const parts = [`${counts.met} of ${requirements.length} requirements met`];
+  const parts = [`${counts.met} of ${plural(requirements.length, "requirement")} met`];
   if (counts.partly) parts.push(`${counts.partly} partly`);
   if (counts.missing) parts.push(`${counts.missing} missing`);
 
