@@ -14,7 +14,7 @@
         v-for="stage in OPEN_STAGES"
         :key="stage"
         :disabled="stage === currentStage"
-        @select="moveTo(stage)"
+        @select="moveToStage(job, stage)"
       >
         {{ STAGE_LABELS[stage] }}
       </DropdownMenuItem>
@@ -51,20 +51,12 @@ import {
   OPEN_STAGES,
   STAGE_LABELS,
   stageOf,
-  statusForStage,
-  type OpenStage,
 } from "@/lib/stages";
 import type { JobApplication } from "@/types";
 
 const { job } = defineProps<{ job: JobApplication }>();
 
-const { updateJobApplicationStatus, markApplied } = useUpdateJobApplicationStatus();
+const { updateJobApplicationStatus, moveToStage } = useUpdateJobApplicationStatus();
 
 const currentStage = computed(() => stageOf(job.status));
-
-function moveTo(stage: OpenStage) {
-  // Saved -> Applied is "I applied": it also sets the follow-up date
-  if (stage === "applied" && job.status === "draft") return markApplied(job.id);
-  return updateJobApplicationStatus(job.id, statusForStage(stage));
-}
 </script>
