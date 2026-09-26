@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JobApplication, JobStatus } from "@/types";
-import { buildNextUp, type NextUpInterview } from "../nextUp";
+import { buildNextUp, nextUpEyebrow, type NextUpInterview } from "../nextUp";
 
 const NOW = new Date(2026, 8, 25, 10, 0); // Fri 25 Sep 2026, 10:00 local
 const at = (dayOffset: number, hour = 9) => new Date(2026, 8, 25 + dayOffset, hour, 0);
@@ -99,5 +99,19 @@ describe("buildNextUp", () => {
   it("handles jobs without timestamps (still being written)", () => {
     const pending = { ...job("p", "draft"), createdAt: null } as unknown as JobApplication;
     expect(buildNextUp([pending], [], NOW)).toEqual([]);
+  });
+});
+
+describe("nextUpEyebrow", () => {
+  const item = (overdueDays: number) => ({ kind: "follow-up" as const, job: job("a", "applied"), dueAt: at(-overdueDays), overdueDays });
+
+  it("counts late days with the right plural", () => {
+    expect(nextUpEyebrow(item(0))).toBe("Follow-up due today");
+    expect(nextUpEyebrow(item(1))).toBe("Follow-up, 1 day late");
+    expect(nextUpEyebrow(item(3))).toBe("Follow-up, 3 days late");
+  });
+
+  it("says how long a saved job has waited", () => {
+    expect(nextUpEyebrow({ kind: "stale-saved", job: job("b", "draft"), savedDaysAgo: 6 })).toBe("Saved 6 days ago");
   });
 });
