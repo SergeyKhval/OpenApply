@@ -198,6 +198,24 @@ describe("extractJob on layouts that can't be captured headless", () => {
   });
 });
 
+describe("extractJob salary", () => {
+  it("reads a salary range from JSON-LD baseSalary", () => {
+    expect(extractFrom("jsonld-synthetic").salary).toBe("$120,000–$140,000/yr");
+  });
+
+  it("reads a single salary value with a non-USD currency", () => {
+    const dom = new JSDOM(
+      `<script type="application/ld+json">{"@type":"JobPosting","title":"X","baseSalary":{"@type":"MonetaryAmount","currency":"EUR","value":{"@type":"QuantitativeValue","value":60000,"unitText":"YEAR"}}}</script><main><p>Short.</p></main>`,
+      { url: "https://careers.example.com/jobs/1", runScripts: "outside-only" },
+    ).window.eval(`${source}; extractJob()`);
+    expect(dom.salary).toBe("€60,000/yr");
+  });
+
+  it("has no salary when the page's JSON-LD doesn't list one", () => {
+    expect(extractFrom("greenhouse").salary).toBe("");
+  });
+});
+
 describe("extractJob with a text selection", () => {
   it("prefers the text the user selected", () => {
     const job = extractFrom("greenhouse", { select: ".job__description" });

@@ -100,6 +100,7 @@ function saveFromExtension(job: ExtensionJob): boolean {
     jobDescription: job.description,
     jobDescriptionLink: job.url,
     technologies: [],
+    salary: job.salary,
     posting: job.posting,
   });
   if (!saved) return false;
