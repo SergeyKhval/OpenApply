@@ -1,4 +1,4 @@
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import { assertAiAllowance, chargeAiCheck } from "./lib/aiUsage";
@@ -6,10 +6,45 @@ import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration } from "./lib/validation";
 import { TAILOR_MODEL, TAILOR_PROMPT_VERSION, tailorResume } from "./lib/tailorEngine";
 import { hashResumeText } from "./lib/tailorSegment";
+import { assertTailorAllowed, assertTailorWithinLimits } from "./lib/tailorAccess";
+import { rateLimitWindows } from "./lib/matchTool";
 
 defineString("GEMINI_API_KEY");
 
 const db = getFirestore();
+
+// Counters only need to outlive their window; a TTL policy on expiresAt
+// (firestore.indexes.json) cleans them up
+const RATE_LIMIT_TTL_MS = 2 * 24 * 60 * 60 * 1000;
+
+// Every attempt counts, including ones that end with nothing to change:
+// those are free to the user but not to us
+async function consumeTailorRateLimit(userId: string) {
+  const now = new Date();
+  const windows = rateLimitWindows(userId, now);
+  const refs = {
+    hourly: db.collection("tailorRateLimits").doc(windows.hourly),
+    daily: db.collection("tailorRateLimits").doc(windows.daily),
+    global: db.collection("tailorRateLimits").doc(windows.global),
+  };
+  const expiresAt = Timestamp.fromMillis(now.getTime() + RATE_LIMIT_TTL_MS);
+
+  await db.runTransaction(async (transaction) => {
+    const [hourly, daily, global] = await Promise.all([
+      transaction.get(refs.hourly),
+      transaction.get(refs.daily),
+      transaction.get(refs.global),
+    ]);
+    assertTailorWithinLimits({
+      hourly: hourly.data()?.count ?? 0,
+      daily: daily.data()?.count ?? 0,
+      global: global.data()?.count ?? 0,
+    });
+    for (const ref of Object.values(refs)) {
+      transaction.set(ref, { count: FieldValue.increment(1), expiresAt }, { merge: true });
+    }
+  });
+}
 
 /**
  * Tailors a resume to one job from the newest match check of that resume
@@ -29,6 +64,10 @@ export const createTailoredResume = onCall(async (request) => {
   }
 
   try {
+    // Closed until rollout: the app's flag only hides the button
+    const user = await db.collection("users").doc(userId).get();
+    assertTailorAllowed(userId, user.get("admin") === true);
+
     const [resume, application] = await Promise.all([
       db.collection("userResumes").doc(resumeId).get(),
       db.collection("jobApplications").doc(applicationId).get(),
@@ -70,6 +109,7 @@ export const createTailoredResume = onCall(async (request) => {
     }
 
     await assertAiAllowance(userId);
+    await consumeTailorRateLimit(userId);
 
     const started = Date.now();
     const result = await tailorResume({ resumeText: resumeData.text, analysis: matchData.analysis });
