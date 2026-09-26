@@ -45,5 +45,21 @@ jobs:
         env:
           FIREBASE_ENV: ${{ secrets.FIREBASE_ENV }}
 
+      # Read by functions via process.env (not a declared param). Only append
+      # when the secret is set and FIREBASE_ENV doesn't already define it.
+      - name: Append rate limit hash key
+        run: |
+          ENV_FILE=functions/.env.applytrack-a4197
+          if [ -z "$RATE_LIMIT_HASH_KEY" ]; then
+            echo "RATE_LIMIT_HASH_KEY secret is empty; skipping."
+          elif grep -q '^RATE_LIMIT_HASH_KEY=' "$ENV_FILE"; then
+            echo "RATE_LIMIT_HASH_KEY already defined in env file; skipping."
+          else
+            printf 'RATE_LIMIT_HASH_KEY=%s\n' "$RATE_LIMIT_HASH_KEY" >> "$ENV_FILE"
+            echo "Appended RATE_LIMIT_HASH_KEY to env file."
+          fi
+        env:
+          RATE_LIMIT_HASH_KEY: ${{ secrets.RATE_LIMIT_HASH_KEY }}
+
       - name: Deploy to Firebase
         run: firebase deploy --only functions,firestore:rules,firestore:indexes --project applytrack-a4197
