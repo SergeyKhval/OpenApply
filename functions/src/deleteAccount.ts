@@ -15,6 +15,7 @@ export const USER_DATA_COLLECTIONS = [
   "userResumes",
   "coverLetters",
   "resumeJobMatches",
+  "tailoredResumes",
 ] as const;
 
 // Stripe subscription states that still bill (or may bill) the customer

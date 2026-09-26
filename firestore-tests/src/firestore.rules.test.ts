@@ -158,3 +158,52 @@ describe("jobApplications collection (existing owner-scoped rule; sanity check)"
     await assertFails(getDoc(doc(bob, "jobApplications", APP_ID)));
   });
 });
+
+describe("tailoredResumes collection", () => {
+  const ID = "tailored1";
+  const tailored = {
+    userId: "alice",
+    resumeId: "resume1",
+    jobApplicationId: "app1",
+    ops: [{ kind: "rephrase", status: "applied", text: "Built the invoice API in Go." }],
+    excludedOpIds: [],
+    updatedAt: 1,
+  };
+
+  beforeEach(async () => {
+    await seed(async (db) => setDoc(doc(db, "tailoredResumes", ID), tailored));
+  });
+
+  it("lets the owner read it, and nobody else", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertSucceeds(getDoc(doc(alice, "tailoredResumes", ID)));
+    await assertFails(getDoc(doc(bob, "tailoredResumes", ID)));
+    await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "tailoredResumes", ID)));
+  });
+
+  it("lets only the function create one, never a client", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(setDoc(doc(alice, "tailoredResumes", "forged"), tailored));
+  });
+
+  it("lets the owner switch edits off and on", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertSucceeds(updateDoc(doc(alice, "tailoredResumes", ID), { excludedOpIds: [0, 2], updatedAt: 2 }));
+  });
+
+  it("never lets the owner rewrite the edits themselves", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(alice, "tailoredResumes", ID), { ops: [{ kind: "rephrase", status: "applied", text: "Led the platform team." }] }));
+    await assertFails(updateDoc(doc(alice, "tailoredResumes", ID), { excludedOpIds: [0], userId: "bob" }));
+    await assertFails(updateDoc(doc(alice, "tailoredResumes", ID), { excludedOpIds: "all" }));
+  });
+
+  it("denies another user's toggles and lets the owner delete", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(bob, "tailoredResumes", ID), { excludedOpIds: [1] }));
+    await assertFails(deleteDoc(doc(bob, "tailoredResumes", ID)));
+    await assertSucceeds(deleteDoc(doc(alice, "tailoredResumes", ID)));
+  });
+});

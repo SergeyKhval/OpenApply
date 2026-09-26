@@ -196,12 +196,15 @@ export async function tailorResume(
     throw new HttpsError(
       "failed-precondition",
       "Your resume's text came out jumbled, so we can't edit it safely. Upload a simpler PDF (single column).",
+      { code: "scrambled" },
     );
   }
 
   const segmented = segmentResume(input.resumeText);
   if (!segmented.some((line) => line.role === "bullet")) {
-    throw new HttpsError("failed-precondition", "We couldn't find any resume lines we can safely edit.");
+    throw new HttpsError("failed-precondition", "We couldn't find any resume lines we can safely edit.", {
+      code: "nothing_to_edit",
+    });
   }
 
   let generated: Awaited<ReturnType<TailorGenerate>>;
