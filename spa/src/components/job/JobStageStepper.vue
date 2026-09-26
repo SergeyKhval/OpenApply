@@ -76,14 +76,13 @@ import {
   OPEN_STAGES,
   STAGE_LABELS,
   stageOf,
-  statusForStage,
   type OpenStage,
 } from "@/lib/stages";
 import type { JobApplication } from "@/types";
 
 const { job } = defineProps<{ job: JobApplication }>();
 
-const { updateJobApplicationStatus, markApplied } = useUpdateJobApplicationStatus();
+const { updateJobApplicationStatus, moveToStage } = useUpdateJobApplicationStatus();
 
 const current = computed(() => stageOf(job.status));
 const reason = computed(() => closedReason(job.status));
@@ -93,7 +92,6 @@ const currentIndex = computed(() =>
 
 function moveTo(stage: OpenStage) {
   if (stage === current.value) return;
-  if (stage === "applied" && job.status === "draft") return markApplied(job.id);
-  return updateJobApplicationStatus(job.id, statusForStage(stage));
+  return moveToStage(job, stage);
 }
 </script>
