@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import type { BlockedJobBoard } from "@/lib/jobInput";
+import type { FollowUpTemplateType } from "@/types";
 
 function isLoaded(): boolean {
   return posthog.__loaded;
@@ -60,7 +61,7 @@ type EventMap = {
   contact_created: { applicationId: string };
   note_created: { applicationId: string };
   next_up_action: { kind: "follow-up" | "interview" | "stale-saved"; action: "draft" | "done" | "snooze" | "applied" | "let_go" | "open" };
-  follow_up_copied: { applicationId?: string };
+  follow_up_copied: { applicationId?: string; template: FollowUpTemplateType };
   account_deleted: void;
   // Posting signals (flag job-signals) were on screen
   job_signals_shown: { surface: "app_page"; sign_types: string[] };
