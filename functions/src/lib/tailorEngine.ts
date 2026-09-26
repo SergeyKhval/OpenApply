@@ -5,6 +5,9 @@ import type { MatchToolResult } from "./matchEngine";
 import { lockLines, segmentResume, type SourceLine } from "./tailorSegment";
 import {
   assembleTailoredResume,
+  canonicalize,
+  containsPhrase,
+  skillsSectionText,
   tailorStats,
   verifyTailorOps,
   type TailoredDoc,
@@ -18,7 +21,7 @@ import {
 // name, an employer or a date; those are always rendered from the source.
 
 export const TAILOR_MODEL = "gemini-3.5-flash";
-export const TAILOR_PROMPT_VERSION = "tailor-v1";
+export const TAILOR_PROMPT_VERSION = "tailor-v2";
 const MAX_OPS = 40;
 
 const ai = genkit({
@@ -49,7 +52,10 @@ export type TailorGenerate = (prompt: string) => Promise<{ output: TailorModelOu
 
 export type TailorInput = {
   resumeText: string;
-  analysis: Pick<MatchToolResult, "companyName" | "position" | "parseCheck" | "requirements" | "missingKeywords" | "fixes" | "technologies">;
+  analysis: Pick<
+    MatchToolResult,
+    "companyName" | "position" | "matchScore" | "parseCheck" | "requirements" | "missingKeywords" | "fixes" | "technologies"
+  >;
 };
 
 export type TailorResult = {
@@ -67,6 +73,44 @@ const ROLE_LABEL: Record<SourceLine["role"], string> = {
   bullet: "EDITABLE",
 };
 
+const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
+
+/**
+ * Concrete work for the model, computed in code: which line proves each
+ * met or partly met requirement, and which of the job's tools a bullet
+ * names but the Skills section doesn't list.
+ */
+export function buildTailorWorklist(lines: SourceLine[], analysis: TailorInput["analysis"]): string[] {
+  const bullets = lines.filter((line) => line.role === "bullet");
+  const items: string[] = [];
+  analysis.requirements.forEach((requirement, index) => {
+    if (requirement.status === "missing" || !requirement.evidence) return;
+    const evidence = normalize(requirement.evidence);
+    const line = bullets.find((candidate) => {
+      const text = normalize(candidate.text);
+      return text.includes(evidence) || (text.length > 20 && evidence.includes(text));
+    });
+    if (!line) return;
+    items.push(
+      `Requirement ${index} ("${requirement.requirement}", ${requirement.importance}, ${requirement.status}) is proven by ${line.id}. ` +
+        "moveUp it if it isn't first in its job, and rephrase it to use the requirement's words where the line already states the same thing in other words.",
+    );
+  });
+
+  const skills = skillsSectionText(lines);
+  const skillsCanonical = skills === null ? null : canonicalize(skills);
+  for (const technology of analysis.technologies) {
+    if (skillsCanonical !== null && containsPhrase(skillsCanonical, technology)) continue;
+    const line = bullets.find((candidate) => containsPhrase(canonicalize(candidate.text), technology));
+    if (!line) continue;
+    const index = analysis.requirements.findIndex((requirement) => containsPhrase(canonicalize(requirement.requirement), technology));
+    items.push(
+      `${line.id} names "${technology}" but the Skills section doesn't list it: surfaceKeyword with requirement ${index >= 0 ? index : "the closest one"}.`,
+    );
+  }
+  return items;
+}
+
 export function buildTailorPrompt(lines: SourceLine[], analysis: TailorInput["analysis"]): string {
   const numbered = lines.map((line) => `${line.id} | ${ROLE_LABEL[line.role]} | ${line.text}`).join("\n");
   const requirements = analysis.requirements
@@ -77,17 +121,19 @@ export function buildTailorPrompt(lines: SourceLine[], analysis: TailorInput["an
     )
     .join("\n");
   const fixes = analysis.fixes.map((fix) => `- ${fix.gap}: ${fix.action} (where: ${fix.where})`).join("\n");
+  const worklist = buildTailorWorklist(lines, analysis);
+  const target = analysis.matchScore >= 85 ? "0 to 6 edits: the resume is already strong, change only what clearly helps" : "4 to 12 edits";
 
-  return `You tailor a resume to one job by editing the candidate's own lines. You are strict about truth: a recruiter will hold the candidate to every word, so you never add anything the resume doesn't already say.
+  return `Tailor this resume to one job by editing the candidate's own lines, so a screener sees the job's must-haves first and in the job's own words. Every edit you propose is checked by code against the source lines, and any edit that adds or strengthens a claim is thrown out, so propose useful edits confidently and let the check do its job.
 
-The job: ${analysis.position || "unknown position"} at ${analysis.companyName || "unknown company"}.
+The job: ${analysis.position || "unknown position"} at ${analysis.companyName || "unknown company"}. Match score today: ${analysis.matchScore}/100.
 
-The resume, one line per id. SECTION lines are section titles, FIXED lines (name, contact, job and school headers, dates) can never be edited, cut or moved. Only EDITABLE lines can be changed.
+The resume, one line per id. SECTION lines are section titles. FIXED lines (name, contact, job and school headers, dates) never change. Only EDITABLE lines can be edited.
 <resume>
 ${numbered}
 </resume>
 
-The job's requirements, numbered, with what a screener found in the resume:
+The job's requirements, numbered, with what a screener found:
 <requirements>
 ${requirements}
 </requirements>
@@ -97,25 +143,28 @@ Fixes a screener suggested:
 ${fixes || "- none"}
 </fixes>
 
-Terms the job wants that the resume does NOT contain. Never add any of these anywhere; the app lists them to the candidate as honest gaps: ${analysis.missingKeywords.join(", ") || "none"}.
+Start with this worklist:
+<worklist>
+${worklist.length ? worklist.map((item) => `- ${item}`).join("\n") : "- nothing specific; look for lines that prove a requirement"}
+</worklist>
 
 Return:
 - headerLineIds: ids of any EDITABLE lines that are really headers (a job title, employer, school, or dates line). Empty if none.
-- sectionOrder: the SECTION line ids in the order that best fits this job (for example Skills before Education). Use every SECTION id exactly once.
-- ops: at most ${MAX_OPS} edits, most useful first. Each has kind, lineIds, text, term, requirement (the requirement number it serves, or -1 for a cut) and reason (one short sentence). Unused fields are "" or [].
-  - moveUp: lineIds [one EDITABLE line]. Moves it to the top of its own job or section. Use it for the lines that prove the job's must-haves.
-  - rephrase: lineIds [one EDITABLE line, or two EDITABLE lines from the same job to merge], text: the new line. Use it to name a requirement in the job's own words when the line already states it in other words, to lead with the result, or to tighten. The new text may only use facts the cited lines state.
-  - surfaceKeyword: lineIds [the one EDITABLE line that already states it], term: a skill or tool from the job that this line literally names. It gets added to the Skills section.
-  - cut: lineIds [one EDITABLE line] that doesn't help for this job. Never cut a whole job, a header, or education. Cut sparingly.
+- sectionOrder: every SECTION id once, in the order that best fits this job (for example Skills before Education).
+- ops: ${target}, most useful first. Each has kind, lineIds, text, term, requirement (the requirement number it serves, -1 only for a cut) and reason (one short sentence). Unused fields are "" or [].
+  - rephrase: lineIds [one EDITABLE line, or two from the same job to merge], text: the new line. Name the requirement in the job's words when the line already says the same thing differently (for example "churn prediction models" → "predictive models for churn"), lead with the result, or tighten.
+  - moveUp: lineIds [one EDITABLE line]. Moves it to the top of its own job or section.
+  - surfaceKeyword: lineIds [the EDITABLE line that names it], term: a job tool or skill that line literally names. It is added to Skills.
+  - cut: lineIds [one EDITABLE line] that doesn't help for this job. Never a header, a whole job, or education.
 
-Hard rules for every rephrase:
-- Never add a skill, tool, employer, product, title, degree, certification, language, location, date, number, percentage, or amount that the cited lines don't state.
-- Never raise ownership, seniority or scope: "helped", "contributed to" or "worked on" never becomes "led", "owned", "managed", "architected" or "spearheaded". "Team member" never becomes "lead". Keep "a", "some", "several" as they are, never "all", "every", "entire".
-- Never do arithmetic: 3 years plus 2 years is not "5+ years". Never round, never add "over", "more than" or "+".
-- Never move a bullet to a different job and never merge bullets from different jobs.
-- If a requirement is missing, leave it missing. Do not hint at it.
-- Keep the candidate's voice and tense. Shorter is fine; longer only by a few words.
-- If nothing can be improved honestly, return an empty ops list.`;
+What the check throws out (so don't bother proposing it):
+- Any skill, tool, employer, title, degree, certification, language, date, number, percentage or amount the cited lines don't state. These are gaps the candidate must address honestly: ${analysis.missingKeywords.join(", ") || "none"}.
+- Stronger ownership, seniority or scope: "helped", "supported" or "contributed to" never becomes "led", "owned" or "managed"; "some" never becomes "all".
+- Dropped qualifiers: keep words like informally, a handful, some, basic, learning, started, coursework, exposure, familiar, assisted, supported, part of, candidate, no production use, personal project.
+- Added intensifiers: busy, high-volume, fast-paced, extensive, significant, major, complex, critical, large-scale, strategic, robust, successful, numerous.
+- Arithmetic or rounding ("3 years" and "2 years" are not "5+ years"; never add "over", "more than" or "+").
+- Words from the job's requirements that the cited line doesn't already say.
+- Bullets moved to another job, merged across jobs, or rewritten more than a few words longer.`;
 }
 
 const defaultGenerate: TailorGenerate = async (prompt) => {
@@ -170,7 +219,10 @@ export async function tailorResume(
   const ops: TailorOp[] = generated.output.ops.slice(0, MAX_OPS);
   const verified = verifyTailorOps(ops, {
     lines,
-    vocabulary: { terms: [...analysis.technologies, ...analysis.missingKeywords] },
+    vocabulary: {
+      terms: [...analysis.technologies, ...analysis.missingKeywords],
+      requirementTexts: analysis.requirements.map((requirement) => requirement.requirement),
+    },
     requirementCount: analysis.requirements.length,
   });
   const sectionOrder = generated.output.sectionOrder;

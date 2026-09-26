@@ -155,6 +155,173 @@ describe("verifyTailorOps: edits that must revert", () => {
   });
 });
 
+// The six inflated rewrites the precision gate's run 1 let through
+// (research/tailored-resume-gate-2026-09.md), as they came from the model
+describe("verifyTailorOps: gate run 1 inflations", () => {
+  const gateContext = (resume: string, requirementTexts: string[] = []) => {
+    const gateLines = segmentResume(resume);
+    return { lines: gateLines, vocabulary: { terms: [], requirementTexts }, requirementCount: 1 };
+  };
+  const rewrite = (resume: string, text: string, requirementTexts: string[] = []) => {
+    const context = gateContext(resume, requirementTexts);
+    const line = context.lines.filter((candidate) => candidate.role === "bullet").at(-1)!;
+    return verifyTailorOps([op({ kind: "rephrase", lineIds: [line.id], text })], context)[0];
+  };
+  const job = (bullet: string) => `Name\nExperience\nRole, Company\n2020 – 2024\n• ${bullet}`;
+
+  it.each([
+    [
+      "drops 'informally' and 'a handful'",
+      "Talked informally with a handful of patients after launch to gather reactions to the new portal.",
+      "Gathered patient feedback post-launch to evaluate reactions to the new portal.",
+      ["qual:informal", "qual:few"],
+    ],
+    [
+      "drops 'no production use yet'",
+      "Started learning Python through an online course; no production use yet.",
+      "Started learning Python through an online course.",
+      ["qual:not-shipped"],
+    ],
+    [
+      "drops 'started' and 'no production use yet'",
+      "Started learning Python through an online course; no production use yet.",
+      "Learning Python through an online course.",
+      ["qual:not-shipped"],
+    ],
+  ])("%s", (_label, source, text, dropped) => {
+    const result = rewrite(job(source), text);
+    expect(result.revertReason).toBe("dropped_qualifier");
+    expect(result.offendingTokens).toEqual(expect.arrayContaining(dropped));
+  });
+
+  it("adds 'busy'", () => {
+    const result = rewrite(
+      job("Provided direct patient care for a 6-8 patient med-surg assignment each shift."),
+      "Provided direct patient care for a busy 6-8 patient med-surg assignment each shift.",
+    );
+    expect(result).toMatchObject({ revertReason: "new_fact", offendingTokens: ["lex:busy"] });
+  });
+
+  it("borrows the job's wording the cited line doesn't state", () => {
+    const result = rewrite(
+      job("Took part in the on-call rotation and wrote runbooks for common incidents."),
+      "Took part in the on-call rotation for customer-facing services and wrote runbooks.",
+      ["On-call experience for customer-facing services"],
+    );
+    expect(result).toMatchObject({ revertReason: "job_word", offendingTokens: ["job:customer-facing", "job:services"] });
+  });
+
+  it.each([
+    ["high-volume", "Handled customer complaints at a retail store.", "Handled customer complaints at a high-volume retail store."],
+    ["fast paced", "Shipped features for the checkout team.", "Shipped features for the fast paced checkout team."],
+    ["complex", "Built reporting queries in SQL.", "Built complex reporting queries in SQL."],
+    ["successfully", "Migrated the billing service to Go.", "Successfully migrated the billing service to Go."],
+  ])("adds an intensifier: %s", (_label, source, text) => {
+    expect(rewrite(job(source), text).revertReason).toBe("new_fact");
+  });
+});
+
+// The inflations gate run 2 let through, as they came from the model
+describe("verifyTailorOps: gate run 2 inflations", () => {
+  const job = (bullet: string) => `Name\nExperience\nRole, Company\n2020 – 2024\n• ${bullet}`;
+  const context = (resume: string) => ({ lines: segmentResume(resume), vocabulary: { terms: [] }, requirementCount: 1 });
+  const rewrite = (source: string, text: string) =>
+    verifyTailorOps([op({ kind: "rephrase", lineIds: ["L5"], text })], context(job(source)))[0];
+
+  it.each([
+    [
+      "drops a count",
+      "Managed two freelance writers and a $5,000/month content budget.",
+      "Managed freelance writers and a $5,000/month content budget.",
+      "scope_change",
+      ["dropped-num:2"],
+    ],
+    [
+      "turns a singular noun plural",
+      "Managed the regional marketing budget for France and Belgium.",
+      "Managed regional marketing budgets for France and Belgium.",
+      "scope_change",
+      ["plural:budgets"],
+    ],
+    [
+      "drops 'approximately once a week'",
+      "Served as relief charge nurse on night shift approximately once a week, coordinating assignments and admissions.",
+      "Served as relief charge nurse on night shift, coordinating assignments and admissions.",
+      "dropped_qualifier",
+      ["qual:approximate", "qual:frequency"],
+    ],
+    [
+      "adds 'strong'",
+      "Prepared financial statements in accordance with GAAP for quarterly board reporting.",
+      "Demonstrated strong GAAP knowledge by preparing financial statements for quarterly board reporting.",
+      "new_fact",
+      ["lex:strong"],
+    ],
+  ])("%s", (_label, source, text, reason, tokens) => {
+    const result = rewrite(source, text);
+    expect(result.revertReason).toBe(reason);
+    expect(result.offendingTokens).toEqual(expect.arrayContaining(tokens));
+  });
+
+  it("won't list a skill from a line that says the candidate is only learning it", () => {
+    const result = verifyTailorOps(
+      [op({ kind: "surfaceKeyword", lineIds: ["L5"], term: "Python" })],
+      context(job("Started learning Python through an online course; no production use yet.")),
+    )[0];
+    expect(result).toMatchObject({ revertReason: "qualified_source" });
+    expect(result.offendingTokens).toEqual(expect.arrayContaining(["qual:learning", "qual:not-shipped"]));
+  });
+
+  it("still lists a skill from a line whose qualifier isn't about skill level", () => {
+    const result = verifyTailorOps(
+      [op({ kind: "surfaceKeyword", lineIds: ["L5"], term: "Redux" })],
+      context(job("Owned global state with Redux, migrating several legacy screens off ad-hoc component state.")),
+    )[0];
+    expect(result.status).toBe("applied");
+  });
+
+  it("won't list overlapping terms twice", () => {
+    const [first, second] = verifyTailorOps(
+      [
+        op({ kind: "surfaceKeyword", lineIds: ["L5"], term: "REST" }),
+        op({ kind: "surfaceKeyword", lineIds: ["L5"], term: "REST APIs" }),
+      ],
+      context(job("Integrated REST APIs for authentication and payments.")),
+    );
+    expect(first.status).toBe("applied");
+    expect(second.revertReason).toBe("term_already_listed");
+  });
+});
+
+describe("verifyTailorOps: qualifiers and job words that are fine", () => {
+  const context = (resume: string, requirementTexts: string[] = []) => ({
+    lines: segmentResume(resume),
+    vocabulary: { terms: [], requirementTexts },
+    requirementCount: 1,
+  });
+  const job = (bullet: string) => `Name\nExperience\nRole, Company\n2020 – 2024\n• ${bullet}`;
+  const rewrite = (source: string, text: string, requirementTexts: string[] = []) =>
+    verifyTailorOps([op({ kind: "rephrase", lineIds: ["L5"], text })], context(job(source), requirementTexts))[0];
+
+  it("keeps a qualifier through a synonym of the same family", () => {
+    expect(rewrite("Helped the team migrate billing to Stripe.", "Supported the team's billing migration to Stripe.").status).toBe("applied");
+  });
+
+  it("allows a job word whose stem the line states", () => {
+    const result = rewrite("Built churn prediction models in Python with scikit-learn.", "Built predictive models for churn in Python with scikit-learn.", [
+      "2+ years building predictive models in Python",
+    ]);
+    expect(result.status).toBe("applied");
+  });
+
+  it("ignores generic requirement words", () => {
+    const result = rewrite("Wrote Terraform modules for VPCs and load balancers.", "Wrote Terraform modules for VPCs and load balancers, with strong experience.", [
+      "Strong experience with Terraform",
+    ]);
+    expect(result.revertReason).not.toBe("job_word");
+  });
+});
+
 describe("verifyTailorOps: edits that apply", () => {
   it("allows an alias to the job's spelling", () => {
     const result = rephrase("Maintained Postgres", "Maintained PostgreSQL queries for the reporting dashboard.", 3);
