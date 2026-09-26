@@ -95,4 +95,37 @@ describe("JobApplicationForm validation", () => {
     const wrapper = mount(JobApplicationForm, {});
     expect(wrapper.text()).toContain("Job Description (optional)");
   });
+
+  it("includes the salary in the submitted payload when filled in", async () => {
+    let submittedData: Record<string, unknown> | undefined;
+    mockAddJobApplication.mockImplementationOnce(async (data: Record<string, unknown>) => {
+      submittedData = { ...data };
+      return { success: true, id: "abc123" };
+    });
+    const wrapper = mount(JobApplicationForm, {});
+
+    await wrapper.find("#company").setValue("Acme Corp");
+    await wrapper.find("#position").setValue("Senior Engineer");
+    await wrapper.find("#salary").setValue("$120k-140k");
+    await wrapper.find("form").trigger("submit");
+    await flushPromises();
+
+    expect(submittedData).toMatchObject({ salary: "$120k-140k" });
+  });
+
+  it("submits an empty salary when left blank", async () => {
+    let submittedData: Record<string, unknown> | undefined;
+    mockAddJobApplication.mockImplementationOnce(async (data: Record<string, unknown>) => {
+      submittedData = { ...data };
+      return { success: true, id: "abc123" };
+    });
+    const wrapper = mount(JobApplicationForm, {});
+
+    await wrapper.find("#company").setValue("Acme Corp");
+    await wrapper.find("#position").setValue("Senior Engineer");
+    await wrapper.find("form").trigger("submit");
+    await flushPromises();
+
+    expect(submittedData).toMatchObject({ salary: "" });
+  });
 });

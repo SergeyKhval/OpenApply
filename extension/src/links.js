@@ -57,7 +57,7 @@ export function saveUrl(jobUrl) {
 }
 
 // Same limits as shared/extensionJob.ts, which decodes the payload on /save
-export const JOB_LIMITS = { url: 2000, title: 300, company: 300, location: 300, description: 15000 };
+export const JOB_LIMITS = { url: 2000, title: 300, company: 300, location: 300, salary: 200, description: 15000 };
 
 function bytesToBase64Url(bytes) {
   let binary = "";

@@ -67,6 +67,15 @@
     </div>
 
     <div class="flex flex-col gap-2">
+      <Label for="salary">Salary (optional)</Label>
+      <Input
+        id="salary"
+        v-model="formData.salary"
+        placeholder="e.g., $120,000 - $140,000"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
       <Label for="employmentType">Employment Type (optional)</Label>
       <Select v-model="formData.employmentType">
         <SelectTrigger id="employmentType" class="w-full">
@@ -171,6 +180,7 @@ type JobApplicationFormProps = {
   position?: string;
   remotePolicy?: "remote" | "hybrid" | "in-office";
   employmentType?: "full-time" | "part-time";
+  salary?: string;
   technologies?: string[];
   jobDescriptionLink?: string;
   jobDescription?: string;
@@ -193,6 +203,7 @@ const {
   position = "",
   remotePolicy = "",
   employmentType = "",
+  salary = "",
   technologies = [],
   jobDescriptionLink = "",
   jobDescription = "",
@@ -217,6 +228,7 @@ function getInitialForm() {
     jobDescription,
     remotePolicy,
     employmentType,
+    salary,
     jobDescriptionLink,
     jobId,
     technologies: technologies.slice(),

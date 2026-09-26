@@ -74,6 +74,12 @@ describe("pendingToolApplication", () => {
       expect(readPendingToolApplication(new Date(savedAt).getTime() + 1000)).toEqual(extensionPending);
     });
 
+    it("accepts a job from the extension with a salary", () => {
+      const withSalary = { ...extensionPending, salary: "$120k-140k" };
+      store(withSalary);
+      expect(readPendingToolApplication(new Date(savedAt).getTime() + 1000)).toEqual(withSalary);
+    });
+
     it("requires a match check for jobs from the match tool", () => {
       const { match: _match, ...withoutMatch } = pending;
       store(withoutMatch);
@@ -148,6 +154,15 @@ describe("pendingToolApplication", () => {
       const input = toJobApplicationInput({ ...pending, companyName: "", position: "" });
       expect(input.companyName).toBe("Unknown company");
       expect(input.position).toBe("Unknown position");
+    });
+
+    it("keeps the salary the extension read", () => {
+      const input = toJobApplicationInput({ ...extensionPending, salary: "$120k-140k" });
+      expect(input.salary).toBe("$120k-140k");
+    });
+
+    it("omits salary when the extension didn't find one", () => {
+      expect(toJobApplicationInput(extensionPending)).not.toHaveProperty("salary");
     });
   });
 
