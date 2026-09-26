@@ -102,6 +102,10 @@ export type InterviewFormInterview = {
   conductedAt: ZonedDateTime;
 };
 
+// Static, non-AI message templates offered from a job's page: a follow-up
+// after applying, a post-interview thank-you, or a reply to an offer.
+export type FollowUpTemplateType = "follow_up" | "thank_you" | "offer_response";
+
 export type CreateJobApplicationInput = Omit<
   JobApplication,
   "id" | "createdAt" | "userId" | "status"

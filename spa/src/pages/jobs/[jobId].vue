@@ -43,8 +43,17 @@
         :job="application"
         :upcoming-interview="upcomingInterview"
         :now="now"
-        @draft-follow-up="followUpJob = application"
+        @draft-follow-up="openTemplate('follow_up')"
       />
+
+      <div v-if="hasInterview || application.status === 'offered'" class="flex flex-wrap gap-2">
+        <Button v-if="hasInterview" variant="outline" size="sm" @click="openTemplate('thank_you')">
+          Draft thank-you note
+        </Button>
+        <Button v-if="application.status === 'offered'" variant="outline" size="sm" @click="openTemplate('offer_response')">
+          Draft offer response
+        </Button>
+      </div>
 
       <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
         <div class="flex min-w-0 flex-col gap-5">
@@ -110,7 +119,12 @@
       </div>
     </div>
 
-    <FollowUpDialog :job="followUpJob" @close="followUpJob = null" />
+    <FollowUpDialog
+      :job="followUpJob"
+      :type="followUpType"
+      :contact-name="latestContactName"
+      @close="followUpJob = null"
+    />
   </div>
 </template>
 
@@ -150,7 +164,7 @@ import { useResumes } from "@/composables/useResumes";
 import { useResumeUpload } from "@/composables/useResumeUpload";
 import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus";
 import type { TimelineEntry } from "@/lib/timeline";
-import type { JobApplication } from "@/types";
+import type { FollowUpTemplateType, JobApplication } from "@/types";
 
 const { jobId } = defineProps<{ jobId: string }>();
 const route = useRoute();
@@ -193,7 +207,20 @@ const upcomingInterview = computed(
       | undefined) ?? null,
 );
 
+const hasInterview = computed(() => timeline.entries.value.some((entry) => entry.kind === "interview"));
+const latestContactName = computed(() => {
+  const contacts = timeline.contacts.value;
+  const contact = contacts?.[contacts.length - 1];
+  return contact ? `${contact.firstName} ${contact.lastName}`.trim() || undefined : undefined;
+});
+
 const followUpJob = shallowRef<JobApplication | null>(null);
+const followUpType = ref<FollowUpTemplateType>("follow_up");
+
+function openTemplate(type: FollowUpTemplateType) {
+  followUpType.value = type;
+  followUpJob.value = application.value ?? null;
+}
 
 const { data: resumes } = useResumes();
 const { openFileDialog, isUploading } = useResumeUpload();
