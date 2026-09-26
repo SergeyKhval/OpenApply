@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 import { CalendarDate, ZonedDateTime } from "@internationalized/date";
 import type { JobPosting } from "../../../shared/jobPosting";
+import type { SourceLine as TailoredSourceLine, VerifiedOp as TailoredOp } from "@/lib/tailoredResume";
 
 export type JobStatus =
   | "draft"
@@ -156,6 +157,13 @@ export type ResumeJobMatch = {
   jobApplicationId: string;
   resumeId: string;
   userId: string;
+  // Raw engine output, stored since the shared match engine (older matches
+  // don't have it). The tailored resume reads requirements and gaps from it.
+  analysis?: {
+    matchScore: number;
+    requirements: { requirement: string; status: "matched" | "partial" | "missing"; importance: string; evidence: string }[];
+    missingKeywords: string[];
+  };
   matchResult: {
     match_summary: {
       overall_match_percent: number;
@@ -171,4 +179,23 @@ export type ResumeJobMatch = {
       partially_matched_skills?: ScoredSkill[];
     };
   };
+};
+
+// A tailored version of a resume for one job (createTailoredResume). Only the
+// user's switched-off edits (excludedOpIds) are theirs to change.
+export type TailoredResume = {
+  id: string;
+  userId: string;
+  resumeId: string;
+  jobApplicationId: string;
+  matchId: string;
+  resume: { id: string; fileName: string | null };
+  jobApplication: { id: string; companyName: string | null; position: string | null };
+  lines: TailoredSourceLine[];
+  sectionOrder: string[];
+  ops: TailoredOp[];
+  excludedOpIds: number[];
+  stats: { proposed: number; applied: number; reverted: number };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 };

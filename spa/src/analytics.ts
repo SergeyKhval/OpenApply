@@ -6,7 +6,7 @@ function isLoaded(): boolean {
   return posthog.__loaded;
 }
 
-export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan";
+export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan" | "tailored_resume";
 
 type JobCreationMethod = "link_parse" | "paste" | "manual" | "match_tool" | "extension";
 // "landing" events come from astro/src/components/vue/JobLinkInput.vue
@@ -57,6 +57,14 @@ type EventMap = {
   resume_match_started: { resumeId: string; jobApplicationId: string };
   resume_match_completed: { resumeId: string; jobApplicationId: string };
   resume_match_failed: { error: string };
+  // Tailored resume (flag tailored-resume)
+  tailored_resume_offered: { matchScore: number; blocked?: "no_analysis" | "limit" };
+  tailored_resume_started: { resumeId: string; jobApplicationId: string; matchScore: number };
+  tailored_resume_generated: { proposed: number; applied: number; reverted: number; durationMs: number };
+  tailored_resume_no_changes: { proposed: number; reverted: number };
+  tailored_resume_failed: { error: string; code?: string };
+  tailored_resume_change_toggled: { kind: string; on: boolean };
+  tailored_resume_opened: { resumeId: string; jobApplicationId: string };
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };

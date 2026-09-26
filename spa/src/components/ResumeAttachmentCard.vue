@@ -22,7 +22,13 @@
       </Button>
     </EmptyDescription>
 
-    <ResumeMatchSheet v-model:open="isSheetOpen" :resume="resume" :application="application" />
+    <ResumeMatchSheet v-model:open="isSheetOpen" :resume="resume" :application="application" @tailor="isTailoredOpen = true" />
+    <TailoredResumeSheet
+      v-if="tailoringEnabled"
+      v-model:open="isTailoredOpen"
+      :resume="resume"
+      :application="application"
+    />
   </Empty>
 </template>
 
@@ -36,6 +42,8 @@ import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty";
 import ResumeLink from "@/components/ResumeLink.vue";
 import ResumeScore from "@/components/ResumeScore.vue";
 import ResumeMatchSheet from "@/components/ai/ResumeMatchSheet.vue";
+import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
+import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { db } from "@/firebase/config.ts";
 import type { JobApplication, Resume, ResumeJobMatch } from "@/types";
 
@@ -48,6 +56,8 @@ const { resume, application } = defineProps<ResumeAttachmentCardProps>();
 
 const user = useCurrentUser();
 const isSheetOpen = ref(false);
+const isTailoredOpen = ref(false);
+const tailoringEnabled = useFeatureFlag("tailored-resume");
 
 const latestMatchQuery = computed(() =>
   user.value
