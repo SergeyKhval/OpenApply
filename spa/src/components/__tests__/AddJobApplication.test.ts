@@ -4,6 +4,12 @@ import { ref } from "vue";
 
 enableAutoUnmount(afterEach);
 
+// useJobIngestion.ts imports `db`/`functions` from here at module load time;
+// vi.importActual below still runs that top-level import, so without this
+// mock it initializes real Firebase and throws auth/invalid-api-key in CI
+// (no spa/.env there).
+vi.mock("@/firebase/config", () => ({ db: "mock-db", functions: "mock-functions" }));
+
 const mockStart = vi.fn();
 const mockReset = vi.fn();
 const mockStatus = ref("idle");
