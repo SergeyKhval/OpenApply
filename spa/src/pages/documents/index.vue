@@ -7,7 +7,7 @@
       </div>
       <UploadResumeButton v-if="tab === 'resumes'" />
       <Button
-        v-else
+        v-else-if="tab === 'cover-letters'"
         @click="
           $router.replace({
             query: { ...$route.query, 'dialog-name': 'generate-cover-letter' },
@@ -24,12 +24,16 @@
       <TabsList aria-label="Documents">
         <TabsTrigger value="resumes">Resumes</TabsTrigger>
         <TabsTrigger value="cover-letters">Cover letters</TabsTrigger>
+        <TabsTrigger value="people">People</TabsTrigger>
       </TabsList>
       <TabsContent value="resumes">
         <ResumesList />
       </TabsContent>
       <TabsContent value="cover-letters">
         <CoverLettersList />
+      </TabsContent>
+      <TabsContent value="people">
+        <PeopleList />
       </TabsContent>
     </Tabs>
   </div>
@@ -44,18 +48,19 @@ import PageHeader from "@/components/PageHeader.vue";
 import AppSearch from "@/components/AppSearch.vue";
 import ResumesList from "@/components/ResumesList.vue";
 import CoverLettersList from "@/components/CoverLettersList.vue";
+import PeopleList from "@/components/PeopleList.vue";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type DocumentsTab = "resumes" | "cover-letters";
+type DocumentsTab = "resumes" | "cover-letters" | "people";
 
 const route = useRoute();
 const router = useRouter();
 
 // The tab lives in the url (?tab=) so links and redirects can open either one
 const tab = computed<DocumentsTab>({
-  get: () => (route.query.tab === "cover-letters" ? "cover-letters" : "resumes"),
+  get: () => (route.query.tab === "cover-letters" ? "cover-letters" : route.query.tab === "people" ? "people" : "resumes"),
   set: (value) => router.replace({ query: { ...route.query, tab: value } }),
 });
 

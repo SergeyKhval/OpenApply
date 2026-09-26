@@ -3,6 +3,7 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config.ts";
 import { JobStatus } from "@/types";
 import { trackEvent } from "@/analytics";
+import { type OpenStage, statusForStage } from "@/lib/stages";
 
 // A week after applying is when a follow-up usually makes sense
 export const FOLLOW_UP_AFTER_APPLYING_DAYS = 7;
@@ -58,6 +59,13 @@ export function useUpdateJobApplicationStatus() {
     return updateDoc(doc(db, "jobApplications", applicationId), updates);
   }
 
+  // The one path every stage change goes through: stage menu, stepper, and board drag-and-drop.
+  // Saved -> Applied is "I applied": it also sets the follow-up date.
+  function moveToStage(job: { id: string; status: JobStatus }, stage: OpenStage) {
+    if (stage === "applied" && job.status === "draft") return markApplied(job.id);
+    return updateJobApplicationStatus(job.id, statusForStage(stage));
+  }
+
   // "I applied": Applied today, follow up in a week
   function markApplied(applicationId: string) {
     trackEvent("status_changed", { applicationId, status: "applied" });
@@ -93,5 +101,5 @@ export function useUpdateJobApplicationStatus() {
     });
   }
 
-  return { updateJobApplicationStatus, markApplied, scheduleFollowUp, snoozeFollowUp, clearFollowUp };
+  return { updateJobApplicationStatus, moveToStage, markApplied, scheduleFollowUp, snoozeFollowUp, clearFollowUp };
 }
