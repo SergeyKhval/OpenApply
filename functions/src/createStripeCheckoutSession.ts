@@ -5,6 +5,7 @@ import { isProStatus } from "./lib/aiAllowance";
 import { proPriceId } from "./lib/proPrice";
 import {
   APP_HOME_URL,
+  ensureStripeCustomerId,
   getBillingProfileOrThrow,
   safeReturnUrl,
 } from "./lib/billingProfile";
@@ -44,9 +45,15 @@ export const createStripeCheckoutSession = onCall<{
     }
 
     const stripeClient = new Stripe(STRIPE_API_KEY.value());
+    const stripeCustomerId = await ensureStripeCustomerId(
+      uid,
+      billingProfile,
+      request.auth.token?.email,
+      stripeClient,
+    );
     const session = await stripeClient.checkout.sessions.create({
       mode: "subscription",
-      customer: billingProfile.stripeCustomerId,
+      customer: stripeCustomerId,
       client_reference_id: uid,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: { metadata: { firebaseUid: uid } },
