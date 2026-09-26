@@ -26,6 +26,7 @@
 
     <div class="flex grow flex-col gap-7 px-4 pb-28 lg:px-6 lg:pb-10">
       <template v-if="hasJobs">
+        <WeekStatsRow :jobs="jobApplications" :now="now" />
         <NextUpStrip :items="nextUp" :jobs="jobApplications" :now="now" />
         <p v-if="search && !filteredJobs.length" class="text-muted-foreground">
           No jobs match "{{ search }}".
@@ -65,6 +66,7 @@ import JobsBoard from "@/components/jobs/JobsBoard.vue";
 import JobsList from "@/components/jobs/JobsList.vue";
 import JobsMobileList from "@/components/jobs/JobsMobileList.vue";
 import NextUpStrip from "@/components/jobs/NextUpStrip.vue";
+import WeekStatsRow from "@/components/jobs/WeekStatsRow.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
