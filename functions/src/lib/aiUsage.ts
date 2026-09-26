@@ -1,4 +1,4 @@
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import {
   AllowanceProfile,
@@ -6,13 +6,7 @@ import {
   consumeAiCheck,
   getAllowanceState,
 } from "./aiAllowance";
-
-const billingProfileRef = (userId: string) =>
-  getFirestore()
-    .collection("users")
-    .doc(userId)
-    .collection("billingProfile")
-    .doc("profile");
+import { billingProfileRef, DEFAULT_BILLING_PROFILE } from "./billingProfile";
 
 const formatResetDate = (date: Date) =>
   date.toLocaleDateString("en-US", {
@@ -39,13 +33,13 @@ export function aiLimitReachedError(state: AllowanceState): HttpsError {
   );
 }
 
-function profileOrThrow(
-  snapshot: FirebaseFirestore.DocumentSnapshot,
-): AllowanceProfile {
-  if (!snapshot.exists) {
-    throw new HttpsError("failed-precondition", "Billing profile not found");
-  }
-  return snapshot.data() as AllowanceProfile;
+/**
+ * A missing billing profile (Stripe outage at signup, or an account that
+ * predates this self-heal) is treated as a fresh free tier rather than a
+ * hard failure — AI allowance never depends on Stripe having succeeded.
+ */
+function profileOf(snapshot: FirebaseFirestore.DocumentSnapshot): AllowanceProfile {
+  return (snapshot.exists ? snapshot.data() : DEFAULT_BILLING_PROFILE) as AllowanceProfile;
 }
 
 /**
@@ -56,7 +50,7 @@ export async function assertAiAllowance(
   userId: string,
   now = new Date(),
 ): Promise<void> {
-  const profile = profileOrThrow(await billingProfileRef(userId).get());
+  const profile = profileOf(await billingProfileRef(userId).get());
   const state = getAllowanceState(profile, now);
   if (!state.canUse) {
     throw aiLimitReachedError(state);
@@ -73,15 +67,24 @@ export async function chargeAiCheck(
   now = new Date(),
 ): Promise<void> {
   const ref = billingProfileRef(userId);
-  const profile = profileOrThrow(await transaction.get(ref));
+  const snapshot = await transaction.get(ref);
+  const profile = profileOf(snapshot);
   const update = consumeAiCheck(profile, now);
 
   if (!update) {
     throw aiLimitReachedError(getAllowanceState(profile, now));
   }
 
-  transaction.update(ref, {
-    ...update,
-    updatedAt: FieldValue.serverTimestamp(),
-  });
+  if (snapshot.exists) {
+    transaction.update(ref, {
+      ...update,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  } else {
+    transaction.set(ref, {
+      ...DEFAULT_BILLING_PROFILE,
+      ...update,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
 }

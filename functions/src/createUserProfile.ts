@@ -3,6 +3,7 @@ import { defineString } from "firebase-functions/params";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { Resend } from "resend";
+import { billingProfileRef, DEFAULT_BILLING_PROFILE } from "./lib/billingProfile";
 
 const STRIPE_API_KEY = defineString("STRIPE_API_KEY");
 const RESEND_API_KEY = defineString("RESEND_API_KEY");
@@ -10,7 +11,6 @@ const RESEND_API_KEY = defineString("RESEND_API_KEY");
 const db = getFirestore();
 
 export const createUserProfile = user().onCreate(async (user) => {
-  const stripeClient = new Stripe(STRIPE_API_KEY.value());
   const resendClient = new Resend(RESEND_API_KEY.value());
 
   if (user.email) {
@@ -31,34 +31,33 @@ export const createUserProfile = user().onCreate(async (user) => {
     }
   }
 
+  // Stripe is optional (self-hosters, or a transient outage): a failure here
+  // must never block the user doc or a working free-tier billing profile.
+  let stripeCustomerId: string | null = null;
   try {
+    const stripeClient = new Stripe(STRIPE_API_KEY.value());
     const customer = await stripeClient.customers.create({
       email: user.email,
       metadata: { firebaseUid: user.uid },
     });
-    const userRef = db.collection("users").doc(user.uid);
-    const billingProfileRef = userRef
-      .collection("billingProfile")
-      .doc("profile");
+    stripeCustomerId = customer.id;
+  } catch (error) {
+    console.error(`Failed to create Stripe customer for ${user.uid}:`, error);
+  }
 
-    await userRef.set(
-      {
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
-
-    await billingProfileRef.set({
-      stripeCustomerId: customer.id,
-      aiUsage: null,
-      bonusChecks: 0,
-      subscriptionStatus: null,
+  const userRef = db.collection("users").doc(user.uid);
+  await userRef.set(
+    {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
-    });
-  } catch (error) {
-    console.error(`Failed to create user profile for ${user.uid}:`, error);
-    throw error;
-  }
+    },
+    { merge: true },
+  );
+
+  await billingProfileRef(user.uid).set({
+    ...DEFAULT_BILLING_PROFILE,
+    stripeCustomerId,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 });
