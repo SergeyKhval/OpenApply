@@ -25,6 +25,7 @@ B.S. Computer Science, Portland State University`;
 export const ANALYSIS = {
   companyName: "Globex",
   position: "Senior Frontend Engineer",
+  matchScore: 70,
   parseCheck: { status: "clean" as const, note: "" },
   requirements: [
     { requirement: "Expert React", status: "matched" as const, importance: "must-have" as const, evidence: "Built the core web app in React with TypeScript across the codebase." },

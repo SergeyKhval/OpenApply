@@ -31,7 +31,11 @@ export type RevertReason =
   | "no_change"
   | "empty_text"
   | "term_not_in_source"
-  | "term_already_listed";
+  | "term_already_listed"
+  | "qualified_source"
+  | "dropped_qualifier"
+  | "scope_change"
+  | "job_word";
 
 export type VerifiedOp = TailorOp & {
   index: number;
@@ -45,6 +49,9 @@ export type TailorVocabulary = {
   // Tools and skills named by the job (technologies and missingKeywords).
   // Any of them in a rewrite has to be in the cited lines too.
   terms: string[];
+  // The job's requirement texts. A content word from them in a rewrite has
+  // to be in the cited lines too.
+  requirementTexts?: string[];
 };
 
 export const MAX_REPHRASE_GROWTH = 1.3;
@@ -115,7 +122,7 @@ function wordsOf(canonicalText: string): string[] {
     .filter(Boolean);
 }
 
-function containsPhrase(canonicalText: string, phrase: string): boolean {
+export function containsPhrase(canonicalText: string, phrase: string): boolean {
   const needle = wordsOf(canonicalize(phrase)).join(" ");
   if (!needle) return false;
   return ` ${wordsOf(canonicalText).join(" ")} `.includes(` ${needle} `);
@@ -129,7 +136,7 @@ const SPELLED_NUMBERS: Record<string, string> = {
   eighty: "80", ninety: "90", hundred: "100", dozen: "12",
   double: "x2", doubled: "x2", doubling: "x2", twice: "x2", triple: "x3", tripled: "x3",
   tripling: "x3", quadrupled: "x4", half: "x0.5", halved: "x0.5",
-  dozens: "dozens", hundreds: "hundreds", thousands: "thousands", millions: "millions",
+  once: "x1", dozens: "dozens", hundreds: "hundreds", thousands: "thousands", millions: "millions",
 };
 
 const MULTIPLIER_WORDS: Record<string, string> = {
@@ -177,6 +184,21 @@ const LEXICON: [family: string, pattern: RegExp][] = [
   ["first", /^first$/],
   ["entire", /^(entire|entirely|every|whole|all)$/],
   ["global", /^(global|globally|worldwide|international|internationally|company-wide|org-wide|enterprise-wide)$/],
+  // Intensifiers: "a busy 6-8 patient assignment" claims more than the line did
+  ["busy", /^(busy|hectic)$/],
+  ["high-volume", /^(high-volume|high-traffic|high-throughput|high-stakes|high-impact|high-profile)$/],
+  ["fast-paced", /^(fast-paced|rapid|rapidly|fast-moving|fast-growing)$/],
+  ["significant", /^(significant|significantly|substantial|substantially|considerable|considerably)$/],
+  ["major", /^(major|massive|huge|enormous|vast|tremendous)$/],
+  ["complex", /^(complex|complicated|sophisticated|intricate|challenging|demanding|intensive)$/],
+  ["critical", /^(critical|mission-critical|business-critical|essential|vital|crucial)$/],
+  ["large-scale", /^(large-scale|enterprise-scale|at-scale|scalable)$/],
+  ["strategic", /^(strategic|strategically)$/],
+  ["robust", /^(robust|seamless|seamlessly|cutting-edge|state-of-the-art|world-class|best-in-class)$/],
+  ["highly", /^(highly|greatly|dramatically|drastically|vastly|hugely|exceptionally|exceptional|outstanding)$/],
+  ["successful", /^(successful|successfully|proven|effective|effectively)$/],
+  ["strong", /^(strong|strongly|solid|excellent|comprehensive|thorough|in-depth|superb)$/],
+  ["numerous", /^(numerous|countless|many|multiple|various|extensive|extensively)$/],
 ];
 
 const COMMON_CAPITALIZED = new Set([
@@ -231,6 +253,9 @@ export function factTokens(text: string, vocabulary: TailorVocabulary): Set<Fact
   }
   if (/\bmore than\b|\bupwards of\b/.test(canonical)) facts.add("lex:over");
   if (/\bup to\b/.test(canonical)) facts.add("lex:upto");
+  if (/\bhigh (volume|traffic|throughput|stakes|impact|profile)\b/.test(canonical)) facts.add("lex:high-volume");
+  if (/\bfast paced\b/.test(canonical)) facts.add("lex:fast-paced");
+  if (/\blarge scale\b|\bat scale\b/.test(canonical)) facts.add("lex:large-scale");
 
   for (const word of namedWords(text)) facts.add(`word:${word}`);
 
@@ -303,6 +328,90 @@ export function newFacts(
   return missing;
 }
 
+// Words that limit a claim. If the cited lines have one, the rewrite must
+// keep it (or a word of the same family): dropping "informally", "a
+// handful" or "no production use yet" makes a weak claim read strong.
+const QUALIFIERS: [family: string, pattern: RegExp][] = [
+  ["informal", /\b(informal|informally|casual|casually|ad hoc|ad-hoc|unofficial|unofficially)\b/],
+  ["few", /\b(a handful|handful|a few|a couple|some|occasional|occasionally|sometimes|limited|small)\b/],
+  ["basic", /\b(basic|basics|beginner|introductory|entry-level|foundational|fundamentals)\b/],
+  ["learning", /\b(learning|learn|started|starting|began|beginning|studying|self-taught|exploring)\b/],
+  ["not-shipped", /\b(no production|not in production|not deployed|never deployed|personal project|side project|hobby|course project|class project|kaggle|prototype|proof of concept)\b/],
+  ["exposure", /\b(exposure|exposed|familiar|familiarity|awareness|aware|introduction)\b/],
+  ["coursework", /\b(coursework|course|courses|non-degree|bootcamp|workshop|tutorial)\b/],
+  ["assist", /\b(assisted|assisting|assist|assistant|helped|helping|help|supported|supporting|support|contributed|contributing|contribution|contributions|participated|participating|took part|part of|involved|member)\b/],
+  ["candidate", /\b(candidate|pursuing|in progress|working toward|working towards|toward|towards|expected|ongoing|pending)\b/],
+  ["approximate", /\b(approximately|approx|roughly|nearly|almost|~)\b/],
+  ["frequency", /\b(once a|twice a|once per|per week|per month|a week|a month|as needed)\b/],
+  ["cover", /\b(relief|backup|substitute|covering|cover for|stand-in|acting)\b/],
+  ["partial", /\b(partial|partially|partly|some|part-time|temporary|temp|contract basis)\b/],
+  ["junior", /\b(junior|intern|interns|internship|trainee|apprentice|apprenticeship|entry)\b/],
+  ["attempt", /\b(tried|attempted|aimed|proposed|suggested|planned|drafted)\b/],
+];
+
+// Qualifiers that describe how well the candidate knows a skill. A line with
+// one can't put that skill under Skills. ("Supporting order processing" or
+// "ad-hoc state" say nothing about skill level, so the other families don't
+// count here.)
+const SKILL_LEVEL_QUALIFIERS = new Set(["basic", "learning", "not-shipped", "exposure", "coursework", "candidate"]);
+
+/**
+ * Scope the rewrite quietly widens: a number from the source that it drops
+ * ("managed two writers" → "managed writers"), or a noun it turns plural
+ * ("the budget" → "budgets").
+ */
+export function scopeChanges(text: string, sourceText: string): string[] {
+  const noVocabulary = { terms: [] };
+  const rewriteFacts = factTokens(text, noVocabulary);
+  const droppedNumbers = [...factTokens(sourceText, noVocabulary)]
+    .filter((fact) => (fact.startsWith("num:") || fact.startsWith("mult:")) && !rewriteFacts.has(fact))
+    .map((fact) => `dropped-${fact}`);
+
+  const sourceWords = new Set(wordsOf(canonicalize(sourceText)));
+  const plurals = [...new Set(wordsOf(canonicalize(text)))]
+    .filter((word) => /^[a-z-]{3,}s$/.test(word) && !sourceWords.has(word))
+    .filter((word) => [word.slice(0, -1), word.replace(/ies$/, "y"), word.replace(/es$/, "")].some((singular) => sourceWords.has(singular)))
+    .map((word) => `plural:${word}`);
+  return [...droppedNumbers, ...plurals];
+}
+
+/** Qualifier families the source states that the rewrite drops. */
+export function droppedQualifiers(text: string, sourceText: string): string[] {
+  const rewrite = canonicalize(text);
+  const source = canonicalize(sourceText);
+  return QUALIFIERS.filter(([, pattern]) => pattern.test(source) && !pattern.test(rewrite)).map(([family]) => `qual:${family}`);
+}
+
+// Requirement words that say nothing on their own
+const GENERIC_JOB_WORDS = new Set(
+  ("experience experienced years year strong ability able skills skill working work knowledge understanding " +
+    "including related field similar least plus preferred required requirement proven track record excellent " +
+    "solid hands-on level professional environment environments teams team other their based using within " +
+    "across tools tool must nice have with from into like such well good great familiarity comfortable " +
+    "demonstrated background equivalent relevant role roles practices practice concepts principles").split(" "),
+);
+
+const stemOf = (word: string) => (word.length >= 6 ? word.slice(0, 5) : word);
+
+/**
+ * Content words from the job's requirements that the rewrite adds but the
+ * cited lines don't state (compared by a 5-letter stem, so "prediction"
+ * supports "predictive"). Stops a rewrite from stitching the job's wording
+ * onto a line: "on-call rotation" must not become "on-call for
+ * customer-facing services" because another bullet mentions them.
+ */
+export function unsupportedJobWords(text: string, citedText: string, requirementTexts: string[]): string[] {
+  const jobWords = new Set(
+    requirementTexts.flatMap((requirement) => wordsOf(canonicalize(requirement))).filter(
+      (word) => word.length >= 4 && !GENERIC_JOB_WORDS.has(word) && !/^\d/.test(word),
+    ),
+  );
+  const cited = new Set(wordsOf(canonicalize(citedText)).map(stemOf));
+  return [...new Set(wordsOf(canonicalize(text)))]
+    .filter((word) => jobWords.has(word) && !cited.has(stemOf(word)))
+    .map((word) => `job:${word}`);
+}
+
 type VerifyContext = {
   lines: SourceLine[];
   vocabulary: TailorVocabulary;
@@ -372,6 +481,12 @@ export function verifyTailorOps(ops: TailorOp[], context: VerifyContext): Verifi
       if (text.length > allowed) return revert("too_long");
       const invented = newFacts(text, sourceText, context.vocabulary);
       if (invented.length) return revert("new_fact", invented);
+      const dropped = droppedQualifiers(text, sourceText);
+      if (dropped.length) return revert("dropped_qualifier", dropped);
+      const widened = scopeChanges(text, sourceText);
+      if (widened.length) return revert("scope_change", widened);
+      const borrowed = unsupportedJobWords(text, sourceText, context.vocabulary.requirementTexts ?? []);
+      if (borrowed.length) return revert("job_word", borrowed);
       rephrasedIds.add(sourceLines[0].id);
       sourceLines.slice(1).forEach((line) => consumedIds.add(line.id));
       return { ...apply(), text };
@@ -381,9 +496,15 @@ export function verifyTailorOps(ops: TailorOp[], context: VerifyContext): Verifi
       const term = cleanText(op.term);
       if (sourceLines.length !== 1 || !term) return revert("empty_text");
       if (!containsPhrase(canonicalize(line.text), term)) return revert("term_not_in_source");
+      // "Started learning Python" doesn't make Python a skill to list
+      const qualifiers = QUALIFIERS.filter(
+        ([family, pattern]) => SKILL_LEVEL_QUALIFIERS.has(family) && pattern.test(canonicalize(line.text)),
+      ).map(([family]) => `qual:${family}`);
+      if (qualifiers.length) return revert("qualified_source", qualifiers);
       const key = wordsOf(canonicalize(term)).join(" ");
       const skills = skillsSectionText(context.lines);
-      if (surfaced.has(key) || (skills !== null && containsPhrase(canonicalize(skills), term))) {
+      const overlaps = [...surfaced].some((listed) => containsPhrase(listed, key) || containsPhrase(key, listed));
+      if (overlaps || (skills !== null && containsPhrase(canonicalize(skills), term))) {
         return revert("term_already_listed");
       }
       surfaced.add(key);
@@ -398,7 +519,7 @@ export function verifyTailorOps(ops: TailorOp[], context: VerifyContext): Verifi
 const SKILLS_HEADING = /skill|competenc|technolog|tools|stack/i;
 const INTRO_HEADING = /summary|profile|about|objective/i;
 
-function skillsSectionText(lines: SourceLine[]): string | null {
+export function skillsSectionText(lines: SourceLine[]): string | null {
   const heading = lines.find((line) => line.role === "heading" && SKILLS_HEADING.test(line.text));
   if (!heading) return null;
   return lines

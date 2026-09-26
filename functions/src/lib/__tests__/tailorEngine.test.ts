@@ -20,7 +20,7 @@ vi.mock("@genkit-ai/googleai", () => ({
   googleAI: Object.assign(() => ({}), { model: () => ({}) }),
 }));
 
-import { buildTailorPrompt, tailorResume, type TailorGenerate, type TailorModelOutput } from "../tailorEngine";
+import { buildTailorPrompt, buildTailorWorklist, tailorResume, type TailorGenerate, type TailorModelOutput } from "../tailorEngine";
 import { segmentResume } from "../tailorSegment";
 import { ANALYSIS, RESUME } from "./tailorFixtures";
 
@@ -46,8 +46,30 @@ describe("buildTailorPrompt", () => {
 
   it("numbers the requirements and names the terms it must never add", () => {
     expect(prompt).toContain("2. [must-have, missing] Kubernetes");
-    expect(prompt).toContain("Never add any of these anywhere");
-    expect(prompt).toContain("Kubernetes, GraphQL, Next.js");
+    expect(prompt).toContain("gaps the candidate must address honestly: Kubernetes, GraphQL, Next.js");
+  });
+
+  it("asks for more edits below 85 and fewer on a strong resume", () => {
+    expect(prompt).toContain("4 to 12 edits");
+    expect(buildTailorPrompt(segmentResume(RESUME), { ...ANALYSIS, matchScore: 90 })).toContain("0 to 6 edits");
+  });
+});
+
+describe("buildTailorWorklist", () => {
+  const worklist = buildTailorWorklist(segmentResume(RESUME), ANALYSIS);
+
+  it("points each met or partly met requirement at the line that proves it", () => {
+    expect(worklist).toContainEqual(expect.stringContaining(`Requirement 0 ("Expert React", must-have, matched) is proven by ${lineId("Built the core")}`));
+    expect(worklist).toContainEqual(expect.stringContaining(`Requirement 3 ("PostgreSQL", nice-to-have, partial) is proven by ${lineId("Maintained Postgres")}`));
+  });
+
+  it("skips missing requirements", () => {
+    expect(worklist.some((item) => item.includes("Kubernetes"))).toBe(false);
+  });
+
+  it("lists job tools a bullet names but Skills doesn't", () => {
+    expect(worklist).toContainEqual(`${lineId("Maintained Postgres")} names "PostgreSQL" but the Skills section doesn't list it: surfaceKeyword with requirement 3.`);
+    expect(worklist.some((item) => item.includes('names "React"'))).toBe(false);
   });
 });
 
