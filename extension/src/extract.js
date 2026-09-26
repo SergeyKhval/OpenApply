@@ -126,8 +126,12 @@ export function extractJob() {
   const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£" };
   const UNIT_SUFFIX = { YEAR: "/yr", MONTH: "/mo", WEEK: "/wk", DAY: "/day", HOUR: "/hr" };
 
+  // schema.org amounts are sometimes numbers, sometimes strings ("120000",
+  // "120,000"), sometimes garbage ("competitive", "120k"); null for the latter
   function formatAmount(amount, currency) {
-    const number = Math.round(amount).toLocaleString("en-US");
+    const numeric = Number(typeof amount === "string" ? amount.replace(/,/g, "") : amount);
+    if (!Number.isFinite(numeric)) return null;
+    const number = Math.round(numeric).toLocaleString("en-US");
     return CURRENCY_SYMBOLS[currency] ? `${CURRENCY_SYMBOLS[currency]}${number}` : `${number} ${currency || ""}`.trim();
   }
 
@@ -140,10 +144,14 @@ export function extractJob() {
     const { minValue, maxValue, value: single } = typeof value === "object" && value ? value : {};
     const unit = UNIT_SUFFIX[value?.unitText] || "";
     if (minValue != null && maxValue != null && minValue !== maxValue) {
-      return `${formatAmount(minValue, currency)}–${formatAmount(maxValue, currency)}${unit}`;
+      const min = formatAmount(minValue, currency);
+      const max = formatAmount(maxValue, currency);
+      return min && max ? `${min}–${max}${unit}` : "";
     }
-    const amountValue = single ?? minValue ?? maxValue ?? (typeof value === "number" ? value : undefined);
-    return amountValue != null ? `${formatAmount(amountValue, currency)}${unit}` : "";
+    const amountValue = single ?? minValue ?? maxValue ?? (typeof value === "number" || typeof value === "string" ? value : undefined);
+    if (amountValue == null) return "";
+    const formatted = formatAmount(amountValue, currency);
+    return formatted ? `${formatted}${unit}` : "";
   }
 
   // schema.org JobPosting: Greenhouse, Lever, Ashby, Workable and many career sites publish it

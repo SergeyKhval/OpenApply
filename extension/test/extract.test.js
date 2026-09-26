@@ -199,20 +199,44 @@ describe("extractJob on layouts that can't be captured headless", () => {
 });
 
 describe("extractJob salary", () => {
+  // baseSalary is arbitrary JSON-LD: build a page around it and read job.salary
+  function salaryOf(baseSalary) {
+    const html = `<script type="application/ld+json">${JSON.stringify({ "@type": "JobPosting", title: "X", baseSalary })}</script><main><p>Short.</p></main>`;
+    const dom = new JSDOM(html, { url: "https://careers.example.com/jobs/1", runScripts: "outside-only" });
+    return dom.window.eval(`${source}; extractJob()`).salary;
+  }
+
   it("reads a salary range from JSON-LD baseSalary", () => {
     expect(extractFrom("jsonld-synthetic").salary).toBe("$120,000–$140,000/yr");
   });
 
   it("reads a single salary value with a non-USD currency", () => {
-    const dom = new JSDOM(
-      `<script type="application/ld+json">{"@type":"JobPosting","title":"X","baseSalary":{"@type":"MonetaryAmount","currency":"EUR","value":{"@type":"QuantitativeValue","value":60000,"unitText":"YEAR"}}}</script><main><p>Short.</p></main>`,
-      { url: "https://careers.example.com/jobs/1", runScripts: "outside-only" },
-    ).window.eval(`${source}; extractJob()`);
-    expect(dom.salary).toBe("€60,000/yr");
+    const baseSalary = { "@type": "MonetaryAmount", currency: "EUR", value: { "@type": "QuantitativeValue", value: 60000, unitText: "YEAR" } };
+    expect(salaryOf(baseSalary)).toBe("€60,000/yr");
   });
 
   it("has no salary when the page's JSON-LD doesn't list one", () => {
     expect(extractFrom("greenhouse").salary).toBe("");
+  });
+
+  it("reads amounts given as numeric strings", () => {
+    const baseSalary = {
+      "@type": "MonetaryAmount",
+      currency: "USD",
+      value: { "@type": "QuantitativeValue", minValue: "120,000", maxValue: "140000", unitText: "YEAR" },
+    };
+    expect(salaryOf(baseSalary)).toBe("$120,000–$140,000/yr");
+  });
+
+  it.each([
+    ["competitive"],
+    ["120k"],
+    [null],
+  ])("skips a garbage or non-numeric amount (%s) instead of saving NaN", (value) => {
+    const baseSalary = { "@type": "MonetaryAmount", currency: "USD", value: { "@type": "QuantitativeValue", value, unitText: "YEAR" } };
+    const salary = salaryOf(baseSalary);
+    expect(salary).toBe("");
+    expect(salary).not.toContain("NaN");
   });
 });
 
