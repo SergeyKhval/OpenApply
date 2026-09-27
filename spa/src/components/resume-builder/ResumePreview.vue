@@ -19,11 +19,11 @@
 import { computed, ref, useTemplateRef, watch } from "vue";
 import { refDebounced, useElementSize } from "@vueuse/core";
 import { structuredToDoc, type StructuredResume } from "@/lib/builtResume";
-import { tailoredResumeHtml } from "@/lib/tailoredResumeExport";
+import { tailoredResumeHtml, type ExportTemplate } from "@/lib/tailoredResumeExport";
 
-type ResumePreviewProps = { resume: StructuredResume; title: string };
+type ResumePreviewProps = { resume: StructuredResume; title: string; template?: ExportTemplate };
 
-const { resume, title } = defineProps<ResumePreviewProps>();
+const { resume, title, template = "classic" } = defineProps<ResumePreviewProps>();
 
 // US Letter at 96 dpi; A4 is close enough in width for a preview
 const PAGE_WIDTH = 816;
@@ -32,7 +32,7 @@ const PAGE_HEIGHT = 1056;
 // Rebuilt a moment after typing stops, not on every key
 const source = computed(() => JSON.stringify(resume));
 const settled = refDebounced(source, 300);
-const html = computed(() => tailoredResumeHtml(structuredToDoc(JSON.parse(settled.value)), title));
+const html = computed(() => tailoredResumeHtml(structuredToDoc(JSON.parse(settled.value)), title, template));
 
 // A page scaled much below 0.85 gets hard to read, so a narrower pane reflows
 // the text at its own width instead (the print HTML slims its padding on phones)

@@ -21,6 +21,22 @@
         </div>
       </section>
 
+      <!-- The parser's view of the PDF, when it's hard to follow: a rebuilt
+           copy reads cleanly (flag resume-builder) -->
+      <section v-if="parseProblem" class="flex flex-col gap-2 rounded-card border border-border p-4">
+        <p class="flex items-start gap-2 text-sm">
+          <PhWarningCircle :size="18" class="mt-0.5 shrink-0 text-signal-text" />
+          <span>
+            {{ parseProblem.status === "scrambled" ? "Your resume's text came out jumbled" : "Parts of your resume's text came out out of order" }},
+            and screening software may read it the same way.
+            <span v-if="parseProblem.note" class="text-muted-foreground">{{ parseProblem.note }}</span>
+          </span>
+        </p>
+        <RebuildResumeButton :resume="resume" surface="match_parse_check" class="self-start">
+          Rebuild it in the editor (we'll copy what we can read)
+        </RebuildResumeButton>
+      </section>
+
       <section v-if="view.requirements.length" class="flex flex-col gap-2">
         <h3 class="text-[17px] font-bold">Requirements</h3>
         <ul class="flex flex-col divide-y divide-border">
@@ -103,6 +119,7 @@ import AiLimitReached from "@/components/AiLimitReached.vue";
 import ResumeLink from "@/components/ResumeLink.vue";
 import ResumeScore from "@/components/ResumeScore.vue";
 import AiSheet from "@/components/ai/AiSheet.vue";
+import RebuildResumeButton from "@/components/resume-builder/RebuildResumeButton.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -153,6 +170,12 @@ const matchQuery = computed(() =>
 );
 const matches = useCollection<ResumeJobMatch>(matchQuery);
 const view = computed(() => (matches.value[0] ? toMatchView(matches.value[0].matchResult) : null));
+const builderEnabled = useFeatureFlag("resume-builder");
+const parseProblem = computed(() => {
+  const check = matches.value[0]?.analysis?.parseCheck;
+  if (!builderEnabled.value || resume.kind === "built" || !check || check.status === "clean") return null;
+  return check;
+});
 
 // Tailored version (flag tailored-resume): needs a match run by the shared
 // engine, which stores the analysis it tailors from
@@ -198,7 +221,7 @@ async function runMatch() {
   }
   isRunning.value = true;
   errorMessage.value = "";
-  trackEvent("resume_match_started", { resumeId: resume.id, jobApplicationId: application.id });
+  trackEvent("resume_match_started", { resumeId: resume.id, jobApplicationId: application.id, resumeKind: resume.kind ?? "upload" });
   try {
     await matchResumeWithJobApplication({ resumeId: resume.id, applicationId: application.id });
     trackEvent("resume_match_completed", { resumeId: resume.id, jobApplicationId: application.id });

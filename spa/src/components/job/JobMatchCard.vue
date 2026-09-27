@@ -38,9 +38,12 @@
         <p class="text-[15px] text-soft-foreground">
           Upload a resume to see how it stacks up against this job and what to fix before you apply.
         </p>
-        <Button size="sm" class="self-start" :disabled="isUploading" @click="openFileDialog()">
-          <PhUploadSimple />{{ isUploading ? "Uploading…" : "Upload resume" }}
-        </Button>
+        <div class="flex flex-wrap gap-2">
+          <Button size="sm" :disabled="isUploading" @click="openFileDialog()">
+            <PhUploadSimple />{{ isUploading ? "Uploading…" : "Upload resume" }}
+          </Button>
+          <NewResumeButton surface="job_page" variant="outline" size="sm">Build one here</NewResumeButton>
+        </div>
       </template>
     </CardContent>
 
@@ -65,6 +68,7 @@ import { PhMagicWand, PhPencilSimple, PhSparkle, PhUploadSimple } from "@phospho
 import ResumeScore from "@/components/ResumeScore.vue";
 import ResumeMatchSheet from "@/components/ai/ResumeMatchSheet.vue";
 import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/firebase/config";

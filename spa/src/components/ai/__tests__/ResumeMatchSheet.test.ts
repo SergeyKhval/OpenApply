@@ -7,6 +7,7 @@ const matches = ref<unknown[]>([]);
 const usage = ref(3);
 const callMatch = vi.fn();
 const tailoringFlag = ref(false);
+const builderFlag = ref(false);
 
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
@@ -25,14 +26,25 @@ vi.mock("firebase/firestore", () => ({
 vi.mock("firebase/functions", () => ({ httpsCallable: () => callMatch }));
 vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
 vi.mock("vue-router", () => ({ useRouter: () => ({ replace: vi.fn() }), useRoute: () => ({ query: {} }) }));
-vi.mock("@/analytics", () => ({ trackEvent: vi.fn() }));
+const trackEvent = vi.fn();
+vi.mock("@/analytics", () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
 vi.mock("@/composables/useAiAllowance", () => ({
   useAiAllowance: () => {
     const allowance = computed(() => getAllowanceState({ aiUsage: { period: "2026-09", count: usage.value } }, new Date("2026-09-25T12:00:00Z")));
     return { allowance, canUseAi: computed(() => allowance.value.canUse) };
   },
 }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoringFlag }));
+vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: (flag: string) => (flag === "resume-builder" ? builderFlag : tailoringFlag) }));
+vi.mock("@/components/resume-builder/RebuildResumeButton.vue", async () => {
+  const { defineComponent, h } = await import("vue");
+  return {
+    default: defineComponent({
+      name: "RebuildResumeButton",
+      props: ["resume", "surface"],
+      setup: (componentProps, { slots }) => () => h("button", { "data-surface": componentProps.surface }, slots.default?.()),
+    }),
+  };
+});
 vi.mock("@/composables/useProAvailability", () => ({ useProAvailability: () => ({ proAvailable: ref(false) }) }));
 vi.mock("@/composables/useProSubscription", () => ({
   useProSubscription: () => ({ isStartingCheckout: ref(false), startProCheckout: vi.fn() }),
@@ -63,6 +75,7 @@ describe("ResumeMatchSheet", () => {
     usage.value = 3;
     callMatch.mockReset();
     tailoringFlag.value = false;
+    builderFlag.value = false;
   });
 
   it("shows the latest match: verdict, requirements and fixes", async () => {
@@ -94,6 +107,7 @@ describe("ResumeMatchSheet", () => {
     run.click();
     await flushPromises();
     expect(callMatch).toHaveBeenCalledWith({ resumeId: "resume-1", applicationId: "job-1" });
+    expect(trackEvent).toHaveBeenCalledWith("resume_match_started", { resumeId: "resume-1", jobApplicationId: "job-1", resumeKind: "upload" });
   });
 
   it("says so up front when the month's checks are used, with nothing to buy while Pro is off", async () => {
@@ -143,6 +157,34 @@ describe("ResumeMatchSheet", () => {
       await flushPromises();
       expect(wrapper.emitted("tailor")).toHaveLength(1);
       expect(wrapper.emitted("update:open")).toEqual([[false]]);
+    });
+  });
+
+  describe("a resume whose text came out jumbled (flag resume-builder)", () => {
+    const withParseCheck = (status: string, note = "") => ({
+      matchResult: { match_summary: { overall_match_percent: 60, summary: "" }, recommendations: {}, skills_comparison: {} },
+      analysis: { matchScore: 60, missingKeywords: [], requirements: [], parseCheck: { status, note } },
+    });
+
+    it("says so and offers a rebuild in the editor", async () => {
+      builderFlag.value = true;
+      matches.value = [withParseCheck("scrambled", "Two columns run into each other.")];
+      await mountSheet();
+      expect(body()).toContain("Your resume's text came out jumbled");
+      expect(body()).toContain("Two columns run into each other.");
+      expect(document.body.querySelector('[data-surface="match_parse_check"]')?.textContent).toContain("Rebuild it in the editor");
+    });
+
+    it("stays quiet for clean text, and while the flag is off", async () => {
+      builderFlag.value = true;
+      matches.value = [withParseCheck("clean")];
+      await mountSheet();
+      expect(body()).not.toContain("jumbled");
+      builderFlag.value = false;
+      matches.value = [withParseCheck("scrambled")];
+      await flushPromises();
+      expect(body()).not.toContain("jumbled");
+      expect(document.body.querySelector('[data-surface="match_parse_check"]')).toBeNull();
     });
   });
 });

@@ -121,6 +121,10 @@
       <PhWarningCircle />
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
+    <!-- A jumbled PDF can't be tailored; a rebuilt copy can (flag resume-builder) -->
+    <RebuildResumeButton v-if="isScrambled && !isRunning" :resume="resume" surface="scrambled_block" class="self-start">
+      Rebuild it in the editor (we'll copy what we can read)
+    </RebuildResumeButton>
 
     <template v-if="!isRunning && !showLimit" #footer>
       <AiChecksLeft v-if="allowance" :allowance="allowance" />
@@ -163,6 +167,7 @@ import AiChecksLeft from "@/components/AiChecksLeft.vue";
 import AiLimitReached from "@/components/AiLimitReached.vue";
 import ResumeLink from "@/components/ResumeLink.vue";
 import AiSheet from "@/components/ai/AiSheet.vue";
+import RebuildResumeButton from "@/components/resume-builder/RebuildResumeButton.vue";
 import TailoredChangeReport from "@/components/ai/TailoredChangeReport.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -274,6 +279,7 @@ async function onReported(index: number, kind: ChangeKind) {
 
 const isRunning = ref(false);
 const errorMessage = ref("");
+const isScrambled = ref(false);
 const limitHit = ref(false);
 const noChanges = ref(false);
 const copied = ref(false);
@@ -310,12 +316,14 @@ async function create() {
   }
   isRunning.value = true;
   errorMessage.value = "";
+  isScrambled.value = false;
   noChanges.value = false;
   const started = Date.now();
   trackEvent("tailored_resume_started", {
     resumeId: resume.id,
     jobApplicationId: application.id,
     matchScore: match.value?.analysis?.matchScore ?? -1,
+    resumeKind: resume.kind ?? "upload",
   });
   try {
     const { data } = await createTailoredResume({ resumeId: resume.id, applicationId: application.id });
@@ -333,6 +341,7 @@ async function create() {
     } else if (code && REFUSALS[code]) {
       errorMessage.value = REFUSALS[code]!;
     } else if (code === "scrambled" || code === "nothing_to_edit" || code === "rate_limited") {
+      isScrambled.value = code === "scrambled";
       errorMessage.value = message ?? "The tailored version didn't finish. Try again in a moment.";
     } else {
       errorMessage.value = "The tailored version didn't finish. Nothing was counted; try again in a moment.";

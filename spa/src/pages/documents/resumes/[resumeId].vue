@@ -72,7 +72,24 @@
             </DropdownMenu>
           </div>
           <div class="min-w-0 lg:sticky lg:top-26 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:overflow-y-auto" :class="view === 'edit' && 'max-lg:hidden'">
-            <ResumePreview :resume="draft" :title="title" />
+            <div class="mb-3 flex items-center gap-3">
+              <span id="resume-template-label" class="text-sm font-semibold">Template</span>
+              <div class="grid grid-cols-2 rounded-field bg-muted p-1" role="radiogroup" aria-labelledby="resume-template-label">
+                <button
+                  v-for="option in TEMPLATES"
+                  :key="option.value"
+                  type="button"
+                  role="radio"
+                  class="h-9 rounded-[10px] px-4 text-sm font-semibold"
+                  :class="template === option.value ? 'bg-card shadow-card' : 'text-muted-foreground'"
+                  :aria-checked="template === option.value"
+                  @click="template = option.value"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+            <ResumePreview :resume="draft" :title="title" :template="template" />
           </div>
         </div>
       </template>
@@ -123,7 +140,7 @@ import { exportFileName, printTailoredResume, saveBlob, tailoredResumeDocx } fro
 const route = useRoute("/documents/resumes/[resumeId]");
 const enabled = useFeatureFlag("resume-builder");
 const resumeId = computed(() => route.params.resumeId);
-const { resume, draft, title, pending, saveState, flush } = useBuiltResume(resumeId);
+const { resume, draft, title, template, pending, saveState, flush } = useBuiltResume(resumeId);
 
 // Fields an import proposed but couldn't confirm, marked until filled in
 provide(
@@ -134,6 +151,12 @@ provide(
 onBeforeRouteLeave(async () => {
   await flush();
 });
+
+// Same single column either way; Compact fits more on a page
+const TEMPLATES = [
+  { value: "classic", label: "Classic" },
+  { value: "compact", label: "Compact" },
+] as const;
 
 const VIEWS = [
   { value: "edit", label: "Edit" },
@@ -198,8 +221,8 @@ async function downloadDocx() {
   isExporting.value = true;
   errorMessage.value = "";
   try {
-    saveBlob(await tailoredResumeDocx(doc()), fileName("docx"));
-    trackEvent("resume_builder_downloaded", { format: "docx", template: "classic" });
+    saveBlob(await tailoredResumeDocx(doc(), template.value), fileName("docx"));
+    trackEvent("resume_builder_downloaded", { format: "docx", template: template.value });
   } catch {
     errorMessage.value = "The .docx didn't build. Try again, or use Save as PDF.";
   } finally {
@@ -210,11 +233,11 @@ async function downloadDocx() {
 function savePdf() {
   if (!draft.value) return;
   errorMessage.value = "";
-  if (!printTailoredResume(doc(), fileName("pdf"))) {
+  if (!printTailoredResume(doc(), fileName("pdf"), template.value)) {
     errorMessage.value = "Your browser blocked the print tab. Allow pop-ups for OpenApply, or use Download .docx.";
     return;
   }
-  trackEvent("resume_builder_downloaded", { format: "pdf", template: "classic" });
+  trackEvent("resume_builder_downloaded", { format: "pdf", template: template.value });
 }
 </script>
 

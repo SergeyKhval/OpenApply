@@ -29,6 +29,8 @@ vi.mock("firebase/firestore", () => ({
 }));
 vi.mock("@/firebase/config.ts", () => ({ db: {} }));
 vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
+vi.mock("vue-router", async (importOriginal) => ({ ...(await importOriginal<object>()), useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("@/composables/useResumeImport", () => ({ importResume: vi.fn() }));
 vi.mock("@/composables/useJobApplicationsData", () => ({ useJobApplicationsData: () => ({ jobApplications: ref([]) }) }));
 vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoringFlag }));
 vi.mock("@/components/ai/TailoredResumeSheet.vue", () => ({
@@ -45,7 +47,7 @@ enableAutoUnmount(afterEach);
 const at = (day: number) => ({ toDate: () => new Date(2026, 8, day) });
 
 const mountList = async () => {
-  const wrapper = mount(ResumesList, { attachTo: document.body, global: { stubs: { RouterLink: RouterLinkStub, UploadResumeButton: true } } });
+  const wrapper = mount(ResumesList, { attachTo: document.body, global: { stubs: { RouterLink: RouterLinkStub, UploadResumeButton: true, NewResumeButton: true } } });
   await flushPromises();
   return wrapper;
 };
@@ -119,5 +121,36 @@ describe("ResumesList: a resume built in the app", () => {
     await flushPromises();
     expect(batchDelete).toHaveBeenCalledTimes(1);
     expect(deleteObject).not.toHaveBeenCalled();
+  });
+
+  it("says which PDF it was made from", async () => {
+    resumes.value = [
+      { ...built, importedFrom: { source: "resume", resumeId: "resume-1", flaggedFields: [] } },
+      { id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) },
+    ];
+    const wrapper = await mountList();
+    expect(wrapper.text()).toContain("Made from sarah.pdf");
+  });
+});
+
+describe("ResumesList: resume builder entry points", () => {
+  beforeEach(() => {
+    collectionCalls = 0;
+  });
+
+  it("offers building one next to the upload when there are none", async () => {
+    resumes.value = [];
+    const wrapper = await mountList();
+    expect(wrapper.findComponent({ name: "NewResumeButton" }).props("surface")).toBe("resumes_empty");
+  });
+
+  it("offers editing an uploaded PDF as a new resume from its menu", async () => {
+    tailoringFlag.value = true;
+    resumes.value = [{ id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) }];
+    const wrapper = await mountList();
+    await wrapper.get('[aria-label="Options for sarah.pdf"]').trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    const items = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].map((item) => item.textContent?.trim());
+    expect(items).toEqual(["Edit as a new resume", "Delete"]);
   });
 });
