@@ -16,9 +16,9 @@
     <template v-else-if="!signedInUser">
       <!-- LEFT PANEL (desktop only, or mobile with pending job handled separately) -->
       <div
-        class="relative hidden md:flex md:w-1/2 bg-muted items-center justify-center p-12"
+        class="relative hidden md:flex md:w-1/2 lg:w-[43%] bg-muted items-center justify-start p-12 lg:px-16"
       >
-        <a href="/" class="absolute top-8 left-12 font-display text-xl font-extrabold text-foreground">OpenApply</a>
+        <AppLogo href="/" class="absolute top-10 left-12 lg:left-16" />
         <!-- Variant A: Value pitch (no pending job) -->
         <div v-if="!hasPendingJob && !pendingToolApplication" class="max-w-md space-y-8">
           <div class="space-y-3">
@@ -80,38 +80,25 @@
         </div>
 
         <!-- Variant C: Job saved from the landing page match tool or the browser extension -->
-        <div v-else-if="pendingToolApplication" class="max-w-md space-y-6 text-center">
-          <PhCheckCircle :size="48" weight="fill" class="text-primary mx-auto" />
-          <h2 class="text-2xl font-bold text-foreground">
-            Sign up and this job is saved to your tracker
-          </h2>
-          <div class="rounded-card bg-card p-5 text-left flex items-center gap-4 shadow-card dark:border dark:border-border">
-            <ResumeScore
-              v-if="pendingToolApplication.match"
-              class="size-14 shrink-0"
-              :score="pendingToolApplication.match.matchScore"
-            />
-            <div class="min-w-0">
-              <p class="font-medium text-foreground truncate">
-                {{ pendingToolApplication.position || "Your job" }}
-              </p>
-              <p v-if="pendingToolApplication.companyName" class="text-sm text-muted-foreground truncate">
-                {{ pendingToolApplication.companyName }}
-              </p>
-            </div>
-          </div>
-          <p class="text-muted-foreground">
-            <template v-if="pendingToolApplication.match">Your match check comes with it.</template>
-            Track status, interviews, and follow-ups for free.
+        <div v-else-if="pendingToolApplication" class="flex w-full max-w-md flex-col gap-5">
+          <SavedJobCard
+            :position="pendingToolApplication.position"
+            :company-name="pendingToolApplication.companyName"
+            :location="pendingToolApplication.location"
+            :match-score="pendingToolApplication.match?.matchScore"
+            :requirements="pendingToolApplication.match?.requirements"
+          />
+          <p class="text-base text-soft-foreground">
+            Create your account and we will add it to your tracker, with a reminder to follow up once you apply.
           </p>
         </div>
 
         <!-- Variant B: Parsing status (with pending job) -->
-        <div v-else class="max-w-md space-y-6 text-center">
+        <div v-else class="flex w-full max-w-md flex-col gap-5">
           <!-- Loading / parsing -->
           <template v-if="isParsing">
             <div
-              class="h-12 w-12 mx-auto rounded-full border-4 border-primary border-t-transparent animate-spin"
+              class="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin"
               aria-hidden="true"
             />
             <h2 class="text-2xl font-bold text-foreground">
@@ -125,34 +112,14 @@
 
           <!-- Parsed -->
           <template v-else-if="isParsed">
-            <PhCheckCircle
-              :size="48"
-              weight="fill"
-              class="text-primary mx-auto"
+            <SavedJobCard
+              v-if="jobSnapshot?.parsedData?.companyName || jobSnapshot?.parsedData?.position"
+              :position="jobSnapshot?.parsedData?.position ?? ''"
+              :company-name="jobSnapshot?.parsedData?.companyName ?? ''"
             />
-            <h2 class="text-2xl font-bold text-foreground">
-              Ready! Sign up to save this job
-            </h2>
-            <div
-              v-if="
-                jobSnapshot?.parsedData?.companyName ||
-                jobSnapshot?.parsedData?.position
-              "
-              class="rounded-card bg-card p-5 text-left shadow-card dark:border dark:border-border"
-            >
-              <p
-                v-if="jobSnapshot?.parsedData?.companyName"
-                class="font-medium text-foreground"
-              >
-                {{ jobSnapshot.parsedData.companyName }}
-              </p>
-              <p
-                v-if="jobSnapshot?.parsedData?.position"
-                class="text-sm text-muted-foreground"
-              >
-                {{ jobSnapshot.parsedData.position }}
-              </p>
-            </div>
+            <p class="text-base text-soft-foreground">
+              Create your account and we will add it to your tracker, with a reminder to follow up once you apply.
+            </p>
           </template>
 
           <!-- Failed -->
@@ -175,64 +142,40 @@
         </div>
       </div>
 
-      <!-- Mobile banner for a job saved from the match tool -->
-      <div
-        v-if="pendingToolApplication && !hasPendingJob"
-        class="md:hidden flex items-center gap-3 px-4 py-3 bg-secondary"
-      >
-        <PhCheckCircle class="text-primary shrink-0" :size="20" />
-        <p class="text-sm text-foreground">
-          Sign up and {{ pendingToolApplication.position || "this job" }} is saved{{
-            pendingToolApplication.match ? " with your match check" : " to your tracker"
-          }}.
-        </p>
-      </div>
-
-      <!-- Mobile banner for pending job (visible only on mobile) -->
-      <div
-        v-if="hasPendingJob"
-        class="md:hidden flex items-center gap-3 px-4 py-3 bg-secondary"
-      >
-        <template v-if="isParsing">
+      <!-- Phones: logo, then the saved job (if any) above the form -->
+      <div class="flex flex-col gap-4 px-6 pt-6 md:hidden">
+        <AppLogo href="/" />
+        <SavedJobCard
+          v-if="pendingToolApplication && !hasPendingJob"
+          compact
+          :position="pendingToolApplication.position"
+          :company-name="pendingToolApplication.companyName"
+          :match-score="pendingToolApplication.match?.matchScore"
+        />
+        <SavedJobCard
+          v-else-if="isParsed && (jobSnapshot?.parsedData?.companyName || jobSnapshot?.parsedData?.position)"
+          compact
+          :position="jobSnapshot?.parsedData?.position ?? ''"
+          :company-name="jobSnapshot?.parsedData?.companyName ?? ''"
+        />
+        <div v-else-if="hasPendingJob" class="flex items-center gap-3 rounded-card bg-muted px-3.5 py-3">
           <div
+            v-if="isParsing"
             class="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0"
             aria-hidden="true"
           />
           <p class="text-sm text-foreground">
-            Analyzing your job listing… Sign up to save results.
+            {{ isParsing ? "Reading your job listing. Sign up to save it." : "Sign up to save this job." }}
           </p>
-        </template>
-        <template v-else-if="isParsed">
-          <PhCheckCircle class="text-primary shrink-0" :size="20" />
-          <p class="text-sm text-foreground">
-            Job details ready! Sign up to save.
-          </p>
-        </template>
-        <template v-else>
-          <p class="text-sm text-foreground">
-            Sign up to save this job application.
-          </p>
-        </template>
+        </div>
       </div>
 
       <!-- RIGHT PANEL: auth form -->
-      <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-4 p-8">
-        <a href="/" class="md:hidden flex flex-col items-center gap-1 mb-2 text-center">
-          <span class="font-display text-2xl font-extrabold text-foreground">OpenApply</span>
-          <span class="text-sm text-muted-foreground">Track every job application. Free.</span>
-        </a>
-        <SignInForm
-          v-if="viewMode === 'sign-in'"
-          :pending-job="hasPendingJob || !!pendingToolApplication"
-          :source="source"
-          @sign-up="viewMode = 'sign-up'"
-        />
-        <SignUpForm
-          v-else
-          :pending-job="hasPendingJob || !!pendingToolApplication"
-          :source="source"
-          @sign-in="viewMode = 'sign-in'"
-        />
+      <div class="w-full md:w-1/2 lg:w-[57%] flex flex-col items-center justify-start gap-4 px-6 pt-5 pb-8 md:justify-center md:p-8">
+        <!-- Google and the emailed code work the same for new and returning
+             people; only the heading differs (?mode=signup, or a saved job) -->
+        <SignInForm v-if="viewMode === 'sign-in'" :source="source" />
+        <SignUpForm v-else :source="source" />
       </div>
     </template>
   </div>
@@ -252,7 +195,8 @@ import {
   pendingApplicationSource,
   readPendingToolApplication,
 } from "@/composables/pendingToolApplication";
-import ResumeScore from "@/components/ResumeScore.vue";
+import SavedJobCard from "@/components/SavedJobCard.vue";
+import AppLogo from "@/components/shell/AppLogo.vue";
 import { isJobParsing, isJobParseFailed, isPastedJob } from "@/composables/useJobIngestion";
 import type { JobSnapshot } from "@/composables/useJobIngestion";
 import { trackEvent } from "@/analytics";

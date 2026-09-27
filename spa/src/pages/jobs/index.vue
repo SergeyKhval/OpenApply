@@ -7,13 +7,28 @@
   <!-- /jobs?stage=closed: closed jobs (also where old /dashboard/archive lands) -->
   <ClosedJobsList v-else-if="showClosed" :now="now" />
   <div v-else class="flex h-full flex-col">
-    <PageHeader>
+    <!-- Phones (canvas "Jobs", mobile): short date, "Jobs" and a search button, no rule -->
+    <PageHeader class="max-lg:h-auto max-lg:border-transparent max-lg:pt-4 max-lg:pb-2">
       <div class="flex w-full min-w-0 items-center gap-3">
         <div class="mr-auto flex min-w-0 flex-col">
+          <span class="text-[13px] text-muted-foreground lg:hidden">{{ shortDateLabel }}</span>
           <span class="hidden text-sm text-muted-foreground lg:block">{{ todayLabel }}</span>
-          <h1 class="truncate text-2xl font-extrabold lg:text-[30px]">{{ greeting }}</h1>
+          <h1 class="truncate text-[28px] font-extrabold lg:text-[30px]">
+            <span class="lg:hidden">Jobs</span><span class="hidden lg:inline">{{ greeting }}</span>
+          </h1>
         </div>
         <template v-if="hasJobs">
+          <Button
+            variant="outline"
+            size="icon"
+            class="size-11 lg:hidden"
+            :aria-label="isSearchOpen ? 'Close search' : 'Search jobs'"
+            :aria-expanded="isSearchOpen"
+            @click="toggleSearch"
+          >
+            <PhX v-if="isSearchOpen" />
+            <PhMagnifyingGlass v-else />
+          </Button>
           <AppSearch v-model="search" class="max-w-72" />
           <Tabs v-model="view" class="hidden lg:flex">
             <TabsList aria-label="View">
@@ -29,10 +44,16 @@
       </div>
     </PageHeader>
 
-    <div class="flex grow flex-col gap-7 px-4 pb-28 lg:px-6 lg:pb-10">
+    <div class="flex grow flex-col gap-5 px-4 pb-28 lg:gap-7 lg:px-6 lg:pb-10">
       <template v-if="hasJobs">
-        <WeekStatsRow :jobs="jobApplications" :now="now" />
-        <NextUpStrip :items="nextUp" :jobs="jobApplications" :now="now" />
+        <div v-if="isSearchOpen" class="relative lg:hidden">
+          <Label for="jobs-search" class="sr-only">Search jobs</Label>
+          <PhMagnifyingGlass :size="18" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-soft-foreground" aria-hidden="true" />
+          <Input id="jobs-search" ref="searchInput" v-model="search" placeholder="Company or role" class="h-11 pl-11" />
+        </div>
+        <WeekStatsRow class="hidden lg:block" :jobs="jobApplications" :now="now" />
+        <NextUpCompact class="lg:hidden" :items="nextUp" />
+        <NextUpStrip class="hidden lg:flex" :items="nextUp" :jobs="jobApplications" :now="now" />
         <p v-if="search && !filteredJobs.length" class="text-muted-foreground">
           No jobs match "{{ search }}".
         </p>
@@ -57,11 +78,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCurrentUser } from "vuefire";
 import { useIntervalFn } from "@vueuse/core";
-import { PhKanban, PhListBullets, PhPlus } from "@phosphor-icons/vue";
+import { PhKanban, PhListBullets, PhMagnifyingGlass, PhPlus, PhX } from "@phosphor-icons/vue";
 import PageHeader from "@/components/PageHeader.vue";
 import AppSearch from "@/components/AppSearch.vue";
 import FirstJobApplicationPrompt from "@/components/FirstJobApplicationPrompt.vue";
@@ -69,9 +90,12 @@ import ClosedJobsList from "@/components/jobs/ClosedJobsList.vue";
 import JobsBoard from "@/components/jobs/JobsBoard.vue";
 import JobsList from "@/components/jobs/JobsList.vue";
 import JobsMobileList from "@/components/jobs/JobsMobileList.vue";
+import NextUpCompact from "@/components/jobs/NextUpCompact.vue";
 import NextUpStrip from "@/components/jobs/NextUpStrip.vue";
 import WeekStatsRow from "@/components/jobs/WeekStatsRow.vue";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { useNextUp } from "@/composables/useNextUp";
@@ -99,6 +123,10 @@ const greeting = computed(() => {
   const firstName = user.value?.displayName?.trim().split(/\s+/)[0];
   return firstName ? `${part}, ${firstName}` : part;
 });
+// "Wed 25 Sep" over "Jobs" on phones
+const shortDateLabel = computed(() =>
+  now.value.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }),
+);
 const todayLabel = computed(() =>
   now.value.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }),
 );
@@ -134,6 +162,19 @@ const filteredJobs = computed(() => {
   );
 });
 watch(showClosed, () => (search.value = ""));
+
+// Phones: the search box opens under the header
+const isSearchOpen = ref(false);
+const searchInput = ref<InstanceType<typeof Input> | null>(null);
+async function toggleSearch() {
+  isSearchOpen.value = !isSearchOpen.value;
+  if (!isSearchOpen.value) {
+    search.value = "";
+    return;
+  }
+  await nextTick();
+  (searchInput.value?.$el as HTMLInputElement | undefined)?.focus?.();
+}
 
 function openAddJob() {
   router.replace({ query: { ...route.query, "dialog-name": "add-job-application" } });
