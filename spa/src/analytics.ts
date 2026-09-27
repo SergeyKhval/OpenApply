@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import type { BlockedJobBoard } from "@/lib/jobInput";
+import { classifyEmailDomain } from "@/lib/emailDomainType";
 import type { FollowUpTemplateType } from "@/types";
 
 function isLoaded(): boolean {
@@ -92,7 +93,11 @@ export function identifyUser(
   properties: { email?: string | null; authMethod: string },
 ) {
   if (!isLoaded()) return;
-  posthog.identify(uid, properties);
+  // Flags likely school-admissions signups (see emailDomainType.ts) so metrics
+  // can report them separately instead of counting them as real users. Never
+  // sends the email anywhere it doesn't already go: `properties.email` above
+  // is already part of this same identify call.
+  posthog.identify(uid, { ...properties, email_domain_type: classifyEmailDomain(properties.email) });
 }
 
 export function resetUser() {
