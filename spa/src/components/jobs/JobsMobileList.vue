@@ -7,6 +7,7 @@
         :key="chip.value"
         size="sm"
         :variant="filter === chip.value ? 'default' : 'outline'"
+        :class="filter === chip.value && 'bg-foreground text-background hover:bg-foreground/90'"
         :aria-pressed="filter === chip.value"
         class="shrink-0"
         @click="filter = chip.value"
@@ -20,7 +21,7 @@
         {{ STAGE_LABELS[group.stage] }}
         <span class="font-sans text-[15px] font-normal text-muted-foreground">{{ group.jobs.length }}</span>
       </h3>
-      <JobCard v-for="job in group.jobs" :key="job.id" :job="job" :now="now" />
+      <JobListRow v-for="job in group.jobs" :key="job.id" :job="job" :now="now" />
     </section>
   </div>
 </template>
@@ -28,7 +29,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { Button } from "@/components/ui/button";
-import JobCard from "@/components/jobs/JobCard.vue";
+import JobListRow from "@/components/jobs/JobListRow.vue";
+import { toJsDate } from "@/lib/jobDates";
 import { OPEN_STAGES, STAGE_LABELS, stageOf, type OpenStage } from "@/lib/stages";
 import type { JobApplication } from "@/types";
 
@@ -49,9 +51,13 @@ const chips = computed(() => [
   })),
 ]);
 
+// Within a stage, follow-ups due soonest come first (as on the canvas); the rest keep their order
+const followUpTime = (job: JobApplication) => toJsDate(job.followUpAt)?.getTime() ?? Number.POSITIVE_INFINITY;
+const byFollowUp = (list: JobApplication[]) => [...list].sort((a, b) => followUpTime(a) - followUpTime(b));
+
 const groups = computed(() =>
   GROUP_ORDER.filter((stage) => filter.value === "all" || filter.value === stage)
-    .map((stage) => ({ stage, jobs: openJobs.value.filter((job) => stageOf(job.status) === stage) }))
+    .map((stage) => ({ stage, jobs: byFollowUp(openJobs.value.filter((job) => stageOf(job.status) === stage)) }))
     .filter((group) => group.jobs.length),
 );
 </script>
