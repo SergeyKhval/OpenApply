@@ -17,6 +17,16 @@
 const KNOWN_SCHOOL_DOMAINS = new Set([
   "icsz.ch", // International Community School, Zurich
   "tisa.az", // The International School of Azerbaijan
+  // Added 2026-09-27 (oa-o6f, from research/activation-dropoff-2026-09-27.md):
+  // obviously institutional by name, but each sits on a generic-looking
+  // suffix (.org/.ch/.it/.com/.qa) with no edu/ac/sch/k12 marker.
+  "aislusaka.org", // American International School of Lusaka
+  "iszl.ch", // International School of Zug and Luzern
+  "gh-is.org", // Ghana International School
+  "isnaples.it", // International School Naples
+  "montessorijapan.com", // Montessori school network, Japan
+  "canadianschool.it", // a Canadian international school in Italy
+  "qad.qfschools.qa", // Qatar Academy Doha, part of the Qatar Foundation Schools network
 ]);
 
 export type EmailDomainType = "school" | "other";

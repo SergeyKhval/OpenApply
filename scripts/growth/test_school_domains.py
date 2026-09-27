@@ -17,6 +17,13 @@ from school_domains import is_school_domain
         "tisa.az",  # known international school domain, no edu/ac/k12 marker
         "EIC.EDU",  # case insensitive
         "  eic.edu  ",  # tolerate surrounding whitespace
+        "aislusaka.org",  # oa-o6f: institutional by name, .org suffix
+        "iszl.ch",  # oa-o6f: institutional by name, bare .ch suffix
+        "gh-is.org",  # oa-o6f: institutional by name, .org suffix
+        "isnaples.it",  # oa-o6f: institutional by name, .it suffix
+        "montessorijapan.com",  # oa-o6f: institutional by name, .com suffix
+        "canadianschool.it",  # oa-o6f: institutional by name, .it suffix
+        "qad.qfschools.qa",  # oa-o6f: institutional by name, .qa suffix
     ],
 )
 def test_flags_known_school_domains(domain):
