@@ -21,10 +21,13 @@ const ai = genkit({
 // thinkingBudget, so thinkingLevel isn't typed here yet, but it does reach
 // the API untouched and the API honors it (verified in oa-gom: MINIMAL cut
 // thinking tokens to 0 vs ~740 with no thinkingConfig set, on an identical
-// prompt). Left unset to keep today's behavior; flipping this needs the
-// same quality re-test oa-7zx ran for thinkingBudget, since a lower level
-// may affect requirement-evidence accuracy the same way switching models did.
-const MATCH_THINKING_LEVEL: "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | undefined = undefined;
+// prompt). Set to LOW after oa-6vn's 3-run pooled re-test (54 covered
+// requirements/config): 94.2% pooled agreement vs 90.8% for the unset
+// default, ~57% lower cost and latency; the only major mismatches were the
+// same known summed-years edge case that also hits the default config.
+// research/thinking-level-quality-2026-09-27.md in the growth-sprint vault
+// has the full numbers.
+const MATCH_THINKING_LEVEL: "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | undefined = "LOW";
 
 export const MatchToolResultSchema = z.object({
   companyName: z.string(),
