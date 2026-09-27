@@ -7,9 +7,9 @@
     rel="noopener noreferrer"
     class="font-bold break-all text-foreground hover:underline"
   >
-    {{ resume.fileName || "Resume" }}
+    {{ resumeName(resume) }}
   </a>
-  <span v-else class="font-bold break-all text-foreground">{{ resume.fileName || "Resume" }}</span>
+  <span v-else class="font-bold break-all text-foreground">{{ resumeName(resume) }}</span>
 </template>
 
 
@@ -17,6 +17,7 @@
 import { useStorageFileUrl, useFirebaseStorage } from "vuefire";
 import { ref as storageRef } from "firebase/storage";
 import { Resume } from "@/types";
+import { resumeName } from "@/lib/resumeUsage";
 
 type ResumeLinkProps = {
   resume: Resume;
@@ -24,6 +25,6 @@ type ResumeLinkProps = {
 
 const { resume } = defineProps<ResumeLinkProps>();
 const storage = useFirebaseStorage();
-const resumeStorageRef = storageRef(storage, resume.storagePath);
-const { url } = useStorageFileUrl(resumeStorageRef);
+// A built resume has no file: it shows as plain text
+const { url } = useStorageFileUrl(resume.kind === "built" ? null : storageRef(storage, resume.storagePath));
 </script>

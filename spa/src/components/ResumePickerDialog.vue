@@ -52,11 +52,11 @@
               <div class="flex items-start justify-between gap-2 grow">
                 <div class="min-w-0 flex-1">
                   <p class="font-medium break-all">
-                    {{ resume.fileName }}
+                    {{ resumeName(resume) }}
                   </p>
 
                   <p class="text-sm text-muted-foreground">
-                    {{ formatFileSize(resume.fileSize) }} •
+                    <template v-if="resume.kind !== 'built'">{{ formatFileSize(resume.fileSize) }} •</template>
                     {{ formatDate(resume.createdAt) }}
                   </p>
                   <div class="mt-1 flex flex-col text-xs">
@@ -83,6 +83,7 @@
                 {{ resume.id === currentResumeId ? "Attached" : "Attach" }}
               </Button>
               <Button
+                v-if="resume.kind !== 'built'"
                 size="sm"
                 variant="ghost"
                 as="a"
@@ -122,6 +123,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { useResumes } from "@/composables/useResumes";
+import { resumeName } from "@/lib/resumeUsage";
 import { useJobApplications } from "@/composables/useJobApplications";
 import { useToast } from "@/components/ui/toast";
 import type { Timestamp } from "firebase/firestore";

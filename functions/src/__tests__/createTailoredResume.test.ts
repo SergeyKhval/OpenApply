@@ -333,6 +333,13 @@ describe("createTailoredResume", () => {
       });
     });
 
+    it("names a built resume by its title", async () => {
+      seed();
+      store.set("userResumes/resume-1", { userId: USER_ID, kind: "built", title: "Product roles", text: RESUME_TEXT });
+      await call();
+      expect(created()[0]!.data).toMatchObject({ resume: { id: "resume-1", fileName: "Product roles" } });
+    });
+
     it("logs counts and tokens but never resume text", async () => {
       seed();
       await call();

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
-import { legacyRedirects } from "../legacyRedirects";
+import { legacyRedirects, redirectLegacyQueries } from "../legacyRedirects";
 
 const Stub = { template: "<div />" };
 
-const makeRouter = () =>
-  createRouter({
+const makeRouter = () => {
+  const router = createRouter({
     history: createMemoryHistory(),
     routes: [
       { path: "/", component: Stub },
@@ -13,10 +13,14 @@ const makeRouter = () =>
       { path: "/jobs/new", component: Stub },
       { path: "/jobs/:jobId", component: Stub },
       { path: "/documents", component: Stub },
+      { path: "/people", component: Stub },
       { path: "/settings/import-export", component: Stub },
       ...legacyRedirects,
     ],
   });
+  router.beforeEach(redirectLegacyQueries);
+  return router;
+};
 
 describe("legacy /dashboard urls", () => {
   it.each([
@@ -31,6 +35,20 @@ describe("legacy /dashboard urls", () => {
     ["/dashboard/cover-letters", "/documents?tab=cover-letters"],
     ["/dashboard/cover-letters?dialog-name=generate-cover-letter", "/documents?dialog-name=generate-cover-letter&tab=cover-letters"],
     ["/dashboard/file-import", "/settings/import-export"],
+  ])("%s lands on %s", async (from, to) => {
+    const router = makeRouter();
+    await router.push(from);
+    expect(router.currentRoute.value.fullPath).toBe(to);
+  });
+});
+
+describe("People moved out of Documents", () => {
+  it.each([
+    ["/documents?tab=people", "/people"],
+    ["/documents?tab=people&utm_source=email", "/people?utm_source=email"],
+    ["/documents?tab=resumes", "/documents?tab=resumes"],
+    ["/documents?tab=cover-letters", "/documents?tab=cover-letters"],
+    ["/documents", "/documents"],
   ])("%s lands on %s", async (from, to) => {
     const router = makeRouter();
     await router.push(from);

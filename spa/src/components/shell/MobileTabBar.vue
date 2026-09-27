@@ -1,4 +1,4 @@
-<!-- Phones and tablets (below lg): Jobs, Documents, Me -->
+<!-- Phones and tablets (below lg): Jobs, Documents, People, Me -->
 <template>
   <nav
     aria-label="Main"

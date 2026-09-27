@@ -132,7 +132,8 @@ export const createTailoredResume = onCall(async (request) => {
         resumeId,
         jobApplicationId: applicationId,
         matchId: match.id,
-        resume: { id: resumeId, fileName: resumeData.fileName ?? null },
+        // A built resume has a title instead of a file name
+        resume: { id: resumeId, fileName: resumeData.fileName ?? resumeData.title ?? null },
         jobApplication: {
           id: applicationId,
           companyName: applicationData.companyName ?? null,
