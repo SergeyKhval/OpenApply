@@ -1,0 +1,297 @@
+{
+  "cases": [
+    {
+      "name": "full resume, every section type",
+      "structured": {
+        "version": 1,
+        "contact": {
+          "name": "Sarah Chen",
+          "headline": "Senior Frontend Engineer",
+          "email": "sarah.chen@example.com",
+          "phone": "+48 600 100 200",
+          "location": "Warsaw, Poland",
+          "links": [
+            "linkedin.com/in/sarahchen",
+            "github.com/sarahchen"
+          ]
+        },
+        "sections": [
+          {
+            "id": "s1",
+            "type": "summary",
+            "heading": "Summary",
+            "text": "Frontend engineer with seven years in B2B SaaS, most of them on checkout and billing flows."
+          },
+          {
+            "id": "s2",
+            "type": "experience",
+            "heading": "Work Experience",
+            "entries": [
+              {
+                "id": "e1",
+                "title": "Senior Frontend Engineer",
+                "organization": "Globex",
+                "location": "Warsaw",
+                "start": {
+                  "year": 2021,
+                  "month": 3
+                },
+                "end": "present",
+                "bullets": [
+                  {
+                    "id": "b1",
+                    "text": "Cut checkout load time from 4.1 s to 1.6 s by splitting the payment bundle."
+                  },
+                  {
+                    "id": "b2",
+                    "text": "Mentored two junior engineers through their first releases."
+                  }
+                ]
+              },
+              {
+                "id": "e2",
+                "title": "Frontend Engineer",
+                "organization": "Initech",
+                "location": "Krakow",
+                "start": {
+                  "year": 2018,
+                  "month": 6
+                },
+                "end": {
+                  "year": 2021,
+                  "month": 2
+                },
+                "bullets": [
+                  {
+                    "id": "b3",
+                    "text": "Built the Vue 2 design system used by four product teams."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "type": "education",
+            "heading": "Education",
+            "entries": [
+              {
+                "id": "d1",
+                "degree": "BSc Computer Science",
+                "school": "Warsaw University of Technology",
+                "location": "",
+                "start": {
+                  "year": 2014,
+                  "month": null
+                },
+                "end": {
+                  "year": 2018,
+                  "month": null
+                },
+                "bullets": []
+              }
+            ]
+          },
+          {
+            "id": "s4",
+            "type": "skills",
+            "heading": "Skills",
+            "items": [
+              "TypeScript",
+              "Vue",
+              "Playwright",
+              "PostgreSQL"
+            ]
+          },
+          {
+            "id": "s5",
+            "type": "languages",
+            "heading": "Languages",
+            "items": [
+              "Polish (native)",
+              "English (C1)"
+            ]
+          },
+          {
+            "id": "s6",
+            "type": "certifications",
+            "heading": "Certifications",
+            "items": [
+              "AWS Certified Developer, 2022"
+            ]
+          }
+        ]
+      },
+      "text": "Sarah Chen\nSenior Frontend Engineer\nsarah.chen@example.com | +48 600 100 200 | Warsaw, Poland | linkedin.com/in/sarahchen | github.com/sarahchen\nSummary\nFrontend engineer with seven years in B2B SaaS, most of them on checkout and billing flows.\nWork Experience\nSenior Frontend Engineer, Globex | Warsaw | Mar 2021 – Present\n• Cut checkout load time from 4.1 s to 1.6 s by splitting the payment bundle.\n• Mentored two junior engineers through their first releases.\nFrontend Engineer, Initech | Krakow | Jun 2018 – Feb 2021\n• Built the Vue 2 design system used by four product teams.\nEducation\nBSc Computer Science, Warsaw University of Technology | 2014 – 2018\nSkills\nTypeScript, Vue, Playwright, PostgreSQL\nLanguages\nPolish (native), English (C1)\nCertifications\n• AWS Certified Developer, 2022"
+    },
+    {
+      "name": "blanks are dropped, newlines collapse, unknown heading falls back",
+      "structured": {
+        "version": 1,
+        "contact": {
+          "name": "  Jan   Kowalski ",
+          "headline": "",
+          "email": "jan@example.com",
+          "phone": "",
+          "location": "",
+          "links": [
+            "",
+            " "
+          ]
+        },
+        "sections": [
+          {
+            "id": "s1",
+            "type": "skills",
+            "heading": "My Stuff",
+            "items": [
+              "Excel",
+              "",
+              " SQL\n"
+            ]
+          },
+          {
+            "id": "s2",
+            "type": "summary",
+            "heading": "Summary",
+            "text": "   "
+          },
+          {
+            "id": "s3",
+            "type": "experience",
+            "heading": "Experience",
+            "entries": [
+              {
+                "id": "e1",
+                "title": "Analyst",
+                "organization": "Acme\nCorp",
+                "location": "",
+                "start": null,
+                "end": null,
+                "bullets": [
+                  {
+                    "id": "b1",
+                    "text": "Built the monthly\nsales report."
+                  },
+                  {
+                    "id": "b2",
+                    "text": "  "
+                  }
+                ]
+              },
+              {
+                "id": "e2",
+                "title": "",
+                "organization": "",
+                "location": "",
+                "start": null,
+                "end": null,
+                "bullets": []
+              }
+            ]
+          },
+          {
+            "id": "s4",
+            "type": "education",
+            "heading": "Education",
+            "entries": []
+          }
+        ]
+      },
+      "text": "Jan Kowalski\njan@example.com\nSkills\nExcel, SQL\nExperience\nAnalyst, Acme Corp\n• Built the monthly sales report."
+    },
+    {
+      "name": "year-only dates, projects, volunteering and awards",
+      "structured": {
+        "version": 1,
+        "contact": {
+          "name": "Ada Obi",
+          "headline": "Data Analyst",
+          "email": "",
+          "phone": "+44 7700 900123",
+          "location": "Leeds",
+          "links": []
+        },
+        "sections": [
+          {
+            "id": "s1",
+            "type": "projects",
+            "heading": "Selected Projects",
+            "entries": [
+              {
+                "id": "p1",
+                "title": "Bus delay dashboard",
+                "organization": "Personal project",
+                "location": "",
+                "start": {
+                  "year": 2023,
+                  "month": null
+                },
+                "end": null,
+                "bullets": [
+                  {
+                    "id": "b1",
+                    "text": "Pulled two years of open transit data into a daily Power BI report."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "type": "volunteering",
+            "heading": "Volunteer Experience",
+            "entries": [
+              {
+                "id": "v1",
+                "title": "Treasurer",
+                "organization": "Leeds Food Bank",
+                "location": "Leeds",
+                "start": {
+                  "year": 2020,
+                  "month": 9
+                },
+                "end": {
+                  "year": 2022,
+                  "month": 12
+                },
+                "bullets": [
+                  {
+                    "id": "b2",
+                    "text": "Kept the books for a volunteer team of 40."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "type": "awards",
+            "heading": "Honors and Awards",
+            "items": [
+              "Dean's list, 2019",
+              "Best student project, 2020"
+            ]
+          }
+        ]
+      },
+      "text": "Ada Obi\nData Analyst\n+44 7700 900123 | Leeds\nSelected Projects\nBus delay dashboard, Personal project | 2023\n• Pulled two years of open transit data into a daily Power BI report.\nVolunteer Experience\nTreasurer, Leeds Food Bank | Leeds | Sep 2020 – Dec 2022\n• Kept the books for a volunteer team of 40.\nHonors and Awards\n• Dean's list, 2019\n• Best student project, 2020"
+    },
+    {
+      "name": "empty resume",
+      "structured": {
+        "version": 1,
+        "contact": {
+          "name": "",
+          "headline": "",
+          "email": "",
+          "phone": "",
+          "location": "",
+          "links": []
+        },
+        "sections": []
+      },
+      "text": ""
+    }
+  ]
+}

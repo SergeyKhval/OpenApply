@@ -1,4 +1,4 @@
-import type { JobApplication } from "@/types";
+import type { JobApplication, Resume } from "@/types";
 
 // How many jobs each resume was used for (jobApplications.resumeId)
 export function countResumeUsage(jobs: JobApplication[]) {
@@ -11,6 +11,11 @@ export function countResumeUsage(jobs: JobApplication[]) {
 
 export const usageLabel = (count: number) =>
   count === 0 ? "Not used yet" : `Used in ${count} ${count === 1 ? "job" : "jobs"}`;
+
+/** What to call a resume in lists and pickers: its file name or its title. */
+export function resumeName(resume: Resume): string {
+  return (resume.kind === "built" ? resume.title : resume.fileName) || "Resume";
+}
 
 export function formatFileSize(bytes?: number) {
   if (!bytes) return "";

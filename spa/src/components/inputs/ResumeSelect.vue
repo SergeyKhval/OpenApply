@@ -13,7 +13,7 @@
         >
           <div class="flex items-center gap-2">
             <PhFile :size="16" class="text-muted-foreground" />
-            <span>{{ resume.fileName }}</span>
+            <span>{{ resumeName(resume) }}</span>
           </div>
         </SelectItem>
       </SelectContent>
@@ -33,6 +33,7 @@ import {
 import { PhFile } from "@phosphor-icons/vue";
 import { Label } from "@/components/ui/label";
 import { useResumes } from "@/composables/useResumes.ts";
+import { resumeName } from "@/lib/resumeUsage";
 
 const selectedResumeId = defineModel<string>();
 

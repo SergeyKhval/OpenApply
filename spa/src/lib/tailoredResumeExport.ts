@@ -1,8 +1,8 @@
-// Downloads of a tailored resume: a DOCX built in the browser (docx, loaded
+// Downloads of a tailored or built resume: a DOCX built in the browser (docx, loaded
 // only on click) and a print view for "Save as PDF". Both follow the same
 // ATS-friendly layout: one column, plain section headings, real bullets, no
 // tables, columns, icons, headers or footers.
-import type { TailoredDoc } from "@/lib/tailoredResume";
+import type { ResumeDoc } from "@/lib/tailoredResume";
 
 export type ExportMeta = {
   companyName?: string | null;
@@ -10,13 +10,13 @@ export type ExportMeta = {
 };
 
 /** The candidate's name: the first line of the top block. */
-export function candidateName(doc: TailoredDoc): string {
+export function candidateName(doc: ResumeDoc): string {
   const top = doc.sections.find((section) => section.heading === null);
   return top?.lines[0]?.text.trim() ?? "";
 }
 
 /** "Sarah Chen - Globex Senior Frontend Engineer", safe as a file name. */
-export function exportFileName(doc: TailoredDoc, meta: ExportMeta, extension: "docx" | "pdf"): string {
+export function exportFileName(doc: ResumeDoc, meta: ExportMeta, extension: "docx" | "pdf"): string {
   const job = [meta.companyName, meta.position].filter(Boolean).join(" ");
   const base = [candidateName(doc) || "Resume", job].filter(Boolean).join(" - ");
   const safe = base
@@ -34,7 +34,7 @@ const HEADING_SIZE = 24;
 const BODY_SIZE = 21;
 const FONT = "Calibri";
 
-export async function tailoredResumeDocx(doc: TailoredDoc): Promise<Blob> {
+export async function tailoredResumeDocx(doc: ResumeDoc): Promise<Blob> {
   const { Document, Packer, Paragraph, TextRun, BorderStyle } = await import("docx");
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
 
@@ -52,7 +52,7 @@ export async function tailoredResumeDocx(doc: TailoredDoc): Promise<Blob> {
       const isName = section.heading === null && sectionIndex === 0 && lineIndex === 0;
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: line.text, bold: isName, size: isName ? NAME_SIZE : BODY_SIZE, font: FONT })],
+          children: [new TextRun({ text: line.text, bold: isName || line.strong === true, size: isName ? NAME_SIZE : BODY_SIZE, font: FONT })],
           ...(line.bullet ? { bullet: { level: 0 } } : {}),
           spacing: { after: line.bullet ? 40 : 60 },
         }),
@@ -72,7 +72,7 @@ const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 
 /** A standalone page for the browser's "Save as PDF". */
-export function tailoredResumeHtml(doc: TailoredDoc, title: string): string {
+export function tailoredResumeHtml(doc: ResumeDoc, title: string): string {
   const body = doc.sections
     .map((section, sectionIndex) => {
       const heading = section.heading ? `<h2>${escapeHtml(section.heading)}</h2>` : "";
@@ -89,7 +89,13 @@ export function tailoredResumeHtml(doc: TailoredDoc, title: string): string {
         }
         flush();
         const isName = section.heading === null && sectionIndex === 0 && lineIndex === 0;
-        items.push(isName ? `<h1>${escapeHtml(line.text)}</h1>` : `<p>${escapeHtml(line.text)}</p>`);
+        items.push(
+          isName
+            ? `<h1>${escapeHtml(line.text)}</h1>`
+            : line.strong
+              ? `<p><strong>${escapeHtml(line.text)}</strong></p>`
+              : `<p>${escapeHtml(line.text)}</p>`,
+        );
       });
       flush();
       return `<section>${heading}${items.join("")}</section>`;
@@ -125,7 +131,7 @@ export function saveBlob(blob: Blob, fileName: string): void {
  * where the user picks "Save as PDF". Returns false when a popup blocker
  * stopped the tab.
  */
-export function printTailoredResume(doc: TailoredDoc, fileName: string): boolean {
+export function printTailoredResume(doc: ResumeDoc, fileName: string): boolean {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return false;
   printWindow.document.open();
