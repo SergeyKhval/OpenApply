@@ -1,26 +1,35 @@
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Job Description</CardTitle>
+  <Card class="gap-3">
+    <CardHeader class="flex flex-row items-center justify-between gap-2">
+      <CardTitle class="text-base">Job description</CardTitle>
+      <Button
+        v-if="viewMode === 'view' && jobDescription"
+        size="sm"
+        variant="ghost"
+        class="-mr-2"
+        @click="viewMode = 'edit'"
+      >
+        <PhPencilSimple />
+        Edit
+      </Button>
     </CardHeader>
 
     <CardContent>
       <template v-if="viewMode === 'view'">
         <template v-if="jobDescription">
           <p
-            class="whitespace-pre-line break-words"
+            class="text-[15px] leading-relaxed whitespace-pre-line break-words text-soft-foreground"
             :class="isWholeDescriptionVisible ? '' : 'line-clamp-5'"
           >
             {{ displayedDescription }}
           </p>
-          <Button
-            size="sm"
-            variant="link"
+          <button
+            type="button"
+            class="mt-2 text-sm font-semibold text-secondary-foreground underline underline-offset-2"
             @click="isWholeDescriptionVisible = !isWholeDescriptionVisible"
           >
-            <PhEye />
-            {{ isWholeDescriptionVisible ? "Show less" : "Show more" }}
-          </Button>
+            {{ isWholeDescriptionVisible ? "Show less" : "Show all" }}
+          </button>
         </template>
         <template v-else>
           <div class="text-muted-foreground flex flex-col items-center gap-2">
@@ -54,17 +63,8 @@
         Job Description can't be empty
       </p>
     </CardContent>
-    <CardFooter class="justify-end">
-      <Button
-        v-if="viewMode === 'view' && jobDescription"
-        size="sm"
-        variant="outline"
-        @click="viewMode = 'edit'"
-      >
-        <PhPencilSimple />
-        Edit
-      </Button>
-      <div v-else-if="viewMode === 'edit'" class="flex gap-2 items-center">
+    <CardFooter v-if="viewMode === 'edit'" class="justify-end">
+      <div class="flex gap-2 items-center">
         <Button size="sm" @click="updateJobDescription()">
           <PhCheckFat />
           Save</Button
@@ -92,7 +92,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   PhCheckFat,
-  PhEye,
   PhFileDashed,
   PhPencilSimple,
   PhRewind,
