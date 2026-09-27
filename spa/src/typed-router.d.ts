@@ -89,6 +89,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/people': RouteRecordInfo<
+      '/people',
+      '/people',
+      Record<never, never>,
+      Record<never, never>,
+      | '/people/'
+    >,
+    '/people/': RouteRecordInfo<
+      '/people/',
+      '/people',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/posting-review': RouteRecordInfo<
       '/posting-review',
       '/posting-review',
@@ -227,6 +241,19 @@ declare module 'vue-router/auto-routes' {
     'src/pages/jobs/report.vue': {
       routes:
         | '/jobs/report'
+      views:
+        | never
+    }
+    'src/pages/people.vue': {
+      routes:
+        | '/people'
+        | '/people/'
+      views:
+        | 'default'
+    }
+    'src/pages/people/index.vue': {
+      routes:
+        | '/people/'
       views:
         | never
     }

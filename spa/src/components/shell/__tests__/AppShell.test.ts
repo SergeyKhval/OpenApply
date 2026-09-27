@@ -39,7 +39,7 @@ const Stub = defineComponent({ template: "<div />" });
 const makeRouter = () =>
   createRouter({
     history: createMemoryHistory("/app/"),
-    routes: ["/", "/jobs", "/jobs/:jobId", "/documents", "/settings", "/settings/plan", "/settings/email"].map((path) => ({
+    routes: ["/", "/jobs", "/jobs/:jobId", "/documents", "/people", "/settings", "/settings/plan", "/settings/email"].map((path) => ({
       path,
       component: Stub,
     })),
@@ -67,11 +67,20 @@ describe("AppSidebar", () => {
     billing.value = { aiUsage: { period: "2026-09", count: 3 } };
   });
 
-  it("links Jobs and Documents and marks the current section", async () => {
+  it("links Jobs, Documents and People and marks the current section", async () => {
     const { wrapper } = await mountAt(AppSidebar, "/jobs/abc");
     const links = wrapper.findAll('nav[aria-label="Main"] a');
-    expect(links.map((link) => link.attributes("href"))).toEqual(["/app/jobs", "/app/documents"]);
+    expect(links.map((link) => link.attributes("href"))).toEqual(["/app/jobs", "/app/documents", "/app/people"]);
+    expect(links.map((link) => link.text().replace(/\d+/g, "").trim())).toEqual(["Jobs", "Documents", "People"]);
     expect(links[0].attributes("aria-current")).toBe("page");
+    expect(links[1].attributes("aria-current")).toBeUndefined();
+    expect(links[2].attributes("aria-current")).toBeUndefined();
+  });
+
+  it("marks People active on the People page", async () => {
+    const { wrapper } = await mountAt(AppSidebar, "/people");
+    const links = wrapper.findAll('nav[aria-label="Main"] a');
+    expect(links[2].attributes("aria-current")).toBe("page");
     expect(links[1].attributes("aria-current")).toBeUndefined();
   });
 
@@ -95,13 +104,19 @@ describe("AppSidebar", () => {
 });
 
 describe("MobileTabBar", () => {
-  it("has Jobs, Documents and Me, with Me active in settings", async () => {
+  it("has Jobs, Documents, People and Me, with Me active in settings", async () => {
     const { wrapper } = await mountAt(MobileTabBar, "/settings/email");
     const links = wrapper.findAll("a");
-    expect(links.map((link) => link.text())).toEqual(["Jobs", "Documents", "Me"]);
-    expect(links[2].attributes("href")).toBe("/app/settings");
-    expect(links[2].attributes("aria-current")).toBe("page");
+    expect(links.map((link) => link.text())).toEqual(["Jobs", "Documents", "People", "Me"]);
+    expect(links[2].attributes("href")).toBe("/app/people");
+    expect(links[3].attributes("href")).toBe("/app/settings");
+    expect(links[3].attributes("aria-current")).toBe("page");
     expect(links[0].attributes("aria-current")).toBeUndefined();
+  });
+
+  it("marks People active on the People page", async () => {
+    const { wrapper } = await mountAt(MobileTabBar, "/people");
+    expect(wrapper.findAll("a")[2].attributes("aria-current")).toBe("page");
   });
 });
 

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routes } from "vue-router/auto-routes";
-import { legacyRedirects } from "./legacyRedirects";
+import { legacyRedirects, redirectLegacyQueries } from "./legacyRedirects";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/firebase/config";
 import { usePostHog } from "@/composables/usePostHog.ts";
@@ -55,6 +55,8 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL || "/app"),
   routes: [...routes, ...legacyRedirects],
 });
+
+router.beforeEach(redirectLegacyQueries);
 
 router.beforeEach(async (to) => {
   if (!to.matched.some((record) => record.meta.requiresAuth)) {
