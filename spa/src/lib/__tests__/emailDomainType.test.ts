@@ -14,6 +14,13 @@ describe("classifyEmailDomain", () => {
     "person@tisa.az", // known international school domain, no edu/ac/k12 marker
     "PERSON@EIC.EDU", // case insensitive
     "  person@eic.edu  ", // tolerate surrounding whitespace
+    "person@aislusaka.org", // oa-o6f: institutional by name, .org suffix
+    "person@iszl.ch", // oa-o6f: institutional by name, bare .ch suffix
+    "person@gh-is.org", // oa-o6f: institutional by name, .org suffix
+    "person@isnaples.it", // oa-o6f: institutional by name, .it suffix
+    "person@montessorijapan.com", // oa-o6f: institutional by name, .com suffix
+    "person@canadianschool.it", // oa-o6f: institutional by name, .it suffix
+    "person@qad.qfschools.qa", // oa-o6f: institutional by name, .qa suffix
   ])("flags %s as a school domain", (email) => {
     expect(classifyEmailDomain(email)).toBe("school");
   });
