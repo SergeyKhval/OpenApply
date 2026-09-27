@@ -1,21 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
-import { ref } from "vue";
+import { defineComponent, ref } from "vue";
 
 const flag = ref(false);
 const pending = ref(false);
 const resumes = Object.assign(ref<unknown[]>([]), { pending });
-const push = vi.fn();
-const createBuiltResume = vi.fn(async (..._args: unknown[]) => "new-1");
 const trackEvent = vi.fn();
 
-vi.mock("vuefire", () => ({ useCurrentUser: () => ref({ uid: "user-1", displayName: "Sarah Chen", email: "sarah@example.com" }) }));
-vi.mock("vue-router", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => flag }));
 vi.mock("@/composables/useResumes", () => ({ useResumes: () => resumes }));
-vi.mock("@/composables/useBuiltResume", () => ({ createBuiltResume: (...args: unknown[]) => createBuiltResume(...args) }));
+vi.mock("../NewResumeSheet.vue", () => ({ default: defineComponent({ name: "NewResumeSheet", props: ["open"], setup: () => () => null }) }));
 vi.mock("@/analytics", () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
-vi.mock("@/components/ui/toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 
 import NewResumeButton from "../NewResumeButton.vue";
 
@@ -26,7 +21,6 @@ describe("NewResumeButton", () => {
     flag.value = false;
     pending.value = false;
     resumes.value = [];
-    push.mockClear();
     trackEvent.mockClear();
   });
 
@@ -59,12 +53,11 @@ describe("NewResumeButton", () => {
     expect(trackEvent).toHaveBeenCalledWith("resume_builder_offered", { surface: "documents_header", hadResume: true });
   });
 
-  it("creates a resume from the account and opens the editor", async () => {
+  it("opens the chooser", async () => {
     flag.value = true;
     const wrapper = mount(NewResumeButton, { props: { surface: "documents_header" } });
+    expect(wrapper.findComponent({ name: "NewResumeSheet" }).props("open")).toBe(false);
     await wrapper.get("button").trigger("click");
-    await flushPromises();
-    expect(createBuiltResume).toHaveBeenCalledWith("user-1", { name: "Sarah Chen", email: "sarah@example.com" });
-    expect(push).toHaveBeenCalledWith({ name: "/documents/resumes/[resumeId]", params: { resumeId: "new-1" } });
+    expect(wrapper.findComponent({ name: "NewResumeSheet" }).props("open")).toBe(true);
   });
 });

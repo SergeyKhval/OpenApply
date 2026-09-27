@@ -5,22 +5,27 @@
       <div class="flex flex-col gap-1.5">
         <Label for="resume-name">Name</Label>
         <Input id="resume-name" v-model="contact.name" autocomplete="name" />
+        <FlaggedHint path="contact.name" :value="contact.name" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="resume-headline">Headline <span class="font-normal text-muted-foreground">(optional)</span></Label>
         <Input id="resume-headline" v-model="contact.headline" placeholder="Frontend Engineer" />
+        <FlaggedHint path="contact.headline" :value="contact.headline" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="resume-email">Email</Label>
         <Input id="resume-email" v-model="contact.email" type="email" autocomplete="email" />
+        <FlaggedHint path="contact.email" :value="contact.email" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="resume-phone">Phone <span class="font-normal text-muted-foreground">(optional)</span></Label>
         <Input id="resume-phone" v-model="contact.phone" type="tel" autocomplete="tel" />
+        <FlaggedHint path="contact.phone" :value="contact.phone" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="resume-location">Location <span class="font-normal text-muted-foreground">(optional)</span></Label>
         <Input id="resume-location" v-model="contact.location" placeholder="City, Country" />
+        <FlaggedHint path="contact.location" :value="contact.location" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="resume-links">Links <span class="font-normal text-muted-foreground">(LinkedIn, portfolio)</span></Label>
@@ -33,6 +38,7 @@
           </TagsInputItem>
           <TagsInputInput placeholder="linkedin.com/in/you, then Enter" class="flex-1" />
         </TagsInput>
+        <FlaggedHint path="contact.links" :value="contact.links" />
       </div>
     </div>
     <ul v-if="hints.length" class="flex flex-col gap-1 text-sm text-muted-foreground">
@@ -45,6 +51,7 @@
 import { computed } from "vue";
 import { PhInfo, PhX } from "@phosphor-icons/vue";
 import { Input } from "@/components/ui/input";
+import FlaggedHint from "@/components/resume-builder/FlaggedHint.vue";
 import { Label } from "@/components/ui/label";
 import { TagsInput, TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInputItemText } from "@/components/ui/tags-input";
 import { contactHints } from "@/lib/builtResumeEdit";

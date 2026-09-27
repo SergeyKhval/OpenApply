@@ -48,6 +48,7 @@
 
         <div class="grid gap-6 lg:grid-cols-2">
           <div class="flex min-w-0 flex-col gap-4" :class="view === 'preview' && 'max-lg:hidden'">
+            <ImportNotice v-if="resume?.importedFrom" v-model="draft" :imported-from="resume.importedFrom" />
             <ResumeContactForm v-model="draft.contact" />
             <ResumeSectionCard
               v-for="(section, index) in draft.sections"
@@ -97,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from "vue";
+import { computed, onBeforeUnmount, provide, ref } from "vue";
 import { onBeforeRouteLeave, useRoute } from "vue-router";
 import { useOnline } from "@vueuse/core";
 import { PhArrowLeft, PhFileDoc, PhFilePdf, PhPlus } from "@phosphor-icons/vue";
@@ -107,6 +108,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Empty, EmptyAction, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import ImportNotice from "@/components/resume-builder/ImportNotice.vue";
 import ResumeContactForm from "@/components/resume-builder/ResumeContactForm.vue";
 import ResumePreview from "@/components/resume-builder/ResumePreview.vue";
 import ResumeSectionCard from "@/components/resume-builder/ResumeSectionCard.vue";
@@ -115,12 +117,19 @@ import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { trackEvent } from "@/analytics";
 import { structuredToDoc, type SectionType } from "@/lib/builtResume";
 import { SECTION_LABELS, missingSectionTypes, moveInPlace, newSection, removeAt, undoRemove, type Removed } from "@/lib/builtResumeEdit";
+import { FLAGGED_FIELDS } from "@/lib/resumeImport";
 import { exportFileName, printTailoredResume, saveBlob, tailoredResumeDocx } from "@/lib/tailoredResumeExport";
 
 const route = useRoute("/documents/resumes/[resumeId]");
 const enabled = useFeatureFlag("resume-builder");
 const resumeId = computed(() => route.params.resumeId);
-const { draft, title, pending, saveState, flush } = useBuiltResume(resumeId);
+const { resume, draft, title, pending, saveState, flush } = useBuiltResume(resumeId);
+
+// Fields an import proposed but couldn't confirm, marked until filled in
+provide(
+  FLAGGED_FIELDS,
+  computed(() => new Set(resume.value?.importedFrom?.flaggedFields ?? [])),
+);
 
 onBeforeRouteLeave(async () => {
   await flush();
