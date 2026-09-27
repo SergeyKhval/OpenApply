@@ -19,7 +19,20 @@
     </div>
 
     <div class="flex flex-wrap gap-2 sm:shrink-0">
-      <template v-if="step.kind === 'follow-up'">
+      <template v-if="step.kind === 'interview'">
+        <Button variant="outline" size="sm" class="bg-card" @click="emit('edit-interview')">Edit step</Button>
+        <!-- Interviews are passed or not; "done" asks which, same choices as the timeline -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button size="sm"><PhCheck />Mark done</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @select="emit('interview-status', 'passed')">Passed</DropdownMenuItem>
+            <DropdownMenuItem @select="emit('interview-status', 'failed')">Didn't pass</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </template>
+      <template v-else-if="step.kind === 'follow-up'">
         <Button variant="outline" size="sm" @click="emit('draft-follow-up')">Draft follow-up</Button>
         <Button variant="ghost" size="sm" @click="snoozeFollowUp(job.id)">Snooze</Button>
         <Button size="sm" @click="clearFollowUp(job.id)"><PhCheck />Done</Button>
@@ -36,28 +49,47 @@
 import { computed } from "vue";
 import { PhCalendarBlank, PhCheck, PhCheckCircle, PhPaperPlaneTilt } from "@phosphor-icons/vue";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus";
 import { daysAgoLabel, toJsDate } from "@/lib/jobDates";
 import { stageOf } from "@/lib/stages";
 import type { TimelineEntry } from "@/lib/timeline";
-import type { JobApplication } from "@/types";
+import type { Interview, JobApplication } from "@/types";
 
 const { job, upcomingInterview, now } = defineProps<{
   job: JobApplication;
   upcomingInterview: Extract<TimelineEntry, { kind: "interview" }> | null;
   now: Date;
 }>();
-const emit = defineEmits<{ (event: "draft-follow-up"): void }>();
+const emit = defineEmits<{
+  (event: "draft-follow-up"): void;
+  (event: "edit-interview"): void;
+  (event: "interview-status", status: Interview["status"]): void;
+}>();
 
 const { markApplied, scheduleFollowUp, snoozeFollowUp, clearFollowUp } = useUpdateJobApplicationStatus();
 
 const formatDate = (date: Date) =>
   date.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
+// "today", "tomorrow", "in 3 days", by calendar day
+function inDaysLabel(date: Date, from: Date) {
+  const startOfDay = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const days = Math.round((startOfDay(date) - startOfDay(from)) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "tomorrow";
+  return `in ${days} days`;
+}
+
 const step = computed(() => {
   const stage = stageOf(job.status);
   if (upcomingInterview) {
-    return { kind: "interview" as const, title: upcomingInterview.title, detail: formatDate(upcomingInterview.date) };
+    return { kind: "interview" as const, title: upcomingInterview.title, detail: `${formatDate(upcomingInterview.date)} · ${inDaysLabel(upcomingInterview.date, now)}` };
   }
   if (stage === "saved") {
     return { kind: "apply" as const, title: "Apply, or let it go", detail: "Mark it applied and we'll remind you to follow up in a week." };
