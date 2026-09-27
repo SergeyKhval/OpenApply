@@ -215,6 +215,18 @@ const COMMON_LINE_STARTS = new Set([
   "saw", "found", "sped", "shipped", "helped", "worked", "partnered", "each", "both", "most",
   "many", "this", "these", "our", "my", "across", "through", "using", "via", "from", "while",
   "within", "after", "before", "during", "when", "where", "responsible", "key", "hands-on",
+  // Common transition/positioning adverbs a rewrite naturally starts a
+  // sentence with (e.g. "Previously led..."). None of these read as a name
+  // or tool, so treating them as ambiguous-at-sentence-start (like Kafka or
+  // an invented employer would be) only produces false reverts.
+  "previously", "currently", "recently", "additionally", "similarly", "meanwhile",
+  "separately", "overall", "ultimately", "occasionally", "frequently", "eventually",
+  "typically", "generally", "specifically", "notably", "finally", "initially",
+  "originally", "usually", "ideally", "personally", "today", "now", "outside", "beyond",
+  "instead", "besides", "moreover", "however", "therefore", "thus", "still", "yet", "then",
+  // Subordinating conjunctions: never a name, whichever clause they open.
+  "because", "since", "although", "though", "unless", "whereas", "given", "once", "if",
+  "without", "unlike", "despite", "regardless", "amid", "alongside", "prior",
 ]);
 
 export type FactToken = string;
@@ -286,7 +298,10 @@ function namedWords(text: string): string[] {
   for (const token of tokens) {
     const word = token.replace(/^[^\w+#]+|[^\w+#]+$/g, "");
     const startsSentence = sentenceStart;
-    sentenceStart = /[.!?:;]$/.test(token) || /^[•\-–—*]$/.test(token);
+    // "|" and "·" also start a fresh clause: LinkedIn headlines routinely
+    // segment on them ("Title | Skills | Positioning"), and the first word
+    // of a later segment is exactly as ambiguous as a sentence's first word.
+    sentenceStart = /[.!?:;]$/.test(token) || /^[•\-–—*|·]$/.test(token);
     if (!word) continue;
     const lower = word.toLowerCase();
     if (COMMON_CAPITALIZED.has(lower)) continue;
@@ -297,6 +312,52 @@ function namedWords(text: string): string[] {
       continue;
     }
     for (const part of wordsOf(canonicalize(word))) result.push(part);
+  }
+  return result;
+}
+
+// A rewrite naturally changes a word's inflection without inventing
+// anything: "design" -> "designing", "reconcile" -> "reconciled". Checked as
+// an explicit, narrow set of suffixes rather than a shared-prefix stem: a
+// prefix stem (e.g. 5 letters) also matches an unrelated word that happens
+// to start the same way ("Salesforce" vs "sales", "Marketo" vs "marketing",
+// "Tableau" vs "tables"), which would let a genuinely invented tool name
+// through as if it were just a different form of an ordinary source word.
+const INFLECTION_SUFFIXES = [
+  "s", "es", "ed", "d", "ing", "er", "ers", "ion", "ions", "ation", "ations", "ment", "ments", "ly",
+];
+// Suffixes where a trailing "e" on the base is dropped before adding them:
+// "manage" -> "managing", "reconcile" -> "reconciled".
+const E_DROP_SUFFIXES = new Set(["ing", "ed", "d"]);
+
+function isInflectionOf(base: string, inflected: string): boolean {
+  if (inflected.length <= base.length) return false;
+  for (const suffix of INFLECTION_SUFFIXES) {
+    if (inflected === base + suffix) return true;
+    if (E_DROP_SUFFIXES.has(suffix) && base.endsWith("e") && inflected === base.slice(0, -1) + suffix) return true;
+  }
+  if (base.endsWith("y")) {
+    const stem = base.slice(0, -1);
+    if (inflected === stem + "ies" || inflected === stem + "ied") return true;
+  }
+  return false;
+}
+
+const wordsShareInflection = (a: string, b: string): boolean => isInflectionOf(a, b) || isInflectionOf(b, a);
+
+/**
+ * Lowercased words in `text` that read as a tool/name marker (a digit, +, #
+ * or an inner capital — "AWS", "K8s", "AE"), not just an initial capital.
+ * Never worth inflection-folding: a real tool or abbreviation should match a
+ * source word exactly (or via the alias table), never by a suffix guess.
+ */
+function toolLikeWords(text: string): Set<string> {
+  const result = new Set<string>();
+  for (const token of text.normalize("NFKC").split(/\s+/)) {
+    const word = token.replace(/^[^\w+#]+|[^\w+#]+$/g, "");
+    if (word && (/\d|[+#]/.test(word) || /^.+[A-Z]/.test(word))) {
+      for (const part of wordsOf(canonicalize(word))) result.add(part);
+    }
   }
   return result;
 }
@@ -316,11 +377,20 @@ export function newFacts(
   // Raw words too: an alias like "Amazon Web Services" → "aws" must not hide
   // "Amazon" from a rewrite that keeps it
   const sourceWords = new Set([...wordsOf(sourceCanonical), ...wordsOf(sourceText.normalize("NFKC").toLowerCase())]);
+  const candidateToolLikeWords = toolLikeWords(text);
   const missing: string[] = [];
   for (const fact of factTokens(text, vocabulary)) {
     if (fact.startsWith("word:")) {
       const word = fact.slice(5);
-      if (!sourceWords.has(word) && !containsPhrase(sourceCanonical, word)) missing.push(fact);
+      // A rewrite hyphenating a compound the source wrote as two words (or
+      // vice versa) isn't a new fact, just tighter styling: "fifth grade" ->
+      // "fifth-grade teacher".
+      const looselyMatches =
+        sourceWords.has(word) ||
+        containsPhrase(sourceCanonical, word) ||
+        (word.includes("-") && containsPhrase(sourceCanonical, word.replace(/-/g, " "))) ||
+        (!candidateToolLikeWords.has(word) && [...sourceWords].some((sourceWord) => wordsShareInflection(word, sourceWord)));
+      if (!looselyMatches) missing.push(fact);
     } else if (fact.startsWith("term:")) {
       if (!containsPhrase(sourceCanonical, fact.slice(5))) missing.push(fact);
     } else if (!sourceFacts.has(fact)) {
@@ -361,17 +431,22 @@ const SKILL_LEVEL_QUALIFIERS = new Set(["basic", "learning", "not-shipped", "exp
 
 // Nouns for people. "the ML team" or "the Data Science team's Python and
 // machine learning engineers" names someone else's work, not the
-// candidate's skill.
+// candidate's skill. Plural only for role nouns ("engineers", "scientists"):
+// the singular is how a LinkedIn About line self-identifies ("DevOps
+// engineer maintaining our AWS infrastructure..."), which is the candidate's
+// own title, not a group of other people.
 const PEOPLE_NOUNS = new Set(
   // Not "group" (AWS security groups) or "leads" (sales leads)
-  ("team teams squad squads department departments org organization engineers engineer " +
-    "scientists scientist researchers specialists staff colleagues admins administrators analysts " +
+  ("team teams squad squads department departments org organization engineers " +
+    "scientists researchers specialists staff colleagues admins administrators analysts " +
     "consultants contractors vendor vendors partner partners experts managers people developers").split(" "),
 );
 // Words that end the phrase a term belongs to: past one of these, a people
-// noun describes something else ("AWS ECS with the platform team's templates")
+// noun describes something else ("AWS ECS with the platform team's templates").
+// "or"/"nor"/"but" also end it: "never worked with Kubernetes or led a team"
+// is two independent, disjoint claims, not "a team's Kubernetes".
 const PHRASE_BREAKS = new Set(
-  "with for to by from at in on using via into onto through across of under over while and-then".split(" "),
+  "with for to by from at in on using via into onto through across of under over while and-then or nor but".split(" "),
 );
 const OTHERS_WINDOW = 5;
 

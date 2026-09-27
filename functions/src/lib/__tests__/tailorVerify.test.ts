@@ -4,6 +4,7 @@ import {
   assembleTailoredResume,
   canonicalize,
   factTokens,
+  namesOthersWork,
   newFacts,
   tailorStats,
   verifyTailorOps,
@@ -65,6 +66,97 @@ describe("newFacts", () => {
 
   it("accepts a lowercase source word written capitalized", () => {
     expect(newFacts("Redux migration of legacy screens.", "migrated legacy screens to redux", vocabulary)).toEqual([]);
+  });
+
+  // oa-0tf: false positives found by the LinkedIn rewriter usefulness gate
+  // (research/linkedin-rewriter-usefulness-2026-09.md), fixed here since
+  // newFacts is shared by both tools.
+  it("doesn't treat an ordinary sentence-starting adverb or conjunction as a name", () => {
+    const bio = "I led the checkout redesign at Acme.";
+    expect(newFacts("Previously led the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+    expect(newFacts("Currently leading the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+    expect(newFacts("Because it mattered, I led the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+  });
+
+  it("still catches an invented name at a sentence start", () => {
+    expect(newFacts("Kafka and Postgres queries for the reporting dashboard.", "Maintained Postgres queries.", vocabulary)).toEqual(
+      expect.arrayContaining(["word:kafka"]),
+    );
+  });
+
+  it("treats a hyphenated compound as the same fact as its two-word source form", () => {
+    expect(newFacts("I teach a fifth-grade class.", "I teach fifth grade at a school.", vocabulary)).toEqual([]);
+  });
+
+  it("tolerates ordinary inflection (plural, gerund, past tense) of a source word via an explicit suffix, not a shared prefix", () => {
+    // "Designing"/"Reconciled" mid-segment (not a sentence start) so the
+    // existing -ing sentence-start exclusion doesn't shortcut past the
+    // inflection check below.
+    expect(
+      newFacts("UX Designer | also Designing for learners", "UX Designer at a startup. I design learning tools.", vocabulary),
+    ).toEqual([]);
+    expect(
+      newFacts(
+        "Staff Accountant | also Reconciled bank accounts",
+        "Staff Accountant handling the close. I reconcile accounts and process vendor payments.",
+        vocabulary,
+      ),
+    ).toEqual([]);
+    expect(newFacts("I also Qualifies leads for the team.", "I qualify leads for the team.", vocabulary)).toEqual([]);
+  });
+
+  // oa-code-review: a 5-letter shared-prefix stem (the previous
+  // implementation) also matches an unrelated word that merely starts the
+  // same way, letting a genuinely invented tool name through as if it were
+  // just a different form of an ordinary source word.
+  it("still catches an invented tool whose name happens to share a prefix with an ordinary source word", () => {
+    expect(
+      newFacts(
+        "I implemented Salesforce workflows to hit quota.",
+        "I work heavily in sales, hitting quota every quarter.",
+        vocabulary,
+      ),
+    ).toEqual(expect.arrayContaining(["word:salesforce"]));
+    expect(
+      newFacts(
+        "I automated campaigns using Marketo for the team.",
+        "I run email marketing campaigns for the team.",
+        vocabulary,
+      ),
+    ).toEqual(expect.arrayContaining(["word:marketo"]));
+    expect(
+      newFacts(
+        "I build reporting dashboards using Tableau in our warehouse.",
+        "I maintain reporting tables in our warehouse.",
+        vocabulary,
+      ),
+    ).toEqual(expect.arrayContaining(["word:tableau"]));
+  });
+
+  it("still catches an unrelated word that merely shares a prefix", () => {
+    expect(newFacts("Spoke at Kubecon this year.", "I run Kubernetes clusters.", vocabulary)).toEqual(
+      expect.arrayContaining(["word:kubecon"]),
+    );
+  });
+
+  it("never folds inflection for a toolLike word (digits, inner capitals, +, #)", () => {
+    // "AE"/"AEs" would pass a plural fold, but a real abbreviation should
+    // only ever match a source word exactly (or via the alias table).
+    expect(
+      newFacts("Learned from a senior AE about procurement.", "One of our senior AEs helped me with procurement.", vocabulary),
+    ).toEqual(expect.arrayContaining(["word:ae"]));
+  });
+});
+
+describe("namesOthersWork", () => {
+  it("doesn't attribute a skill to a team across an 'or'/negation boundary", () => {
+    // "never worked with Kubernetes or led a team" is two independent
+    // admissions, not "a team's Kubernetes".
+    expect(namesOthersWork("I've never worked with Kubernetes or led a team.", "Kubernetes")).toBe(false);
+  });
+
+  it("still attributes a skill named right before a people noun", () => {
+    expect(namesOthersWork("Coordinated with the platform team's Kubernetes engineers.", "Kubernetes")).toBe(true);
   });
 });
 

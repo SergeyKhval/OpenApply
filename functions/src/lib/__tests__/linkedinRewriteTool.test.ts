@@ -279,6 +279,65 @@ describe("verifyLinkedinRewriteLine", () => {
     );
     expect(result).toMatchObject({ changed: false, revertReason: "too_long" });
   });
+
+  // oa-0tf: a short headline restructured into "Title | Skill A, Skill B |
+  // positioning" routinely multiplies its length with zero new facts; the
+  // resume-bullet growth ratio wrongly blocked that. LinkedIn's own field
+  // limit is the check that should apply to a headline.
+  it("allows a headline to grow well past the resume-bullet growth ratio, up to LinkedIn's own limit", () => {
+    const short = "Staff Accountant";
+    const wholeSourceText = `${short}\n\nI handle accounts payable and the monthly close process. We use QuickBooks.`;
+    const result = verifyLinkedinRewriteLine(
+      "headline",
+      short,
+      "Staff Accountant | Accounts Payable, Monthly Close & QuickBooks",
+      wholeSourceText,
+    );
+    expect(result).toMatchObject({ changed: true });
+  });
+
+  it("still reverts a headline that pads past LinkedIn's own field limit", () => {
+    const short = "Staff Accountant";
+    const result = verifyLinkedinRewriteLine("headline", short, "Staff Accountant, ".repeat(20), short);
+    expect(result).toMatchObject({ changed: false, revertReason: "too_long" });
+  });
+
+  // oa-0tf: a term that only appeared in the headline (never in the About
+  // text at all) was leaking into the About line's others-work scan via
+  // wholeSourceText, so a headline like "Kubernetes Engineers Team Lead"
+  // made honestly reusing "Kubernetes" in the About line (exactly the
+  // reuse-elsewhere pattern the test above allows) look like someone else's
+  // work, purely because the headline's own title has a role-noun next to
+  // it.
+  it("doesn't misread a term that only appears in the headline as someone else's work", () => {
+    const headline = "Kubernetes Engineers Team Lead at Acme";
+    const original = "I lead reliability work at Acme, focusing on uptime and on-call rotations.";
+    const wholeSourceText = `${headline}\n\n${original}`;
+    const result = verifyLinkedinRewriteLine(
+      "about-1",
+      original,
+      "I lead Kubernetes reliability work at Acme, focusing on uptime and on-call rotations.",
+      wholeSourceText,
+      "",
+      original,
+    );
+    expect(result).toMatchObject({ changed: true });
+  });
+
+  it("still blocks an About line that names a team's Kubernetes work as the candidate's own", () => {
+    const headline = "Backend Engineer at Acme";
+    const original = "Coordinated with the platform team's Kubernetes engineers on rollout timing.";
+    const wholeSourceText = `${headline}\n\n${original}`;
+    const result = verifyLinkedinRewriteLine(
+      "about-1",
+      original,
+      "Coordinated with the platform team's Kubernetes engineers on the rollout.",
+      wholeSourceText,
+      "",
+      original,
+    );
+    expect(result).toMatchObject({ changed: false, revertReason: "others_work" });
+  });
 });
 
 describe("assertWithinLimits", () => {

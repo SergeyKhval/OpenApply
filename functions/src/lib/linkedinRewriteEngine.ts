@@ -83,7 +83,14 @@ export async function generateLinkedinRewrite(
   );
   const byId = new Map(output.aboutLines.map((line) => [line.id, line.text]));
   const about = lines.map((line) =>
-    verifyLinkedinRewriteLine(line.id, line.text, byId.get(line.id) ?? line.text, wholeSourceText, input.targetRole),
+    verifyLinkedinRewriteLine(
+      line.id,
+      line.text,
+      byId.get(line.id) ?? line.text,
+      wholeSourceText,
+      input.targetRole,
+      input.about,
+    ),
   );
 
   return {
