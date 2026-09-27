@@ -14,7 +14,7 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
   <main class="min-h-screen bg-background">
     <div class="container mx-auto px-4 py-12 max-w-4xl">
       <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">Privacy Policy</h1>
-      <p class="text-sm text-muted-foreground mb-8">Last updated: September 24, 2026</p>
+      <p class="text-sm text-muted-foreground mb-8">Last updated: September 26, 2026</p>
 
       <div class="prose prose-lg dark:prose-invert max-w-none space-y-8">
         <section>
@@ -73,21 +73,51 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
           </p>
         </section>
 
+        <section>
+          <h2 class="text-2xl font-bold text-foreground mb-4">Community Reports on Job Postings</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            If you report a job posting you saved in your tracker, we store your account id, a hashed
+            identifier for the job (not the job's web address), the reason you picked from a fixed list, the
+            report's status (active, withdrawn, or removed), the company name, and the date. There is no
+            free-text field, so we never store a written explanation from you.
+          </p>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            Publicly, we only ever show aggregate counts and dates, for example "3 people reported no reply
+            30+ days after applying (latest Sep 12)," and only once at least 3 different people have reported
+            the same posting with the same reason within the past 180 days. We never publish who made a
+            report. A reason stops counting toward that public total once it is more than 180 days old, though
+            the underlying report stays on your account until you withdraw it or delete your account.
+          </p>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            Anyone, no account required, can ask us to review the reports on a posting through a form that
+            collects an email address and a message of up to 1000 characters. We store that request and email
+            it to our team through Resend, a third-party email provider, so we can reply to the address given.
+            Submitting a review request temporarily hides that posting's community reports from other users
+            while we look into it.
+          </p>
+          <p class="text-muted-foreground leading-relaxed">
+            If you delete your account, we delete your reports and recompute the public counts they
+            contributed to, the same as the rest of your data described under Data Retention below.
+          </p>
+        </section>
+
         <section id="browser-extension">
           <h2 class="text-2xl font-bold text-foreground mb-4">Browser Extension</h2>
           <p class="text-muted-foreground leading-relaxed mb-4">
             The OpenApply browser extension reads a page only when you click its toolbar button, and only
-            the tab you are on. It collects nothing in the background, has no access to other tabs or
-            sites, keeps no browsing history, and stores nothing in your browser.
+            the tab you are on. It has no access to other tabs or sites, keeps no browsing history, and
+            stores nothing in your browser. Opening the popup does make one network request on its own, to
+            check for posting signals as described below; nothing else leaves the page until you click a
+            button.
           </p>
           <p class="text-muted-foreground leading-relaxed mb-4">
-            When you open it on a job posting, the extension checks OpenApply for posting signals (for example
-            when the job was first posted, or reports from people who saved it). It does this without telling
-            us which job you're looking at: it turns the posting's address into a code on your device and sends
-            only the first 4 characters of that code, which many other postings share. Our server
-            returns the signals for every posting that starts with those 4 characters, and the extension picks
-            out the one you're on, on your device. The request carries no cookies or account details, and we
-            don't log the code.
+            When you open it on a job posting, the extension checks OpenApply for posting signals, facts like
+            how long the job has been listed, or community report counts from people who saved it. It does
+            this without telling us which job you're looking at: it turns the posting's address into a code
+            on your device and sends us only the first 4 characters of that code, which many other postings
+            share. We return the signals for every posting that starts with those 4 characters, and the
+            extension picks out the right one on your device. The request carries no cookies or account
+            details, and we do not log the code or which job you were viewing.
           </p>
           <ul class="list-disc list-inside text-muted-foreground space-y-2">
             <li>
@@ -98,6 +128,11 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
               account, or keeps them in your browser until you sign up. If the extension can't find the job
               description on the page, it sends only the posting's address instead, and openapply.app reads
               that page to fill in the details, the same as pasting the link yourself.
+            </li>
+            <li>
+              <strong>Report this posting</strong> opens openapply.app to the saved job, where reporting
+              happens signed in, as described under Community Reports on Job Postings above. The extension
+              itself holds no account and does not submit reports.
             </li>
             <li>
               <strong>Check my resume match</strong> opens our free resume match tool with the job
@@ -122,7 +157,7 @@ const pageDescription = "Privacy Policy for OpenApply - Learn how we collect, us
             We do not sell your personal data. We may share your information with:
           </p>
           <ul class="list-disc list-inside text-muted-foreground space-y-2">
-            <li><strong>Service Providers:</strong> Firebase (hosting), Stripe (payments), Google Gemini (AI processing)</li>
+            <li><strong>Service Providers:</strong> Firebase (hosting), Stripe (payments), Google Gemini (AI processing), Resend (transactional email)</li>
             <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
             <li><strong>Business Transfers:</strong> In case of merger, acquisition, or asset sale</li>
           </ul>
