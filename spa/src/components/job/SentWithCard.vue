@@ -74,7 +74,6 @@ import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/firebase/config";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { toJsDate } from "@/lib/jobDates";
 import type { CoverLetter, JobApplication, Resume, TailoredResume } from "@/types";
 
@@ -83,7 +82,6 @@ const { application, resumes } = defineProps<{ application: JobApplication; resu
 const user = useCurrentUser();
 const router = useRouter();
 const route = useRoute();
-const tailoringEnabled = useFeatureFlag("tailored-resume");
 const isTailoredOpen = ref(false);
 
 const resume = computed(() => resumes.find((candidate) => candidate.id === application.resumeId) ?? null);
@@ -91,9 +89,9 @@ const resume = computed(() => resumes.find((candidate) => candidate.id === appli
 const coverLetterRef = computed(() => (application.coverLetterId ? doc(db, "coverLetters", application.coverLetterId) : null));
 const coverLetter = useDocument<CoverLetter>(coverLetterRef);
 
-// Newest tailored version for this job (flag tailored-resume)
+// Newest tailored version for this job
 const tailoredQuery = computed(() =>
-  user.value && tailoringEnabled.value
+  user.value
     ? query(
         collection(db, "tailoredResumes"),
         where("userId", "==", user.value.uid),

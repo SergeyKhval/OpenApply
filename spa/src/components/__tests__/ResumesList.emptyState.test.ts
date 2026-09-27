@@ -1,17 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterLinkStub, enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
-import { computed, defineComponent, h, ref, type Ref } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 
 const resumes = ref<unknown[]>([]);
-const tailoringFlag = ref(false);
 
 let collectionCalls = 0;
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
-  // First call: the resumes list; second: the tailored versions, empty while
-  // the source is null (flag off), as vuefire does
-  useCollection: (source: Ref<unknown>) =>
-    collectionCalls++ % 2 === 0 ? Object.assign(resumes, { data: resumes }) : computed(() => (source.value ? [] : [])),
+  // First call: the resumes list; second: the tailored versions, empty here
+  useCollection: () => (collectionCalls++ % 2 === 0 ? Object.assign(resumes, { data: resumes }) : computed(() => [])),
   useFirebaseStorage: () => ({}),
   useStorageFileUrl: () => ({ url: ref(null) }),
 }));
@@ -32,7 +29,6 @@ vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
 vi.mock("vue-router", async (importOriginal) => ({ ...(await importOriginal<object>()), useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/composables/useResumeImport", () => ({ importResume: vi.fn() }));
 vi.mock("@/composables/useJobApplicationsData", () => ({ useJobApplicationsData: () => ({ jobApplications: ref([]) }) }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoringFlag }));
 vi.mock("@/components/ai/TailoredResumeSheet.vue", () => ({
   default: defineComponent({
     props: ["open", "resume", "application"],
@@ -55,30 +51,15 @@ const mountList = async () => {
 describe("ResumesList: empty state", () => {
   beforeEach(() => {
     collectionCalls = 0;
-    tailoringFlag.value = false;
   });
 
-  it("does not show the empty state when resumes are present, flag off", async () => {
+  it("does not show the empty state when resumes are present", async () => {
     resumes.value = [{ id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) }];
     const wrapper = await mountList();
     expect(wrapper.text()).not.toContain("No resumes yet");
   });
 
-  it("does not show the empty state when resumes are present, flag on", async () => {
-    tailoringFlag.value = true;
-    resumes.value = [{ id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) }];
-    const wrapper = await mountList();
-    expect(wrapper.text()).not.toContain("No resumes yet");
-  });
-
-  it("shows the empty state when there are no resumes, flag off", async () => {
-    resumes.value = [];
-    const wrapper = await mountList();
-    expect(wrapper.text()).toContain("No resumes yet");
-  });
-
-  it("shows the empty state when there are no resumes, flag on", async () => {
-    tailoringFlag.value = true;
+  it("shows the empty state when there are no resumes", async () => {
     resumes.value = [];
     const wrapper = await mountList();
     expect(wrapper.text()).toContain("No resumes yet");
@@ -145,7 +126,6 @@ describe("ResumesList: resume builder entry points", () => {
   });
 
   it("offers editing an uploaded PDF as a new resume from its menu", async () => {
-    tailoringFlag.value = true;
     resumes.value = [{ id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) }];
     const wrapper = await mountList();
     await wrapper.get('[aria-label="Options for sarah.pdf"]').trigger("keydown", { key: "Enter" });

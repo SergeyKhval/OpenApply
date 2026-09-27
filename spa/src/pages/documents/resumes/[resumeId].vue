@@ -21,9 +21,8 @@
 
     <div class="grow px-4 lg:px-6">
       <div v-if="pending && !draft" class="flex justify-center py-12"><Spinner /></div>
-      <!-- Flags load after the resume, so an existing built resume opens either way -->
       <Empty v-else-if="!draft" class="py-12">
-        <EmptyTitle>{{ enabled ? "We couldn't find this resume" : "The resume builder isn't available on your account yet" }}</EmptyTitle>
+        <EmptyTitle>We couldn't find this resume</EmptyTitle>
         <EmptyAction><Button as-child><RouterLink to="/documents">Back to documents</RouterLink></Button></EmptyAction>
       </Empty>
 
@@ -130,7 +129,6 @@ import ResumeContactForm from "@/components/resume-builder/ResumeContactForm.vue
 import ResumePreview from "@/components/resume-builder/ResumePreview.vue";
 import ResumeSectionCard from "@/components/resume-builder/ResumeSectionCard.vue";
 import { useBuiltResume } from "@/composables/useBuiltResume";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { trackEvent } from "@/analytics";
 import { structuredToDoc, type SectionType } from "@/lib/builtResume";
 import { SECTION_LABELS, missingSectionTypes, moveInPlace, newSection, removeAt, undoRemove, type Removed } from "@/lib/builtResumeEdit";
@@ -138,7 +136,6 @@ import { FLAGGED_FIELDS } from "@/lib/resumeImport";
 import { exportFileName, printTailoredResume, saveBlob, tailoredResumeDocx } from "@/lib/tailoredResumeExport";
 
 const route = useRoute("/documents/resumes/[resumeId]");
-const enabled = useFeatureFlag("resume-builder");
 const resumeId = computed(() => route.params.resumeId);
 const { resume, draft, title, template, pending, saveState, flush } = useBuiltResume(resumeId);
 

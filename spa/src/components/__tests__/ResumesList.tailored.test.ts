@@ -1,20 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
-import { computed, defineComponent, h, ref, type Ref } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 
 const resumes = ref<unknown[]>([]);
 const tailored = ref<unknown[]>([]);
-const tailoringFlag = ref(false);
 const batchDelete = vi.fn();
 const batchCommit = vi.fn();
 
 let collectionCalls = 0;
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
-  // First call: the resumes list; second: the tailored versions, empty while
-  // the source is null (flag off), as vuefire does
-  useCollection: (source: Ref<unknown>) =>
-    collectionCalls++ % 2 === 0 ? Object.assign(resumes, { data: resumes }) : computed(() => (source.value ? tailored.value : [])),
+  // First call: the resumes list; second: the tailored versions
+  useCollection: () => (collectionCalls++ % 2 === 0 ? Object.assign(resumes, { data: resumes }) : computed(() => tailored.value)),
   useFirebaseStorage: () => ({}),
   useStorageFileUrl: () => ({ url: ref(null) }),
 }));
@@ -31,7 +28,6 @@ vi.mock("firebase/firestore", () => ({
 vi.mock("@/firebase/config.ts", () => ({ db: {} }));
 vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
 vi.mock("@/composables/useJobApplicationsData", () => ({ useJobApplicationsData: () => ({ jobApplications: ref([]) }) }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoringFlag }));
 vi.mock("@/components/ai/TailoredResumeSheet.vue", () => ({
   default: defineComponent({
     props: ["open", "resume", "application"],
@@ -61,7 +57,6 @@ const mountList = async () => {
 describe("ResumesList: tailored versions", () => {
   beforeEach(() => {
     collectionCalls = 0;
-    tailoringFlag.value = false;
     resumes.value = [
       { id: "resume-1", fileName: "sarah.pdf", status: "parsed", createdAt: at(1) },
       { id: "resume-2", fileName: "sarah-short.pdf", status: "parsed", createdAt: at(2) },
@@ -76,13 +71,7 @@ describe("ResumesList: tailored versions", () => {
     batchCommit.mockReset().mockResolvedValue(undefined);
   });
 
-  it("is hidden while the flag is off", async () => {
-    const wrapper = await mountList();
-    expect(wrapper.text()).not.toContain("Tailored versions");
-  });
-
   it("lists the newest version per job under the right resume", async () => {
-    tailoringFlag.value = true;
     const wrapper = await mountList();
     const [first, second] = wrapper.findAll("li").filter((item) => item.text().includes(".pdf"));
     expect(first!.text()).toContain("Globex · Engineer");
@@ -92,14 +81,12 @@ describe("ResumesList: tailored versions", () => {
   });
 
   it("opens the tailored sheet for that resume and job", async () => {
-    tailoringFlag.value = true;
     const wrapper = await mountList();
     await wrapper.findAll("button").find((button) => button.text() === "Globex · Engineer")!.trigger("click");
     expect(wrapper.find("[data-test=tailored-sheet]").text()).toBe("Globex resume-1 true");
   });
 
   it("deletes every version for that job after a confirm", async () => {
-    tailoringFlag.value = true;
     const wrapper = await mountList();
     await wrapper.find('[aria-label="Delete the tailored versions for Globex · Engineer"]').trigger("click");
     expect(batchDelete).not.toHaveBeenCalled();

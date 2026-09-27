@@ -4,7 +4,6 @@ import { h, ref } from "vue";
 import type { JobApplication, Resume, ResumeJobMatch } from "@/types";
 
 const matches = ref<ResumeJobMatch[]>([]);
-const tailoring = ref(false);
 const openFileDialog = vi.fn();
 const replace = vi.fn();
 
@@ -21,7 +20,6 @@ vi.mock("firebase/firestore", () => ({
   query: vi.fn(() => ({})),
   where: vi.fn(),
 }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoring }));
 vi.mock("@/composables/useResumeUpload", () => ({
   useResumeUpload: () => ({ openFileDialog, isUploading: ref(false) }),
 }));
@@ -63,7 +61,6 @@ const mountCard = (resumes: Resume[], slots = {}) =>
 describe("JobMatchCard", () => {
   beforeEach(() => {
     matches.value = [];
-    tailoring.value = false;
     vi.clearAllMocks();
   });
 
@@ -73,14 +70,13 @@ describe("JobMatchCard", () => {
     expect(wrapper.text()).toContain("Likely to pass the first screen");
     expect(wrapper.text()).toContain("1 of 2 must-haves met, missing GraphQL");
     expect(wrapper.text()).toMatch(/Checked .*24/);
-    expect(wrapper.findAll("button").map((button) => button.text())).toEqual(["See details", "Write cover letter"]);
+    expect(wrapper.findAll("button").map((button) => button.text())).toEqual(["See details", "Write cover letter", "Tailor resume"]);
   });
 
-  it("offers Tailor resume when the flag is on and the match has an analysis", () => {
-    tailoring.value = true;
-    matches.value = [match()];
+  it("offers Tailor resume only when the match has an analysis", () => {
+    matches.value = [match({ analysis: undefined })];
     const wrapper = mountCard([resume]);
-    expect(wrapper.findAll("button").map((button) => button.text())).toContain("Tailor resume");
+    expect(wrapper.findAll("button").map((button) => button.text())).not.toContain("Tailor resume");
   });
 
   it("Write cover letter opens the cover letter dialog with the matched resume", async () => {
@@ -98,7 +94,7 @@ describe("JobMatchCard", () => {
     expect(wrapper.find("button").text()).toBe("Check my resume");
   });
 
-  it("without a resume, also offers building one (the button hides itself while the flag is off)", () => {
+  it("without a resume, also offers building one", () => {
     expect(mountCard([]).findComponent({ name: "NewResumeButton" }).attributes("surface")).toBe("job_page");
     expect(mountCard([resume]).findComponent({ name: "NewResumeButton" }).exists()).toBe(false);
   });

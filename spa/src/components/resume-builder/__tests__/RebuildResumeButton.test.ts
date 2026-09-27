@@ -1,15 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
-import { ref } from "vue";
 
-const flag = ref(false);
 const push = vi.fn();
 const toast = vi.fn();
 const trackEvent = vi.fn();
 const importResume = vi.fn(async (..._args: unknown[]) => "built-1");
 
 vi.mock("vue-router", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => flag }));
 vi.mock("@/composables/useResumeImport", () => ({ importResume: (...args: unknown[]) => importResume(...args) }));
 vi.mock("@/components/ui/toast", () => ({ useToast: () => ({ toast }) }));
 vi.mock("@/analytics", () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
@@ -25,18 +22,11 @@ const mountButton = (resume: Record<string, unknown> = upload) =>
 
 describe("RebuildResumeButton", () => {
   beforeEach(() => {
-    flag.value = true;
     push.mockClear();
     toast.mockClear();
     trackEvent.mockClear();
     importResume.mockReset();
     importResume.mockResolvedValue("built-1");
-  });
-
-  it("is hidden, and offers nothing, while the flag is off", () => {
-    flag.value = false;
-    expect(mountButton().find("button").exists()).toBe(false);
-    expect(trackEvent).not.toHaveBeenCalled();
   });
 
   it("isn't offered for a built resume or a PDF we couldn't read", () => {

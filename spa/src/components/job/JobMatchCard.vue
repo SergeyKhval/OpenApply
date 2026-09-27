@@ -54,7 +54,7 @@
         :application="application"
         @tailor="isTailoredOpen = true"
       />
-      <TailoredResumeSheet v-if="tailoringEnabled" v-model:open="isTailoredOpen" :resume="matchResume" :application="application" />
+      <TailoredResumeSheet v-model:open="isTailoredOpen" :resume="matchResume" :application="application" />
     </template>
   </Card>
 </template>
@@ -72,7 +72,6 @@ import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/firebase/config";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { useResumeUpload } from "@/composables/useResumeUpload";
 import { toJsDate } from "@/lib/jobDates";
 import { mustHaveLine, toMatchView } from "@/lib/matchView";
@@ -85,7 +84,6 @@ const user = useCurrentUser();
 const router = useRouter();
 const route = useRoute();
 const { openFileDialog, isUploading } = useResumeUpload();
-const tailoringEnabled = useFeatureFlag("tailored-resume");
 
 const isMatchOpen = ref(false);
 const isTailoredOpen = ref(false);
@@ -122,7 +120,7 @@ const checkedOn = computed(() => {
   const date = view.value ? toJsDate(latest.value?.createdAt) : null;
   return date ? date.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
 });
-const canTailor = computed(() => tailoringEnabled.value && Boolean(latest.value?.analysis));
+const canTailor = computed(() => Boolean(latest.value?.analysis));
 
 function writeCoverLetter() {
   router.replace({

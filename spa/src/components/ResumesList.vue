@@ -86,7 +86,7 @@
       </EmptyAction>
     </Empty>
     <TailoredResumeSheet
-      v-if="tailoringEnabled && openVersion"
+      v-if="openVersion"
       v-model:open="isTailoredOpen"
       :resume="openVersion.resume"
       :application="openVersion.application"
@@ -133,7 +133,6 @@ import { countResumeUsage, formatFileSize, resumeName, usageLabel } from "@/lib/
 import ResumeLink from "@/components/ResumeLink.vue";
 import TailoredVersionsList, { type TailoredVersionEntry } from "@/components/TailoredVersionsList.vue";
 import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { newestTailoredPerJob } from "@/lib/tailoredResume";
 
 const user = useCurrentUser();
@@ -159,11 +158,10 @@ function madeFrom(resume: Resume): string {
   return source && source.kind !== "built" ? source.fileName : "";
 }
 
-// Tailored versions (flag tailored-resume): one query for all of them,
-// newest per job under each resume
-const tailoringEnabled = useFeatureFlag("tailored-resume");
+// Tailored versions: one query for all of them, newest per job under each
+// resume
 const tailoredQuery = computed(() =>
-  user.value && tailoringEnabled.value
+  user.value
     ? query(collection(db, "tailoredResumes"), where("userId", "==", user.value.uid), orderBy("createdAt", "desc"))
     : null,
 );

@@ -73,10 +73,9 @@ const pricingPlans = [
   },
 ];
 
-// The resume builder is behind the app's resume-builder flag until Sergey
-// opens it; flip this with the flag so the FAQ never promises what users
-// can't open. Copy checked against research/resume-import-gate-2026-09.md.
-const RESUME_BUILDER_LIVE = false;
+// The resume builder is open to everyone; set this to false to drop the FAQ
+// if it ever closes again. Copy checked against research/resume-import-gate-2026-09.md.
+const RESUME_BUILDER_LIVE = true;
 
 const resumeBuilderFaq = {
   question: 'Can I make a resume here if I don\'t have one?',

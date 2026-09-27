@@ -118,7 +118,7 @@
                   <dd class="text-right font-semibold">{{ detail.value }}</dd>
                 </div>
               </dl>
-              <JobReportSection v-if="signalsEnabled && application.jobKeyHash" :job="application" :now="now" class="mt-3" />
+              <JobReportSection v-if="application.jobKeyHash" :job="application" :now="now" class="mt-3" />
             </CardContent>
           </Card>
         </div>
@@ -190,7 +190,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/toast";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { useJobApplications } from "@/composables/useJobApplications";
 import { useJobSignals } from "@/composables/useJobSignals";
 import { useJobTimeline } from "@/composables/useJobTimeline";
@@ -212,7 +211,6 @@ const now = ref(new Date());
 useIntervalFn(() => (now.value = new Date()), 60_000);
 
 const signs = useJobSignals(application, now);
-const signalsEnabled = useFeatureFlag("job-signals");
 // Before the timeline on phones, where the side column ends up last
 const isWide = useMediaQuery("(min-width: 1024px)");
 

@@ -109,7 +109,7 @@ const RESULT = {
   usage: { inputTokens: 1200, outputTokens: 300, thoughtsTokens: 100 },
 };
 
-function seed({ admin = true, resumeOwner = USER_ID, kind = undefined as string | undefined, text = RESUME_TEXT } = {}) {
+function seed({ admin = false, resumeOwner = USER_ID, kind = undefined as string | undefined, text = RESUME_TEXT } = {}) {
   store.set(`users/${USER_ID}`, { admin });
   store.set("userResumes/resume-1", { userId: resumeOwner, fileName: "maya.pdf", ...(kind ? { kind } : {}), text });
 }
@@ -126,7 +126,6 @@ describe("importResume", () => {
     writes.length = 0;
     mockImport.mockReset().mockResolvedValue(RESULT);
     pdfText.mockReset().mockReturnValue(RESUME_TEXT);
-    delete process.env.BUILDER_ALLOWED_UIDS;
     vi.spyOn(console, "log").mockImplementation(() => undefined);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
@@ -136,16 +135,11 @@ describe("importResume", () => {
       await expect(call(undefined, null)).rejects.toMatchObject({ code: "unauthenticated" });
     });
 
-    it("refuses anyone who isn't an admin or allowlisted, before reading anything else", async () => {
+    it("lets any signed-in user in, admin or not", async () => {
       seed({ admin: false });
-      await expect(call()).rejects.toMatchObject({ code: "permission-denied", details: { code: "not_available" } });
-      expect(mockImport).not.toHaveBeenCalled();
-      expect(writes).toEqual([]);
-    });
-
-    it("lets an allowlisted user in", async () => {
-      seed({ admin: false });
-      process.env.BUILDER_ALLOWED_UIDS = `someone, ${USER_ID}`;
+      await expect(call()).resolves.toMatchObject({ resumeId: expect.any(String) });
+      store.clear();
+      seed({ admin: true });
       await expect(call()).resolves.toMatchObject({ resumeId: expect.any(String) });
     });
   });

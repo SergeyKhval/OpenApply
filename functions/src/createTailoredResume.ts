@@ -6,7 +6,7 @@ import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration } from "./lib/validation";
 import { TAILOR_MODEL, TAILOR_PROMPT_VERSION, tailorResume } from "./lib/tailorEngine";
 import { hashResumeText } from "./lib/tailorSegment";
-import { assertTailorAllowed, assertTailorWithinLimits } from "./lib/tailorAccess";
+import { assertTailorWithinLimits } from "./lib/tailorAccess";
 import { rateLimitWindows } from "./lib/matchTool";
 
 defineString("GEMINI_API_KEY");
@@ -64,10 +64,6 @@ export const createTailoredResume = onCall(async (request) => {
   }
 
   try {
-    // Closed until rollout: the app's flag only hides the button
-    const user = await db.collection("users").doc(userId).get();
-    assertTailorAllowed(userId, user.get("admin") === true);
-
     const [resume, application] = await Promise.all([
       db.collection("userResumes").doc(resumeId).get(),
       db.collection("jobApplications").doc(applicationId).get(),

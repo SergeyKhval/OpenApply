@@ -304,7 +304,6 @@ const createTailoredResume = httpsCallable<{ resumeId: string; applicationId: st
 
 // Server refusals worth their own wording; the rest use the server's message
 const REFUSALS: Record<string, string> = {
-  not_available: "Tailored versions aren't available on your account yet.",
   no_match: "Check your resume against this job first, then make a tailored version.",
   stale_match: "Your resume changed since the last check. Check it against this job again first.",
 };

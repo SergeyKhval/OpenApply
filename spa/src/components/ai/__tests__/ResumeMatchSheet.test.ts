@@ -6,8 +6,6 @@ import { getAllowanceState } from "@/lib/aiAllowance";
 const matches = ref<unknown[]>([]);
 const usage = ref(3);
 const callMatch = vi.fn();
-const tailoringFlag = ref(false);
-const builderFlag = ref(false);
 
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
@@ -34,7 +32,6 @@ vi.mock("@/composables/useAiAllowance", () => ({
     return { allowance, canUseAi: computed(() => allowance.value.canUse) };
   },
 }));
-vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: (flag: string) => (flag === "resume-builder" ? builderFlag : tailoringFlag) }));
 vi.mock("@/components/resume-builder/RebuildResumeButton.vue", async () => {
   const { defineComponent, h } = await import("vue");
   return {
@@ -74,8 +71,6 @@ describe("ResumeMatchSheet", () => {
     matches.value = [];
     usage.value = 3;
     callMatch.mockReset();
-    tailoringFlag.value = false;
-    builderFlag.value = false;
   });
 
   it("shows the latest match: verdict, requirements and fixes", async () => {
@@ -126,7 +121,7 @@ describe("ResumeMatchSheet", () => {
     expect(body()).toContain("free AI checks this month");
   });
 
-  describe("tailored version (flag tailored-resume)", () => {
+  describe("tailored version", () => {
     const latest = (analysis?: unknown) => ({
       matchResult: {
         match_summary: { overall_match_percent: 70, summary: "" },
@@ -136,21 +131,13 @@ describe("ResumeMatchSheet", () => {
       ...(analysis ? { analysis } : {}),
     });
 
-    it("is hidden while the flag is off", async () => {
-      matches.value = [latest({ requirements: [] })];
-      await mountSheet();
-      expect(buttons()).not.toContain("Make a tailored version");
-    });
-
     it("is hidden for an older match without the stored analysis", async () => {
-      tailoringFlag.value = true;
       matches.value = [latest()];
       await mountSheet();
       expect(buttons()).not.toContain("Make a tailored version");
     });
 
     it("hands off to the tailored sheet", async () => {
-      tailoringFlag.value = true;
       matches.value = [latest({ requirements: [] })];
       const wrapper = await mountSheet();
       [...document.body.querySelectorAll("button")].find((button) => button.textContent?.includes("Make a tailored version"))!.click();
@@ -160,14 +147,13 @@ describe("ResumeMatchSheet", () => {
     });
   });
 
-  describe("a resume whose text came out jumbled (flag resume-builder)", () => {
+  describe("a resume whose text came out jumbled", () => {
     const withParseCheck = (status: string, note = "") => ({
       matchResult: { match_summary: { overall_match_percent: 60, summary: "" }, recommendations: {}, skills_comparison: {} },
       analysis: { matchScore: 60, missingKeywords: [], requirements: [], parseCheck: { status, note } },
     });
 
     it("says so and offers a rebuild in the editor", async () => {
-      builderFlag.value = true;
       matches.value = [withParseCheck("scrambled", "Two columns run into each other.")];
       await mountSheet();
       expect(body()).toContain("Your resume's text came out jumbled");
@@ -175,14 +161,9 @@ describe("ResumeMatchSheet", () => {
       expect(document.body.querySelector('[data-surface="match_parse_check"]')?.textContent).toContain("Rebuild it in the editor");
     });
 
-    it("stays quiet for clean text, and while the flag is off", async () => {
-      builderFlag.value = true;
+    it("stays quiet for clean text", async () => {
       matches.value = [withParseCheck("clean")];
       await mountSheet();
-      expect(body()).not.toContain("jumbled");
-      builderFlag.value = false;
-      matches.value = [withParseCheck("scrambled")];
-      await flushPromises();
       expect(body()).not.toContain("jumbled");
       expect(document.body.querySelector('[data-surface="match_parse_check"]')).toBeNull();
     });

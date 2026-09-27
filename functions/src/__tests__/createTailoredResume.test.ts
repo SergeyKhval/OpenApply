@@ -112,7 +112,7 @@ const RESULT = {
 };
 
 function seed({
-  admin = true,
+  admin = false,
   checksUsed = 0,
   resumeOwner = USER_ID,
   applicationOwner = USER_ID,
@@ -148,7 +148,6 @@ describe("createTailoredResume", () => {
     matchQueries.length = 0;
     transactionWrites.length = 0;
     mockTailorResume.mockReset().mockResolvedValue(RESULT);
-    delete process.env.TAILOR_ALLOWED_UIDS;
     vi.spyOn(console, "log").mockImplementation(() => undefined);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
@@ -181,27 +180,12 @@ describe("createTailoredResume", () => {
     });
   });
 
-  describe("access until rollout", () => {
-    it("refuses anyone who isn't an admin or allowlisted, before reading anything else", async () => {
+  describe("access", () => {
+    it("lets any signed-in user in, admin or not", async () => {
       seed({ admin: false });
-      await expect(call()).rejects.toMatchObject({
-        code: "permission-denied",
-        message: "This isn't available on your account yet.",
-        details: { code: "not_available" },
-      });
-      expect(mockTailorResume).not.toHaveBeenCalled();
-      expect(matchQueries).toEqual([]);
-    });
-
-    it("refuses a user with no profile", async () => {
-      seed();
-      store.delete("users/user-1");
-      await expect(call()).rejects.toMatchObject({ code: "permission-denied" });
-    });
-
-    it("lets an allowlisted user in", async () => {
-      seed({ admin: false });
-      process.env.TAILOR_ALLOWED_UIDS = "someone-else, user-1";
+      await expect(call()).resolves.toMatchObject({ tailoredResumeId: expect.any(String) });
+      store.clear();
+      seed({ admin: true });
       await expect(call()).resolves.toMatchObject({ tailoredResumeId: expect.any(String) });
     });
   });

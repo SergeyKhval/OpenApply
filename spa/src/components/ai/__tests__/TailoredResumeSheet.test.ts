@@ -153,7 +153,6 @@ describe("TailoredResumeSheet", () => {
   it.each([
     ["stale_match", "Your resume changed since the last check."],
     ["no_match", "Check your resume against this job first"],
-    ["not_available", "Tailored versions aren't available on your account yet."],
   ])("explains the %s refusal", async (code, text) => {
     callCreate.mockRejectedValue({ message: "server words", details: { code } });
     await mountSheet();

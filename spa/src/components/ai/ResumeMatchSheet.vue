@@ -126,7 +126,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { db, functions } from "@/firebase/config";
 import { trackEvent } from "@/analytics";
 import { useAiAllowance } from "@/composables/useAiAllowance";
-import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { toMatchView, type RequirementStatus } from "@/lib/matchView";
 import type { JobApplication, Resume, ResumeJobMatch } from "@/types";
 
@@ -170,21 +169,19 @@ const matchQuery = computed(() =>
 );
 const matches = useCollection<ResumeJobMatch>(matchQuery);
 const view = computed(() => (matches.value[0] ? toMatchView(matches.value[0].matchResult) : null));
-const builderEnabled = useFeatureFlag("resume-builder");
 const parseProblem = computed(() => {
   const check = matches.value[0]?.analysis?.parseCheck;
-  if (!builderEnabled.value || resume.kind === "built" || !check || check.status === "clean") return null;
+  if (resume.kind === "built" || !check || check.status === "clean") return null;
   return check;
 });
 
-// Tailored version (flag tailored-resume): needs a match run by the shared
-// engine, which stores the analysis it tailors from
-const tailoringEnabled = useFeatureFlag("tailored-resume");
-const canTailor = computed(() => tailoringEnabled.value && Boolean(matches.value[0]?.analysis));
+// Tailored version: needs a match run by the shared engine, which stores
+// the analysis it tailors from
+const canTailor = computed(() => Boolean(matches.value[0]?.analysis));
 watch(
-  () => [open, tailoringEnabled.value, matches.value[0]] as const,
-  ([isOpen, enabled, latest]) => {
-    if (!isOpen || !enabled || !latest) return;
+  () => [open, matches.value[0]] as const,
+  ([isOpen, latest]) => {
+    if (!isOpen || !latest) return;
     const matchScore = Math.round(latest.matchResult.match_summary?.overall_match_percent ?? 0);
     trackEvent("tailored_resume_offered", latest.analysis ? { matchScore } : { matchScore, blocked: "no_analysis" });
   },

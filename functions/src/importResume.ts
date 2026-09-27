@@ -4,7 +4,7 @@ import { defineString } from "firebase-functions/params";
 import { PDFParse } from "pdf-parse";
 import { validateResourceOwnership } from "./lib/ownership";
 import { rateLimitWindows } from "./lib/matchTool";
-import { assertBuilderAllowed, assertImportWithinLimits } from "./lib/builderAccess";
+import { assertImportWithinLimits } from "./lib/builderAccess";
 import { IMPORT_MODEL, IMPORT_PROMPT_VERSION, importResumeText, type ImportSource } from "./lib/importEngine";
 import { serializeResume } from "./lib/builtResume";
 
@@ -122,10 +122,6 @@ export const importResume = onCall({ memory: "512MiB", timeoutSeconds: 120 }, as
   const data = (request.data ?? {}) as Record<string, unknown>;
 
   try {
-    // Closed until rollout: the app's flag only hides the entry points
-    const user = await db.collection("users").doc(userId).get();
-    assertBuilderAllowed(userId, user.get("admin") === true);
-
     const source = data.source as ImportSource;
     const { text, title, resumeId } = await readSource(userId, data);
     if (text.replace(/\s+/g, "").length < MIN_TEXT_CHARS) {
