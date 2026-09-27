@@ -12,10 +12,15 @@
       <div class="hidden grow lg:block">
         <AppSearch v-if="tab === 'cover-letters'" v-model="search" class="ml-auto" />
       </div>
-      <!-- Phones: a round icon button, as on the canvas -->
-      <UploadResumeButton v-if="tab === 'resumes'" class="max-lg:size-11 max-lg:rounded-full max-lg:px-0" aria-label="Upload resume">
-        <span class="hidden lg:inline">Upload resume</span>
-      </UploadResumeButton>
+      <!-- Phones: round icon buttons, as on the canvas -->
+      <div v-if="tab === 'resumes'" class="flex gap-2">
+        <NewResumeButton surface="documents_header" class="max-lg:size-11 max-lg:rounded-full max-lg:px-0" aria-label="New resume">
+          <span class="hidden lg:inline">New resume</span>
+        </NewResumeButton>
+        <UploadResumeButton class="max-lg:size-11 max-lg:rounded-full max-lg:px-0" aria-label="Upload resume">
+          <span class="hidden lg:inline">Upload resume</span>
+        </UploadResumeButton>
+      </div>
       <Button
         v-else
         class="max-lg:size-11 max-lg:rounded-full max-lg:px-0"
@@ -45,6 +50,7 @@ import AppSearch from "@/components/AppSearch.vue";
 import ResumesList from "@/components/ResumesList.vue";
 import CoverLettersList from "@/components/CoverLettersList.vue";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCoverLetters } from "@/composables/useCoverLetters";

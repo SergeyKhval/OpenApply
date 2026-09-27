@@ -111,6 +111,8 @@ p { margin: 0 0 3pt; }
 ul { margin: 0 0 4pt; padding-left: 14pt; }
 li { margin: 0 0 2pt; }
 section { break-inside: auto; }
+@media screen { body { padding: 14mm 16mm; } }
+@media screen and (max-width: 480px) { body { padding: 16px; } }
 </style></head><body>${body}</body></html>`;
 }
 

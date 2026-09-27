@@ -9,6 +9,9 @@ function isLoaded(): boolean {
 
 export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan" | "tailored_resume";
 
+export type ResumeBuilderSurface = "documents_header";
+export type ResumeBuilderSource = "scratch" | "resume" | "linkedin_pdf" | "linkedin_paste";
+
 type JobCreationMethod = "link_parse" | "paste" | "manual" | "match_tool" | "extension";
 // "landing" events come from astro/src/components/vue/JobLinkInput.vue
 export type JobInputSurface = "landing" | "first_run" | "add_dialog";
@@ -68,6 +71,12 @@ type EventMap = {
   tailored_resume_opened: { resumeId: string; jobApplicationId: string };
   tailored_resume_downloaded: { format: "docx" | "pdf"; changesIncluded: number };
   tailored_resume_change_reported: { kind: string; reason: "not_true" | "worse" | "other" };
+  // Resume builder (flag resume-builder)
+  resume_builder_offered: { surface: ResumeBuilderSurface; hadResume: boolean };
+  resume_builder_started: { source: ResumeBuilderSource };
+  resume_builder_section_added: { type: string };
+  resume_builder_completed: { source: ResumeBuilderSource; sections: number; entries: number; bullets: number; minutesSinceStart: number };
+  resume_builder_downloaded: { format: "docx" | "pdf"; template: string };
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };

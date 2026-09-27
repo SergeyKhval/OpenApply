@@ -19,7 +19,7 @@ import DocumentsPage from "../index.vue";
 
 const mountPage = () =>
   mount(DocumentsPage, {
-    global: { stubs: { ResumesList: true, CoverLettersList: true, AppSearch: true }, mocks: { $router: { replace: vi.fn() }, $route: { query: {} } } },
+    global: { stubs: { ResumesList: true, CoverLettersList: true, AppSearch: true, NewResumeButton: true }, mocks: { $router: { replace: vi.fn() }, $route: { query: {} } } },
   });
 
 describe("Documents page", () => {
@@ -35,5 +35,9 @@ describe("Documents page", () => {
 
   it("the upload button keeps its name when it's only an icon on phones", () => {
     expect(mountPage().find('button[aria-label="Upload resume"]').exists()).toBe(true);
+  });
+
+  it("has the resume builder's New resume next to Upload (the button hides itself while the flag is off)", () => {
+    expect(mountPage().findComponent({ name: "NewResumeButton" }).attributes("surface")).toBe("documents_header");
   });
 });
