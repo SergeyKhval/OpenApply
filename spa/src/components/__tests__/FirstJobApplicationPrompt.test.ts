@@ -42,7 +42,7 @@ describe("FirstJobApplicationPrompt", () => {
 
   it("lets extension users switch to pasting", async () => {
     const wrapper = mountPrompt({ extensionUrl: STORE, desktopChromium: true });
-    await wrapper.findAll("button").find((button) => button.text().includes("paste a link or description"))!.trigger("click");
+    await wrapper.findAll("button").find((button) => button.text().includes("paste a link, or add one by hand"))!.trigger("click");
     expect(wrapper.find("input").exists()).toBe(true);
   });
 
@@ -99,4 +99,19 @@ describe("FirstJobApplicationPrompt", () => {
   it("has no spreadsheet import (owner: one action on first run)", () => {
     expect(mountPrompt({ desktopChromium: false }).text()).not.toMatch(/import/i);
   });
+
+  it("shows the extension on a job page as a picture, hidden from screen readers", () => {
+    const wrapper = mountPrompt({ extensionUrl: STORE, desktopChromium: true });
+    const picture = wrapper.get('[aria-hidden="true"]');
+    expect(picture.text()).toContain("Save to OpenApply");
+    expect(picture.find("button, a").exists()).toBe(false);
+    expect(wrapper.find(`a[href="${STORE}"]`).text()).toContain("Add to Chrome, it is free");
+  });
+
+  it("isn't a card (no card background or shadow), as on the canvas", () => {
+    const root = mountPrompt({ desktopChromium: false }).get("div");
+    expect(root.classes()).not.toContain("bg-card");
+    expect(root.classes()).not.toContain("shadow-card");
+  });
 });
+
