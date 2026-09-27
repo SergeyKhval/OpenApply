@@ -13,6 +13,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  serverTimestamp,
   setDoc,
   updateDoc,
   type Firestore,
@@ -205,5 +206,57 @@ describe("tailoredResumes collection", () => {
     await assertFails(updateDoc(doc(bob, "tailoredResumes", ID), { excludedOpIds: [1] }));
     await assertFails(deleteDoc(doc(bob, "tailoredResumes", ID)));
     await assertSucceeds(deleteDoc(doc(alice, "tailoredResumes", ID)));
+  });
+});
+
+describe("tailoredResumeReports collection", () => {
+  const report = (overrides: Record<string, unknown> = {}) => ({
+    userId: "alice",
+    tailoredResumeId: "tailored1",
+    opIndex: 2,
+    kind: "reworded",
+    reason: "not_true",
+    note: "I never led that team.",
+    before: "Helped with the migration.",
+    after: "Led the migration.",
+    requirement: "Led a team",
+    createdAt: serverTimestamp(),
+    ...overrides,
+  });
+
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "tailoredResumes", "tailored1"), { userId: "alice" });
+      await setDoc(doc(db, "tailoredResumes", "bobs"), { userId: "bob" });
+    });
+  });
+
+  it("lets the owner of a tailored version report one of its changes", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertSucceeds(setDoc(doc(alice, "tailoredResumeReports", "r1"), report()));
+  });
+
+  it("denies a report on someone else's tailored version, or in someone else's name", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r1"), report({ tailoredResumeId: "bobs" })));
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r2"), report({ userId: "bob" })));
+    await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "tailoredResumeReports", "r3"), report()));
+  });
+
+  it("denies unknown fields, reasons, kinds and oversized text", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r1"), report({ extra: true })));
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r2"), report({ reason: "spam" })));
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r3"), report({ kind: "invented" })));
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r4"), report({ note: "x".repeat(1001) })));
+    await assertFails(setDoc(doc(alice, "tailoredResumeReports", "r5"), report({ createdAt: 1 })));
+  });
+
+  it("never lets a client read, change or delete a report", async () => {
+    await seed(async (db) => setDoc(doc(db, "tailoredResumeReports", "seeded"), { userId: "alice" }));
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(getDoc(doc(alice, "tailoredResumeReports", "seeded")));
+    await assertFails(updateDoc(doc(alice, "tailoredResumeReports", "seeded"), { note: "edited" }));
+    await assertFails(deleteDoc(doc(alice, "tailoredResumeReports", "seeded")));
   });
 });
