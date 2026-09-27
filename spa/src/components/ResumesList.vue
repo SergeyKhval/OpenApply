@@ -58,12 +58,6 @@
         Read OK means we could read the text in the PDF. That text is what the resume match uses.
       </p>
     </div>
-    <TailoredResumeSheet
-      v-if="tailoringEnabled && openVersion"
-      v-model:open="isTailoredOpen"
-      :resume="openVersion.resume"
-      :application="openVersion.application"
-    />
     <Empty v-else class="py-12">
       <EmptyIcon>
         <PhFilePdf :size="32" />
@@ -78,6 +72,12 @@
         <UploadResumeButton>Upload your resume</UploadResumeButton>
       </EmptyAction>
     </Empty>
+    <TailoredResumeSheet
+      v-if="tailoringEnabled && openVersion"
+      v-model:open="isTailoredOpen"
+      :resume="openVersion.resume"
+      :application="openVersion.application"
+    />
   </div>
 </template>
 
