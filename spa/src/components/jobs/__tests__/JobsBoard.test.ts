@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { nextTick } from "vue";
 import { mount, RouterLinkStub } from "@vue/test-utils";
 import type { JobApplication, JobStatus } from "@/types";
 import type { OpenStage } from "@/lib/stages";
@@ -42,21 +43,39 @@ const mountBoard = (jobs: JobApplication[]) => {
   return mounted;
 };
 
-const dataTransferStub = () => ({ setData: vi.fn(), getData: vi.fn(), dropEffect: "", effectAllowed: "" });
+// jsdom has no layout or PointerEvent: pointer events are MouseEvents, and the lane under the
+// pointer comes from a stubbed elementFromPoint
+const firePointer = (type: string, target: EventTarget, x: number, y: number) =>
+  target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 }));
+
+const pointAtLane = (wrapper: ReturnType<typeof mount>, laneLabel: string) => {
+  const lane = wrapper.find(`section[aria-label="${laneLabel}"]`).element;
+  document.elementFromPoint = vi.fn(() => lane);
+};
+
+const liftCard = async (wrapper: ReturnType<typeof mount>, jobId: string, laneLabel: string) => {
+  pointAtLane(wrapper, laneLabel);
+  firePointer("pointerdown", wrapper.find(`[data-job-id="${jobId}"] article`).element, 10, 10);
+  firePointer("pointermove", window, 60, 40);
+  await nextTick();
+};
 
 const dragCardTo = async (wrapper: ReturnType<typeof mount>, jobId: string, laneLabel: string) => {
-  await wrapper.find(`[data-job-id="${jobId}"]`).trigger("dragstart", { dataTransfer: dataTransferStub() });
-  const lane = wrapper.find(`section[aria-label="${laneLabel}"]`);
-  await lane.trigger("dragover", { dataTransfer: dataTransferStub() });
-  await lane.trigger("drop", { dataTransfer: dataTransferStub() });
+  await liftCard(wrapper, jobId, laneLabel);
+  firePointer("pointerup", window, 60, 40);
+  await nextTick();
 };
+
+// The post-drop click swallower clears itself on the next task, as a real later click would find it
+const nextTask = () => new Promise((resolve) => setTimeout(resolve));
 
 describe("JobsBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await nextTask();
     mounted?.unmount();
     mounted = undefined;
   });
@@ -126,6 +145,7 @@ describe("JobsBoard", () => {
     it("picking a reason from the opened menu closes the job with that reason", async () => {
       const wrapper = mountBoard([job("a", "applied")]);
       await dragCardTo(wrapper, "a", "Closed");
+      await nextTask();
       const rejected = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
         (item) => item.textContent?.trim() === "Rejected",
       )!;
@@ -134,15 +154,75 @@ describe("JobsBoard", () => {
       expect(updateJobApplicationStatus).toHaveBeenCalledWith("a", "rejected");
     });
 
-    it("marks the dragged card and the hovered lane for the lift/highlight styling", async () => {
+    it("lifts the card under the cursor, leaves a placeholder and highlights the hovered lane", async () => {
       const wrapper = mountBoard([job("a", "applied")]);
-      await wrapper.find('[data-job-id="a"]').trigger("dragstart", { dataTransfer: dataTransferStub() });
-      expect(wrapper.find('[data-job-id="a"]').attributes("data-dragging")).toBe("true");
-      const lane = wrapper.find('section[aria-label="Interviewing"]');
-      await lane.trigger("dragover", { dataTransfer: dataTransferStub() });
-      expect(lane.attributes("data-drag-over")).toBe("true");
-      await wrapper.find('[data-job-id="a"]').trigger("dragend");
+      await liftCard(wrapper, "a", "Interviewing");
+      const slot = wrapper.find('[data-job-id="a"]');
+      expect(slot.attributes("data-dragging")).toBe("true");
+      expect(slot.find("[data-drag-placeholder]").exists()).toBe(true);
+      const preview = document.body.querySelector<HTMLElement>("[data-drag-preview]");
+      expect(preview?.textContent).toContain("Company a");
+      expect(preview?.style.transform).toContain("translate3d");
+      expect(wrapper.find('section[aria-label="Interviewing"]').attributes("data-drag-over")).toBe("true");
+
+      firePointer("pointerup", window, 60, 40);
+      await nextTick();
+      expect(document.body.querySelector("[data-drag-preview]")).toBeNull();
       expect(wrapper.find('[data-job-id="a"]').attributes("data-dragging")).toBeUndefined();
+    });
+
+    it("a press that barely moves stays a click: no lift, no move, the click reaches the card", async () => {
+      const wrapper = mountBoard([job("a", "applied")]);
+      pointAtLane(wrapper, "Interviewing");
+      const card = wrapper.find('[data-job-id="a"] article').element;
+      firePointer("pointerdown", card, 10, 10);
+      firePointer("pointermove", window, 12, 11);
+      await nextTick();
+      expect(document.body.querySelector("[data-drag-preview]")).toBeNull();
+      firePointer("pointerup", window, 12, 11);
+      const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+      card.dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(false);
+      expect(moveToStage).not.toHaveBeenCalled();
+    });
+
+    it("swallows the click that follows a drop so the card link doesn't open", async () => {
+      const wrapper = mountBoard([job("a", "applied")]);
+      await dragCardTo(wrapper, "a", "Interviewing");
+      const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+      document.body.dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(true);
+    });
+
+    it("Escape cancels the drag without moving the job", async () => {
+      const wrapper = mountBoard([job("a", "applied")]);
+      await liftCard(wrapper, "a", "Interviewing");
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      await nextTick();
+      expect(document.body.querySelector("[data-drag-preview]")).toBeNull();
+      firePointer("pointerup", window, 60, 40);
+      expect(moveToStage).not.toHaveBeenCalled();
+    });
+
+    it("pressing a button on the card (I applied) doesn't start a drag", async () => {
+      const wrapper = mountBoard([job("s", "draft")]);
+      pointAtLane(wrapper, "Applied");
+      firePointer("pointerdown", wrapper.find('[data-job-id="s"] button').element, 10, 10);
+      firePointer("pointermove", window, 80, 80);
+      await nextTick();
+      expect(document.body.querySelector("[data-drag-preview]")).toBeNull();
+      firePointer("pointerup", window, 80, 80);
+      expect(moveToStage).not.toHaveBeenCalled();
+    });
+
+    it("releasing outside every lane drops nothing", async () => {
+      const wrapper = mountBoard([job("a", "applied")]);
+      await liftCard(wrapper, "a", "Interviewing");
+      document.elementFromPoint = vi.fn(() => document.body);
+      firePointer("pointermove", window, 900, 900);
+      firePointer("pointerup", window, 900, 900);
+      await nextTick();
+      expect(moveToStage).not.toHaveBeenCalled();
     });
   });
 });
