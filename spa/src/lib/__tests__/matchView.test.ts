@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toMatchView, verdictFor } from "../matchView";
+import { mustHaveLine, toMatchView, verdictFor } from "../matchView";
 import type { ResumeJobMatch } from "@/types";
 
 const result = (overrides: Partial<ResumeJobMatch["matchResult"]> = {}): ResumeJobMatch["matchResult"] => ({
@@ -60,5 +60,39 @@ describe("verdictFor", () => {
     expect(verdictFor(75)).toBe("Likely to pass the first screen");
     expect(verdictFor(60)).toBe("Could pass with a few fixes");
     expect(verdictFor(30)).toBe("Unlikely to pass as it is");
+  });
+});
+
+describe("mustHaveLine", () => {
+  const requirement = (name: string, status: string, importance = "must-have") => ({
+    requirement: name,
+    status,
+    importance,
+  });
+
+  it("counts must-haves and names what's missing, as on the canvas", () => {
+    const line = mustHaveLine([
+      requirement("Vue 3", "matched"),
+      requirement("TypeScript", "matched"),
+      requirement("Design systems", "matched"),
+      requirement("Testing", "matched"),
+      requirement("Accessibility", "partial"),
+      requirement("GraphQL", "missing"),
+      requirement("Storybook", "missing", "nice-to-have"),
+    ]);
+    expect(line).toBe("4 of 6 must-haves met, 1 partly, missing GraphQL");
+  });
+
+  it("names two missing, counts three or more", () => {
+    expect(mustHaveLine([requirement("A", "missing"), requirement("B", "missing")])).toBe(
+      "0 of 2 must-haves met, missing A and B",
+    );
+    expect(
+      mustHaveLine([requirement("A", "missing"), requirement("B", "missing"), requirement("C", "missing")]),
+    ).toBe("0 of 3 must-haves met, 3 missing");
+  });
+
+  it("is empty when nothing is marked must-have", () => {
+    expect(mustHaveLine([requirement("A", "matched", "nice-to-have")])).toBe("");
   });
 });

@@ -53,6 +53,13 @@ describe("NewResumeButton", () => {
     expect(trackEvent).toHaveBeenCalledWith("resume_builder_offered", { surface: "documents_header", hadResume: true });
   });
 
+  it("puts class and aria-label on the button", () => {
+    flag.value = true;
+    const wrapper = mount(NewResumeButton, { props: { surface: "documents_header" }, attrs: { class: "round", "aria-label": "New resume" } });
+    expect(wrapper.get("button").classes()).toContain("round");
+    expect(wrapper.get("button").attributes("aria-label")).toBe("New resume");
+  });
+
   it("opens the chooser", async () => {
     flag.value = true;
     const wrapper = mount(NewResumeButton, { props: { surface: "documents_header" } });

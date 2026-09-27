@@ -1,8 +1,9 @@
 <template>
   <template v-if="enabled">
-    <Button variant="secondary" @click="open = true">
+    <!-- Two roots (button and sheet): class and aria-label go to the button -->
+    <Button variant="secondary" v-bind="$attrs" @click="open = true">
       <PhPencilSimpleLine />
-      <span>New<span class="hidden lg:inline"> resume</span></span>
+      <slot><span>New<span class="hidden lg:inline"> resume</span></span></slot>
     </Button>
     <NewResumeSheet v-model:open="open" />
   </template>
@@ -18,6 +19,8 @@ import { useResumes } from "@/composables/useResumes";
 import { trackEvent, type ResumeBuilderSurface } from "@/analytics";
 
 type NewResumeButtonProps = { surface: ResumeBuilderSurface };
+
+defineOptions({ inheritAttrs: false });
 
 const { surface } = defineProps<NewResumeButtonProps>();
 

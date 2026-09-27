@@ -29,21 +29,28 @@
           <RouterLink
             v-if="usage.get(resume.id)"
             to="/jobs"
-            class="text-sm font-semibold text-secondary-foreground hover:underline sm:w-32"
+            class="text-sm font-semibold text-secondary-foreground underline underline-offset-2 sm:w-32"
           >
             {{ usageLabel(usage.get(resume.id) ?? 0) }}
           </RouterLink>
           <span v-else class="text-sm text-muted-foreground sm:w-32">{{ usageLabel(0) }}</span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            class="ml-auto"
-            :aria-label="`Delete ${resumeName(resume)}`"
-            :disabled="deletingIds.includes(resume.id)"
-            @click="handleDelete(resume)"
-          >
-            <PhTrash :size="18" />
-          </Button>
+          <!-- The file name opens the PDF; the menu holds the rest (canvas "Documents") -->
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="ml-auto"
+                :aria-label="`Options for ${resumeName(resume)}`"
+                :disabled="deletingIds.includes(resume.id)"
+              >
+                <PhDotsThree :size="18" weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem variant="destructive" @select="handleDelete(resume)"><PhTrash />Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <p v-if="resume.status === 'parse-failed'" class="basis-full text-sm text-destructive sm:pl-15">
             We couldn't read the text in this PDF, so matches won't work with it. Try exporting it again and uploading the new file.
           </p>
@@ -98,10 +105,16 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import { PhCheck, PhFilePdf, PhFileText, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
+import { PhCheck, PhDotsThree, PhFilePdf, PhFileText, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
 import type { Resume, TailoredResume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyAction,

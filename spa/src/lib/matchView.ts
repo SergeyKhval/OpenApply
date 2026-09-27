@@ -52,3 +52,19 @@ export function toMatchView(result: ResumeJobMatch["matchResult"]): MatchView {
     fixes: (result.recommendations?.improvement_areas ?? []).filter((fix) => fix.trim()),
   };
 }
+
+// Card line from the engine's requirements, must-haves only:
+// "4 of 6 must-haves met, 1 partly, missing GraphQL". Empty when none are marked must-have.
+export function mustHaveLine(requirements: { requirement: string; status: string; importance: string }[]): string {
+  const mustHaves = requirements.filter((requirement) => requirement.importance === "must-have");
+  if (!mustHaves.length) return "";
+  const met = mustHaves.filter((requirement) => requirement.status === "matched").length;
+  const partly = mustHaves.filter((requirement) => requirement.status === "partial").length;
+  const missing = mustHaves.filter((requirement) => requirement.status === "missing").map((requirement) => requirement.requirement);
+
+  const parts = [`${met} of ${plural(mustHaves.length, "must-have")} met`];
+  if (partly) parts.push(`${partly} partly`);
+  if (missing.length === 1 || missing.length === 2) parts.push(`missing ${missing.join(" and ")}`);
+  else if (missing.length > 2) parts.push(`${missing.length} missing`);
+  return parts.join(", ");
+}
