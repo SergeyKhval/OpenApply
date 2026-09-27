@@ -1,0 +1,1804 @@
+{
+  "_comment": "Generated from functions/src/lib/tailorVerify.ts. Both assembleTailoredResume copies (functions and spa) must produce `expected`.",
+  "cases": [
+    {
+      "name": "all edit kinds with Skills moved up",
+      "lines": [
+        {
+          "id": "L1",
+          "text": "Sarah Chen",
+          "bullet": false,
+          "role": "locked",
+          "owner": null,
+          "section": null
+        },
+        {
+          "id": "L2",
+          "text": "sarah.chen@example.com · Portland, OR",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L1",
+          "section": null
+        },
+        {
+          "id": "L3",
+          "text": "Summary",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L2",
+          "section": "L3"
+        },
+        {
+          "id": "L4",
+          "text": "Frontend engineer who ships accessible web apps with a small team.",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L3",
+          "section": "L3"
+        },
+        {
+          "id": "L5",
+          "text": "Experience",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L3",
+          "section": "L5"
+        },
+        {
+          "id": "L6",
+          "text": "Frontend Engineer, Northwind Software",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L5",
+          "section": "L5"
+        },
+        {
+          "id": "L7",
+          "text": "Mar 2019 – Present",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L6",
+          "section": "L5"
+        },
+        {
+          "id": "L8",
+          "text": "Built the core web app in React with TypeScript across the codebase.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L9",
+          "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L10",
+          "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L11",
+          "text": "Raised test coverage from 40% to 85% with Jest.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L12",
+          "text": "Organized the team's weekly demo.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L13",
+          "text": "Junior Developer, Acme Corp",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L14",
+          "text": "2016 – 2019",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L13",
+          "section": "L5"
+        },
+        {
+          "id": "L15",
+          "text": "Maintained Postgres queries for the reporting dashboard.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L16",
+          "text": "Mentored two interns on code review.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L17",
+          "text": "Skills",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L14",
+          "section": "L17"
+        },
+        {
+          "id": "L18",
+          "text": "React, TypeScript, Redux, Jest",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L17",
+          "section": "L17"
+        },
+        {
+          "id": "L19",
+          "text": "Education",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L17",
+          "section": "L19"
+        },
+        {
+          "id": "L20",
+          "text": "B.S. Computer Science, Portland State University",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L19",
+          "section": "L19"
+        }
+      ],
+      "ops": [
+        {
+          "text": "",
+          "term": "",
+          "requirement": 1,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L10"
+          ],
+          "index": 0,
+          "status": "applied"
+        },
+        {
+          "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+          "term": "",
+          "requirement": 3,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 1,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": -1,
+          "reason": "",
+          "kind": "cut",
+          "lineIds": [
+            "L12"
+          ],
+          "index": 2,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "PostgreSQL",
+          "requirement": 3,
+          "reason": "",
+          "kind": "surfaceKeyword",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 3,
+          "status": "applied"
+        },
+        {
+          "text": "Led the Redux migration.",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L9"
+          ],
+          "index": 4,
+          "status": "reverted",
+          "revertReason": "new_fact",
+          "offendingTokens": [
+            "lex:lead",
+            "word:led"
+          ]
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L11"
+          ],
+          "index": 5,
+          "status": "applied"
+        }
+      ],
+      "sectionOrder": [
+        "L3",
+        "L17",
+        "L5",
+        "L19"
+      ],
+      "excluded": [],
+      "expected": {
+        "sections": [
+          {
+            "heading": null,
+            "lines": [
+              {
+                "text": "Sarah Chen",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L1"
+                ]
+              },
+              {
+                "text": "sarah.chen@example.com · Portland, OR",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L2"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Summary",
+            "lines": [
+              {
+                "text": "Frontend engineer who ships accessible web apps with a small team.",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L4"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Skills",
+            "lines": [
+              {
+                "text": "React, TypeScript, Redux, Jest",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L18"
+                ]
+              },
+              {
+                "text": "PostgreSQL",
+                "bullet": false,
+                "kind": "surfaced",
+                "sourceIds": [
+                  "L15"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Experience",
+            "lines": [
+              {
+                "text": "Frontend Engineer, Northwind Software",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L6"
+                ]
+              },
+              {
+                "text": "Mar 2019 – Present",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L7"
+                ]
+              },
+              {
+                "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L10"
+                ],
+                "opIndex": 0
+              },
+              {
+                "text": "Raised test coverage from 40% to 85% with Jest.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L11"
+                ],
+                "opIndex": 5
+              },
+              {
+                "text": "Built the core web app in React with TypeScript across the codebase.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L8"
+                ]
+              },
+              {
+                "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L9"
+                ]
+              },
+              {
+                "text": "Junior Developer, Acme Corp",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L13"
+                ]
+              },
+              {
+                "text": "2016 – 2019",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L14"
+                ]
+              },
+              {
+                "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+                "bullet": true,
+                "kind": "rephrased",
+                "sourceIds": [
+                  "L15"
+                ],
+                "opIndex": 1
+              },
+              {
+                "text": "Mentored two interns on code review.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L16"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Education",
+            "lines": [
+              {
+                "text": "B.S. Computer Science, Portland State University",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L20"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "the user switched off the cut and the first move",
+      "lines": [
+        {
+          "id": "L1",
+          "text": "Sarah Chen",
+          "bullet": false,
+          "role": "locked",
+          "owner": null,
+          "section": null
+        },
+        {
+          "id": "L2",
+          "text": "sarah.chen@example.com · Portland, OR",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L1",
+          "section": null
+        },
+        {
+          "id": "L3",
+          "text": "Summary",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L2",
+          "section": "L3"
+        },
+        {
+          "id": "L4",
+          "text": "Frontend engineer who ships accessible web apps with a small team.",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L3",
+          "section": "L3"
+        },
+        {
+          "id": "L5",
+          "text": "Experience",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L3",
+          "section": "L5"
+        },
+        {
+          "id": "L6",
+          "text": "Frontend Engineer, Northwind Software",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L5",
+          "section": "L5"
+        },
+        {
+          "id": "L7",
+          "text": "Mar 2019 – Present",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L6",
+          "section": "L5"
+        },
+        {
+          "id": "L8",
+          "text": "Built the core web app in React with TypeScript across the codebase.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L9",
+          "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L10",
+          "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L11",
+          "text": "Raised test coverage from 40% to 85% with Jest.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L12",
+          "text": "Organized the team's weekly demo.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L13",
+          "text": "Junior Developer, Acme Corp",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L14",
+          "text": "2016 – 2019",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L13",
+          "section": "L5"
+        },
+        {
+          "id": "L15",
+          "text": "Maintained Postgres queries for the reporting dashboard.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L16",
+          "text": "Mentored two interns on code review.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L17",
+          "text": "Skills",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L14",
+          "section": "L17"
+        },
+        {
+          "id": "L18",
+          "text": "React, TypeScript, Redux, Jest",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L17",
+          "section": "L17"
+        },
+        {
+          "id": "L19",
+          "text": "Education",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L17",
+          "section": "L19"
+        },
+        {
+          "id": "L20",
+          "text": "B.S. Computer Science, Portland State University",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L19",
+          "section": "L19"
+        }
+      ],
+      "ops": [
+        {
+          "text": "",
+          "term": "",
+          "requirement": 1,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L10"
+          ],
+          "index": 0,
+          "status": "applied"
+        },
+        {
+          "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+          "term": "",
+          "requirement": 3,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 1,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": -1,
+          "reason": "",
+          "kind": "cut",
+          "lineIds": [
+            "L12"
+          ],
+          "index": 2,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "PostgreSQL",
+          "requirement": 3,
+          "reason": "",
+          "kind": "surfaceKeyword",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 3,
+          "status": "applied"
+        },
+        {
+          "text": "Led the Redux migration.",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L9"
+          ],
+          "index": 4,
+          "status": "reverted",
+          "revertReason": "new_fact",
+          "offendingTokens": [
+            "lex:lead",
+            "word:led"
+          ]
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L11"
+          ],
+          "index": 5,
+          "status": "applied"
+        }
+      ],
+      "sectionOrder": [
+        "L3",
+        "L17",
+        "L5",
+        "L19"
+      ],
+      "excluded": [
+        0,
+        2
+      ],
+      "expected": {
+        "sections": [
+          {
+            "heading": null,
+            "lines": [
+              {
+                "text": "Sarah Chen",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L1"
+                ]
+              },
+              {
+                "text": "sarah.chen@example.com · Portland, OR",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L2"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Summary",
+            "lines": [
+              {
+                "text": "Frontend engineer who ships accessible web apps with a small team.",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L4"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Skills",
+            "lines": [
+              {
+                "text": "React, TypeScript, Redux, Jest",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L18"
+                ]
+              },
+              {
+                "text": "PostgreSQL",
+                "bullet": false,
+                "kind": "surfaced",
+                "sourceIds": [
+                  "L15"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Experience",
+            "lines": [
+              {
+                "text": "Frontend Engineer, Northwind Software",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L6"
+                ]
+              },
+              {
+                "text": "Mar 2019 – Present",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L7"
+                ]
+              },
+              {
+                "text": "Raised test coverage from 40% to 85% with Jest.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L11"
+                ],
+                "opIndex": 5
+              },
+              {
+                "text": "Built the core web app in React with TypeScript across the codebase.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L8"
+                ]
+              },
+              {
+                "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L9"
+                ]
+              },
+              {
+                "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L10"
+                ]
+              },
+              {
+                "text": "Organized the team's weekly demo.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L12"
+                ]
+              },
+              {
+                "text": "Junior Developer, Acme Corp",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L13"
+                ]
+              },
+              {
+                "text": "2016 – 2019",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L14"
+                ]
+              },
+              {
+                "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+                "bullet": true,
+                "kind": "rephrased",
+                "sourceIds": [
+                  "L15"
+                ],
+                "opIndex": 1
+              },
+              {
+                "text": "Mentored two interns on code review.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L16"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Education",
+            "lines": [
+              {
+                "text": "B.S. Computer Science, Portland State University",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L20"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a bad section order falls back to the source order",
+      "lines": [
+        {
+          "id": "L1",
+          "text": "Sarah Chen",
+          "bullet": false,
+          "role": "locked",
+          "owner": null,
+          "section": null
+        },
+        {
+          "id": "L2",
+          "text": "sarah.chen@example.com · Portland, OR",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L1",
+          "section": null
+        },
+        {
+          "id": "L3",
+          "text": "Summary",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L2",
+          "section": "L3"
+        },
+        {
+          "id": "L4",
+          "text": "Frontend engineer who ships accessible web apps with a small team.",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L3",
+          "section": "L3"
+        },
+        {
+          "id": "L5",
+          "text": "Experience",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L3",
+          "section": "L5"
+        },
+        {
+          "id": "L6",
+          "text": "Frontend Engineer, Northwind Software",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L5",
+          "section": "L5"
+        },
+        {
+          "id": "L7",
+          "text": "Mar 2019 – Present",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L6",
+          "section": "L5"
+        },
+        {
+          "id": "L8",
+          "text": "Built the core web app in React with TypeScript across the codebase.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L9",
+          "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L10",
+          "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L11",
+          "text": "Raised test coverage from 40% to 85% with Jest.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L12",
+          "text": "Organized the team's weekly demo.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L13",
+          "text": "Junior Developer, Acme Corp",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L14",
+          "text": "2016 – 2019",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L13",
+          "section": "L5"
+        },
+        {
+          "id": "L15",
+          "text": "Maintained Postgres queries for the reporting dashboard.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L16",
+          "text": "Mentored two interns on code review.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L17",
+          "text": "Skills",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L14",
+          "section": "L17"
+        },
+        {
+          "id": "L18",
+          "text": "React, TypeScript, Redux, Jest",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L17",
+          "section": "L17"
+        },
+        {
+          "id": "L19",
+          "text": "Education",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L17",
+          "section": "L19"
+        },
+        {
+          "id": "L20",
+          "text": "B.S. Computer Science, Portland State University",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L19",
+          "section": "L19"
+        }
+      ],
+      "ops": [
+        {
+          "text": "",
+          "term": "",
+          "requirement": 1,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L10"
+          ],
+          "index": 0,
+          "status": "applied"
+        },
+        {
+          "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+          "term": "",
+          "requirement": 3,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 1,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": -1,
+          "reason": "",
+          "kind": "cut",
+          "lineIds": [
+            "L12"
+          ],
+          "index": 2,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "PostgreSQL",
+          "requirement": 3,
+          "reason": "",
+          "kind": "surfaceKeyword",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 3,
+          "status": "applied"
+        },
+        {
+          "text": "Led the Redux migration.",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L9"
+          ],
+          "index": 4,
+          "status": "reverted",
+          "revertReason": "new_fact",
+          "offendingTokens": [
+            "lex:lead",
+            "word:led"
+          ]
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L11"
+          ],
+          "index": 5,
+          "status": "applied"
+        }
+      ],
+      "sectionOrder": [
+        "L999"
+      ],
+      "excluded": [],
+      "expected": {
+        "sections": [
+          {
+            "heading": null,
+            "lines": [
+              {
+                "text": "Sarah Chen",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L1"
+                ]
+              },
+              {
+                "text": "sarah.chen@example.com · Portland, OR",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L2"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Summary",
+            "lines": [
+              {
+                "text": "Frontend engineer who ships accessible web apps with a small team.",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L4"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Experience",
+            "lines": [
+              {
+                "text": "Frontend Engineer, Northwind Software",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L6"
+                ]
+              },
+              {
+                "text": "Mar 2019 – Present",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L7"
+                ]
+              },
+              {
+                "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L10"
+                ],
+                "opIndex": 0
+              },
+              {
+                "text": "Raised test coverage from 40% to 85% with Jest.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L11"
+                ],
+                "opIndex": 5
+              },
+              {
+                "text": "Built the core web app in React with TypeScript across the codebase.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L8"
+                ]
+              },
+              {
+                "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L9"
+                ]
+              },
+              {
+                "text": "Junior Developer, Acme Corp",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L13"
+                ]
+              },
+              {
+                "text": "2016 – 2019",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L14"
+                ]
+              },
+              {
+                "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+                "bullet": true,
+                "kind": "rephrased",
+                "sourceIds": [
+                  "L15"
+                ],
+                "opIndex": 1
+              },
+              {
+                "text": "Mentored two interns on code review.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L16"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Skills",
+            "lines": [
+              {
+                "text": "React, TypeScript, Redux, Jest",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L18"
+                ]
+              },
+              {
+                "text": "PostgreSQL",
+                "bullet": false,
+                "kind": "surfaced",
+                "sourceIds": [
+                  "L15"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Education",
+            "lines": [
+              {
+                "text": "B.S. Computer Science, Portland State University",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L20"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "every edit switched off gives the original",
+      "lines": [
+        {
+          "id": "L1",
+          "text": "Sarah Chen",
+          "bullet": false,
+          "role": "locked",
+          "owner": null,
+          "section": null
+        },
+        {
+          "id": "L2",
+          "text": "sarah.chen@example.com · Portland, OR",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L1",
+          "section": null
+        },
+        {
+          "id": "L3",
+          "text": "Summary",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L2",
+          "section": "L3"
+        },
+        {
+          "id": "L4",
+          "text": "Frontend engineer who ships accessible web apps with a small team.",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L3",
+          "section": "L3"
+        },
+        {
+          "id": "L5",
+          "text": "Experience",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L3",
+          "section": "L5"
+        },
+        {
+          "id": "L6",
+          "text": "Frontend Engineer, Northwind Software",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L5",
+          "section": "L5"
+        },
+        {
+          "id": "L7",
+          "text": "Mar 2019 – Present",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L6",
+          "section": "L5"
+        },
+        {
+          "id": "L8",
+          "text": "Built the core web app in React with TypeScript across the codebase.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L9",
+          "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L10",
+          "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L11",
+          "text": "Raised test coverage from 40% to 85% with Jest.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L12",
+          "text": "Organized the team's weekly demo.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L13",
+          "text": "Junior Developer, Acme Corp",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L7",
+          "section": "L5"
+        },
+        {
+          "id": "L14",
+          "text": "2016 – 2019",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L13",
+          "section": "L5"
+        },
+        {
+          "id": "L15",
+          "text": "Maintained Postgres queries for the reporting dashboard.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L16",
+          "text": "Mentored two interns on code review.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L14",
+          "section": "L5"
+        },
+        {
+          "id": "L17",
+          "text": "Skills",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L14",
+          "section": "L17"
+        },
+        {
+          "id": "L18",
+          "text": "React, TypeScript, Redux, Jest",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L17",
+          "section": "L17"
+        },
+        {
+          "id": "L19",
+          "text": "Education",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L17",
+          "section": "L19"
+        },
+        {
+          "id": "L20",
+          "text": "B.S. Computer Science, Portland State University",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L19",
+          "section": "L19"
+        }
+      ],
+      "ops": [
+        {
+          "text": "",
+          "term": "",
+          "requirement": 1,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L10"
+          ],
+          "index": 0,
+          "status": "applied"
+        },
+        {
+          "text": "Maintained PostgreSQL queries for the reporting dashboard.",
+          "term": "",
+          "requirement": 3,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 1,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": -1,
+          "reason": "",
+          "kind": "cut",
+          "lineIds": [
+            "L12"
+          ],
+          "index": 2,
+          "status": "applied"
+        },
+        {
+          "text": "",
+          "term": "PostgreSQL",
+          "requirement": 3,
+          "reason": "",
+          "kind": "surfaceKeyword",
+          "lineIds": [
+            "L15"
+          ],
+          "index": 3,
+          "status": "applied"
+        },
+        {
+          "text": "Led the Redux migration.",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "rephrase",
+          "lineIds": [
+            "L9"
+          ],
+          "index": 4,
+          "status": "reverted",
+          "revertReason": "new_fact",
+          "offendingTokens": [
+            "lex:lead",
+            "word:led"
+          ]
+        },
+        {
+          "text": "",
+          "term": "",
+          "requirement": 0,
+          "reason": "",
+          "kind": "moveUp",
+          "lineIds": [
+            "L11"
+          ],
+          "index": 5,
+          "status": "applied"
+        }
+      ],
+      "sectionOrder": [],
+      "excluded": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "expected": {
+        "sections": [
+          {
+            "heading": null,
+            "lines": [
+              {
+                "text": "Sarah Chen",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L1"
+                ]
+              },
+              {
+                "text": "sarah.chen@example.com · Portland, OR",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L2"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Summary",
+            "lines": [
+              {
+                "text": "Frontend engineer who ships accessible web apps with a small team.",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L4"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Experience",
+            "lines": [
+              {
+                "text": "Frontend Engineer, Northwind Software",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L6"
+                ]
+              },
+              {
+                "text": "Mar 2019 – Present",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L7"
+                ]
+              },
+              {
+                "text": "Built the core web app in React with TypeScript across the codebase.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L8"
+                ]
+              },
+              {
+                "text": "Helped with the migration of legacy screens off ad-hoc state to Redux.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L9"
+                ]
+              },
+              {
+                "text": "Integrated REST APIs for billing and search, handling pagination and error states.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L10"
+                ]
+              },
+              {
+                "text": "Raised test coverage from 40% to 85% with Jest.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L11"
+                ]
+              },
+              {
+                "text": "Organized the team's weekly demo.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L12"
+                ]
+              },
+              {
+                "text": "Junior Developer, Acme Corp",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L13"
+                ]
+              },
+              {
+                "text": "2016 – 2019",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L14"
+                ]
+              },
+              {
+                "text": "Maintained Postgres queries for the reporting dashboard.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L15"
+                ]
+              },
+              {
+                "text": "Mentored two interns on code review.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L16"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Skills",
+            "lines": [
+              {
+                "text": "React, TypeScript, Redux, Jest",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L18"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Education",
+            "lines": [
+              {
+                "text": "B.S. Computer Science, Portland State University",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L20"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a Skills section is created after the summary",
+      "lines": [
+        {
+          "id": "L1",
+          "text": "Name",
+          "bullet": false,
+          "role": "locked",
+          "owner": null,
+          "section": null
+        },
+        {
+          "id": "L2",
+          "text": "Summary",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L1",
+          "section": "L2"
+        },
+        {
+          "id": "L3",
+          "text": "Engineer.",
+          "bullet": false,
+          "role": "bullet",
+          "owner": "L2",
+          "section": "L2"
+        },
+        {
+          "id": "L4",
+          "text": "Experience",
+          "bullet": false,
+          "role": "heading",
+          "owner": "L2",
+          "section": "L4"
+        },
+        {
+          "id": "L5",
+          "text": "Dev, Co",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L4",
+          "section": "L4"
+        },
+        {
+          "id": "L6",
+          "text": "2020 – 2022",
+          "bullet": false,
+          "role": "locked",
+          "owner": "L5",
+          "section": "L4"
+        },
+        {
+          "id": "L7",
+          "text": "Wrote Go services.",
+          "bullet": true,
+          "role": "bullet",
+          "owner": "L6",
+          "section": "L4"
+        }
+      ],
+      "ops": [
+        {
+          "text": "",
+          "term": "Go",
+          "requirement": 0,
+          "reason": "",
+          "kind": "surfaceKeyword",
+          "lineIds": [
+            "L7"
+          ],
+          "index": 0,
+          "status": "applied"
+        }
+      ],
+      "sectionOrder": [],
+      "excluded": [],
+      "expected": {
+        "sections": [
+          {
+            "heading": null,
+            "lines": [
+              {
+                "text": "Name",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L1"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Summary",
+            "lines": [
+              {
+                "text": "Engineer.",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L3"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Skills",
+            "lines": [
+              {
+                "text": "Go",
+                "bullet": false,
+                "kind": "surfaced",
+                "sourceIds": [
+                  "L7"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Experience",
+            "lines": [
+              {
+                "text": "Dev, Co",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L5"
+                ]
+              },
+              {
+                "text": "2020 – 2022",
+                "bullet": false,
+                "kind": "original",
+                "sourceIds": [
+                  "L6"
+                ]
+              },
+              {
+                "text": "Wrote Go services.",
+                "bullet": true,
+                "kind": "original",
+                "sourceIds": [
+                  "L7"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

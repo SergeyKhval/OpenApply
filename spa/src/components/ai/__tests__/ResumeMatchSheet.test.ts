@@ -6,6 +6,7 @@ import { getAllowanceState } from "@/lib/aiAllowance";
 const matches = ref<unknown[]>([]);
 const usage = ref(3);
 const callMatch = vi.fn();
+const tailoringFlag = ref(false);
 
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
@@ -31,6 +32,7 @@ vi.mock("@/composables/useAiAllowance", () => ({
     return { allowance, canUseAi: computed(() => allowance.value.canUse) };
   },
 }));
+vi.mock("@/composables/useFeatureFlag", () => ({ useFeatureFlag: () => tailoringFlag }));
 vi.mock("@/composables/useProAvailability", () => ({ useProAvailability: () => ({ proAvailable: ref(false) }) }));
 vi.mock("@/composables/useProSubscription", () => ({
   useProSubscription: () => ({ isStartingCheckout: ref(false), startProCheckout: vi.fn() }),
@@ -60,6 +62,7 @@ describe("ResumeMatchSheet", () => {
     matches.value = [];
     usage.value = 3;
     callMatch.mockReset();
+    tailoringFlag.value = false;
   });
 
   it("shows the latest match: verdict, requirements and fixes", async () => {
@@ -107,5 +110,39 @@ describe("ResumeMatchSheet", () => {
     [...document.body.querySelectorAll("button")].find((button) => button.textContent?.includes("Check my resume"))!.click();
     await flushPromises();
     expect(body()).toContain("free AI checks this month");
+  });
+
+  describe("tailored version (flag tailored-resume)", () => {
+    const latest = (analysis?: unknown) => ({
+      matchResult: {
+        match_summary: { overall_match_percent: 70, summary: "" },
+        recommendations: {},
+        skills_comparison: { matched_skills: [{ skill: "Vue 3", evidence: "Led the move to Vue 3", status: "matched" }] },
+      },
+      ...(analysis ? { analysis } : {}),
+    });
+
+    it("is hidden while the flag is off", async () => {
+      matches.value = [latest({ requirements: [] })];
+      await mountSheet();
+      expect(buttons()).not.toContain("Make a tailored version");
+    });
+
+    it("is hidden for an older match without the stored analysis", async () => {
+      tailoringFlag.value = true;
+      matches.value = [latest()];
+      await mountSheet();
+      expect(buttons()).not.toContain("Make a tailored version");
+    });
+
+    it("hands off to the tailored sheet", async () => {
+      tailoringFlag.value = true;
+      matches.value = [latest({ requirements: [] })];
+      const wrapper = await mountSheet();
+      [...document.body.querySelectorAll("button")].find((button) => button.textContent?.includes("Make a tailored version"))!.click();
+      await flushPromises();
+      expect(wrapper.emitted("tailor")).toHaveLength(1);
+      expect(wrapper.emitted("update:open")).toEqual([[false]]);
+    });
   });
 });
