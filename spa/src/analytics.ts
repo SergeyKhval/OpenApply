@@ -66,6 +66,7 @@ type EventMap = {
   tailored_resume_failed: { error: string; code?: string };
   tailored_resume_change_toggled: { kind: string; on: boolean };
   tailored_resume_opened: { resumeId: string; jobApplicationId: string };
+  tailored_resume_downloaded: { format: "docx" | "pdf"; changesIncluded: number };
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };

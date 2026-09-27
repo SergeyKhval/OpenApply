@@ -10,6 +10,8 @@ const usage = ref(3);
 const callCreate = vi.fn();
 const updateDoc = vi.fn();
 const trackEvent = vi.fn();
+const saveBlob = vi.fn();
+const printTailoredResume = vi.fn();
 
 vi.mock("vuefire", () => ({
   useCurrentUser: () => ref({ uid: "user-1" }),
@@ -30,6 +32,12 @@ vi.mock("firebase/firestore", () => ({
   serverTimestamp: () => "server-ts",
 }));
 vi.mock("firebase/functions", () => ({ httpsCallable: () => callCreate }));
+vi.mock("@/lib/tailoredResumeExport", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/tailoredResumeExport")>()),
+  tailoredResumeDocx: async () => new Blob(["docx"]),
+  saveBlob: (...args: unknown[]) => saveBlob(...args),
+  printTailoredResume: (...args: unknown[]) => printTailoredResume(...args),
+}));
 vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
 vi.mock("@/analytics", () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
 vi.mock("@/composables/useAiAllowance", () => ({
@@ -98,6 +106,8 @@ describe("TailoredResumeSheet", () => {
     callCreate.mockReset();
     updateDoc.mockReset().mockResolvedValue(undefined);
     trackEvent.mockReset();
+    saveBlob.mockReset();
+    printTailoredResume.mockReset().mockReturnValue(true);
   });
 
   it("explains what it will and won't do before the first run", async () => {
@@ -190,6 +200,34 @@ describe("TailoredResumeSheet", () => {
       expect(preview()).toContain("Maintained Postgres queries for the reporting dashboard.");
       expect(preview()).not.toContain("Maintained PostgreSQL queries");
       expect(body()).toContain("5 changes, 4 switched on");
+    });
+
+    it("downloads a .docx named after the candidate and the job", async () => {
+      await mountSheet();
+      button("Download .docx")!.click();
+      await flushPromises();
+      expect(saveBlob).toHaveBeenCalledWith(expect.any(Blob), "Sarah Chen - Globex Senior Frontend Engineer.docx");
+      expect(trackEvent).toHaveBeenCalledWith("tailored_resume_downloaded", { format: "docx", changesIncluded: 5 });
+    });
+
+    it("opens the print view for Save as PDF with the switched-on changes only", async () => {
+      versions.value = [tailoredVersion({ excludedOpIds: [1] })];
+      await mountSheet();
+      button("Save as PDF")!.click();
+      await flushPromises();
+      const [printed, fileName] = printTailoredResume.mock.calls[0]!;
+      expect(fileName).toBe("Sarah Chen - Globex Senior Frontend Engineer.pdf");
+      expect(JSON.stringify(printed)).not.toContain("Maintained PostgreSQL queries");
+      expect(trackEvent).toHaveBeenCalledWith("tailored_resume_downloaded", { format: "pdf", changesIncluded: 4 });
+    });
+
+    it("says so when a popup blocker stops the print view", async () => {
+      printTailoredResume.mockReturnValue(false);
+      await mountSheet();
+      button("Save as PDF")!.click();
+      await flushPromises();
+      expect(body()).toContain("Your browser blocked the print tab.");
+      expect(trackEvent).not.toHaveBeenCalledWith("tailored_resume_downloaded", expect.anything());
     });
 
     it("starts from the switches saved earlier", async () => {
