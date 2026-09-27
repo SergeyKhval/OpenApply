@@ -2,37 +2,31 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import ResumeMatchTool from '../../components/vue/ResumeMatchTool.vue';
+import LinkedinRewriteTool from '../../components/vue/LinkedinRewriteTool.vue';
 
 const currentPath = Astro.url.pathname;
-const pageTitle = "Free Resume vs Job Description Match Checker | OpenApply";
-const pageDescription = "Paste your resume and a job description. Get an honest match score, every requirement checked against your resume, the keywords you're missing, and what a parser sees in your PDF. Free, no signup.";
-const canonicalUrl = new URL('/tools/resume-job-match', Astro.site || 'https://openapply.app').href;
-const ogImage = 'https://openapply.app/images/og/resume-job-match.png';
+const pageTitle = "Free LinkedIn Headline & About Rewriter | OpenApply";
+const pageDescription = "Paste your LinkedIn headline and About section. Get a sharper rewrite that only uses facts already in your text, checked line by line so it never invents a skill, employer, or title. Free, no signup.";
+const canonicalUrl = new URL('/tools/linkedin-headline-rewrite', Astro.site || 'https://openapply.app').href;
+const ogImage = 'https://openapply.app/images/og/linkedin-headline-rewrite.png';
 
-// Same instructions the tool uses, rewritten for a chat window
-const reusablePrompt = `You are a blunt, experienced recruiter who screens hundreds of resumes a week. Compare my resume to the job description below and tell me honestly how a screener would see it. Do not flatter me.
+const reusablePrompt = `You are a blunt LinkedIn profile editor. Rewrite my headline and About section so they read sharper and more confident, using only what I already wrote.
 
-Hard rule: never rewrite my resume and never invent anything. Do not suggest experience, employers, numbers, or years my resume does not show. Only point at gaps and at lines already in my resume. When counting years of experience, treat "present" as today's date.
+Hard rule: never invent anything. Do not add employers, tools, skills, numbers, years, credentials, or a stronger ownership word (helped -> led, supported -> managed) than what I wrote. Do not drop a hedge I used (a side project, started learning, a handful of, informally), since that would make a weak claim read strong. Do not claim a team's or someone else's work as my own.
 
-1. Parse check: does my resume text read in a sensible order, or are parts jumbled (dates split from jobs, columns interleaved)?
-2. Match score, 0 to 100, using this rubric. Weight must-haves far more than nice-to-haves, and judge by evidence, not keyword overlap.
-   85-100: meets nearly every must-have with clear evidence, plus most nice-to-haves.
-   70-84: meets most must-haves, with a few gaps.
-   50-69: meets some must-haves, with noticeable gaps.
-   0-49: missing several must-haves (years of experience, core skills, credentials).
-3. Verdict: 2 to 3 plain sentences on why a screener would pass on me for this job, or why I'd get through. Name the biggest gap.
-4. Requirement by requirement: the 6 to 10 most important requirements, must-haves first. Mark each matched, partial, or missing, and for matched or partial quote the exact line from my resume that proves it.
-5. Missing keywords: skills, tools, or terms from the job description that don't appear in my resume at all.
-6. Three places to fix, most impactful first. Point at the existing line that undersells a requirement and say which term to name or which result to quantify. Don't write the line for me. For a real gap, tell me plainly and how to address it honestly.
+If I give you a target role, reorder and emphasize my existing experience toward it. Do not claim the title itself, a skill, or a level of seniority I didn't already state, even if the role implies it.
 
-<resume>
-PASTE YOUR RESUME HERE
-</resume>
+Return: a rewritten headline (under 220 characters), a rewritten About section, and one sentence on the angle you took and why.
 
-<job_description>
-PASTE THE JOB DESCRIPTION HERE
-</job_description>`;
+Target role (optional): PASTE THE ROLE HERE, OR DELETE THIS LINE
+
+<headline>
+PASTE YOUR CURRENT HEADLINE HERE
+</headline>
+
+<about>
+PASTE YOUR CURRENT ABOUT SECTION HERE
+</about>`;
 
 const faqs = [
   {
@@ -40,24 +34,20 @@ const faqs = [
     answer: "Yes. No signup, no credit card. There's a daily limit per person to keep it free for everyone.",
   },
   {
-    question: "Do you store my resume?",
-    answer: "No. If you upload a PDF, the text is pulled out in your browser and the file never leaves your device. The text is sent to Google Gemini for this one check and is not saved. We keep the job description so you can save the job to your tracker if you want to.",
+    question: "Do you store my headline or About section?",
+    answer: "No. Your text is sent to Google Gemini for this one rewrite and is not saved.",
   },
   {
-    question: "Will it rewrite my resume?",
-    answer: "No, on purpose. AI rewrites tend to invent employers, numbers, and years you don't have. This only points at gaps and at the lines in your resume that undersell a requirement. You make the edits, so everything stays true.",
+    question: "Will it make up experience I don't have?",
+    answer: "No, on purpose. Every rewritten line is checked in code against everything you pasted. A line that adds a skill, employer, number, credential, or stronger ownership word than you stated gets thrown out and your original wording is kept instead, marked \"kept your wording\" so you can see exactly what changed.",
   },
   {
-    question: "How is this different from an ATS keyword scanner?",
-    answer: "Keyword scanners count word overlap. This weighs must-have requirements over nice-to-haves and quotes the line in your resume that proves each one, so padding with buzzwords won't inflate the score.",
-  },
-  {
-    question: "Why check what a parser sees?",
-    answer: "Resumes designed in Canva, InDesign, or with two columns often come out as jumbled text when software reads them: dates split from jobs, sections mixed together. Upload your PDF and read the text box. If it's hard for you to follow, it's hard for the screener too.",
+    question: "What if I give it a target role?",
+    answer: "It reorders and emphasizes your existing experience toward that role. It still won't claim a title, skill, or seniority level you didn't already state, even if the role implies it.",
   },
   {
     question: "Can I use the prompt myself?",
-    answer: "Please do. The full prompt is above. Paste it into ChatGPT, Claude, or Gemini with your resume and the job description.",
+    answer: "Please do. The full prompt is above. Paste it into ChatGPT, Claude, or Gemini with your headline and About section. Without the code check this tool runs, read the result carefully for anything it added.",
   },
 ];
 
@@ -66,7 +56,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": ["SoftwareApplication", "WebApplication"],
-      "name": "Resume vs Job Description Match Checker",
+      "name": "LinkedIn Headline & About Rewriter",
       "url": canonicalUrl,
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Any",
@@ -94,7 +84,7 @@ const jsonLd = {
 <Layout
   title={pageTitle}
   description={pageDescription}
-  keywords="resume job description match, resume match score, resume keyword checker, ATS resume checker free, tailor resume to job description, resume vs job description"
+  keywords="linkedin headline generator, linkedin about section rewriter, linkedin profile optimizer free, rewrite linkedin summary, linkedin headline examples"
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   includeMonoFont
@@ -112,20 +102,20 @@ const jsonLd = {
               Free tool · No signup
             </p>
             <h1 class="text-4xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight mb-5">
-              Would a screener pass on your resume for this job?
+              Rewrite your LinkedIn headline and About, honestly
             </h1>
             <p class="text-lg text-muted-foreground">
-              Upload or paste your resume and the job description. In about 15 seconds you get an
-              honest match score, every requirement checked against your resume with the line that
-              proves it, the keywords you're missing, and what a parser sees in your PDF.
-              It never rewrites your resume or makes anything up.
+              Paste your headline and About section. In about 15 seconds you get a sharper
+              version that only uses facts already in your text. Every line is checked in code,
+              so it never invents a skill, employer, number, or title, and shows you exactly
+              which lines it kept as-is.
             </p>
           </div>
           <p id="tool-hero-collapsed" class="hidden text-center text-lg font-semibold text-foreground mb-6">
-            Your result<span id="tool-hero-collapsed-label"></span>
+            Your rewrite is ready
           </p>
 
-          <ResumeMatchTool client:load />
+          <LinkedinRewriteTool client:load />
         </div>
       </section>
 
@@ -162,8 +152,8 @@ const jsonLd = {
             ))}
           </div>
           <p class="mt-10 text-muted-foreground">
-            Want your LinkedIn profile to match? Try the
-            {" "}<a href="/tools/linkedin-headline-rewrite" class="font-semibold text-primary hover:underline">free LinkedIn headline and About rewriter</a>
+            Applying to a specific job next? Try the
+            {" "}<a href="/tools/resume-job-match" class="font-semibold text-primary hover:underline">free resume vs job description match checker</a>
             {" "}too.
           </p>
           <div class="mt-6 rounded-card bg-secondary p-8 text-center">
@@ -172,7 +162,7 @@ const jsonLd = {
               every application, and get AI resume reviews when you want them.
             </p>
             <a
-              href="/app/?utm_source=tool&utm_medium=cta&utm_campaign=resume_job_match"
+              href="/app/?utm_source=tool&utm_medium=cta&utm_campaign=linkedin_rewrite"
               id="footer-cta"
               class="inline-flex items-center justify-center gap-2 text-[15px] font-semibold h-12 rounded-full px-6 bg-primary text-primary-foreground hover:bg-primary/90"
             >
@@ -203,10 +193,9 @@ const jsonLd = {
     } catch {
       // Clipboard can be blocked; the prompt is still selectable
     }
-    posthog()?.capture('tool_prompt_copied', { tool: 'resume_job_match' });
+    posthog()?.capture('tool_prompt_copied', { tool: 'linkedin_rewrite' });
   });
 
-  // Keep incoming UTMs on the bottom CTA, same as the in-tool CTA
   const footerCta = document.getElementById('footer-cta') as HTMLAnchorElement | null;
   const incoming = new URLSearchParams(window.location.search);
   if (footerCta && incoming.has('utm_source')) {
@@ -219,19 +208,12 @@ const jsonLd = {
     footerCta.href = url.toString();
   }
   footerCta?.addEventListener('click', () => {
-    posthog()?.capture('tool_cta_clicked', { tool: 'resume_job_match', cta: 'footer_signup' });
+    posthog()?.capture('tool_cta_clicked', { tool: 'linkedin_rewrite', cta: 'footer_signup' });
   });
 
-  // Collapse the hero to a single line once the tool has a result, so the
-  // score lands in the first mobile viewport instead of below the intro
-  // copy. Dispatched by ResumeMatchTool.vue on submit / start over.
-  window.addEventListener('oa:tool-result', (event) => {
-    const label = (event as CustomEvent<{ label?: string }>).detail?.label;
+  window.addEventListener('oa:tool-result', () => {
     document.getElementById('tool-hero-full')?.classList.add('hidden');
-    const collapsed = document.getElementById('tool-hero-collapsed');
-    const collapsedLabel = document.getElementById('tool-hero-collapsed-label');
-    if (collapsedLabel) collapsedLabel.textContent = label ? ` for ${label}` : '';
-    collapsed?.classList.remove('hidden');
+    document.getElementById('tool-hero-collapsed')?.classList.remove('hidden');
   });
 
   window.addEventListener('oa:tool-reset', () => {

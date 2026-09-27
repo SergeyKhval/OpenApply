@@ -353,6 +353,12 @@
       "indexes": []
     },
     {
+      "collectionGroup": "linkedinToolUsage",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
       "collectionGroup": "billingProfile",
       "fieldPath": "stripeCustomerId",
       "ttl": false,
