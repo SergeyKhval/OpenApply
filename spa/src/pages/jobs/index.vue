@@ -1,6 +1,11 @@
 <template>
+  <!-- First run (canvas "First run"): no header bar, the one action centered on the page -->
+  <div v-if="isFirstRun" class="flex min-h-full flex-col px-4 pt-4 pb-28 lg:px-6 lg:pb-10">
+    <h1 class="text-[28px] font-extrabold lg:sr-only">Jobs</h1>
+    <FirstJobApplicationPrompt class="my-auto py-10" />
+  </div>
   <!-- /jobs?stage=closed: closed jobs (also where old /dashboard/archive lands) -->
-  <ClosedJobsList v-if="showClosed" :now="now" />
+  <ClosedJobsList v-else-if="showClosed" :now="now" />
   <div v-else class="flex h-full flex-col">
     <!-- Phones (canvas "Jobs", mobile): short date, "Jobs" and a search button, no rule -->
     <PageHeader class="max-lg:h-auto max-lg:border-transparent max-lg:pt-4 max-lg:pb-2">
@@ -58,7 +63,6 @@
           <JobsList v-else :jobs="filteredJobs" :now="now" />
         </div>
       </template>
-      <FirstJobApplicationPrompt v-else-if="!isLoading" class="py-6" />
     </div>
 
     <Button
@@ -111,6 +115,7 @@ useIntervalFn(() => (now.value = new Date()), 60_000);
 
 const showClosed = computed(() => route.query.stage === "closed");
 const hasJobs = computed(() => (jobApplications.value?.length ?? 0) > 0);
+const isFirstRun = computed(() => !showClosed.value && !isLoading.value && !hasJobs.value);
 
 const greeting = computed(() => {
   const hour = now.value.getHours();
