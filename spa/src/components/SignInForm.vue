@@ -1,52 +1,41 @@
 <template>
-  <Card class="w-full max-w-md gap-2 border-0 bg-transparent py-0 shadow-none dark:border-0">
-    <CardHeader class="px-0">
-      <CardTitle
-        ><h2 class="text-3xl font-extrabold mb-4">
-          {{ pendingJob ? "Sign up to save this job" : "Sign in" }}
-        </h2></CardTitle
-      >
-    </CardHeader>
+  <div class="flex w-full max-w-md flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <h2 class="text-[28px] font-extrabold leading-tight lg:text-[34px]">Sign in</h2>
+      <p class="text-[15px] text-soft-foreground">Welcome back. Pick up where you left off.</p>
+    </div>
 
-    <CardContent class="px-0">
-      <div class="mb-4">
-        <Button
-          @click="handleGoogleLogin"
-          :disabled="loading"
-          size="lg"
-          class="w-full"
-        >
-          <PhGoogleLogo weight="bold" />
-          {{ loading ? "Signing in…" : "Sign in with Google" }}
-        </Button>
-      </div>
+    <Button variant="outline" size="lg" class="w-full" :disabled="loading" @click="handleGoogleLogin">
+      <span class="grid size-5 place-items-center rounded-full border border-border bg-card">
+        <PhGoogleLogo weight="bold" class="size-3" />
+      </span>
+      {{ loading ? "Opening Google…" : "Continue with Google" }}
+    </Button>
 
-      <div class="mb-4 flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
-        <span class="h-px grow bg-border" />or<span class="h-px grow bg-border" />
-      </div>
+    <div class="flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
+      <span class="h-px grow bg-border" />or<span class="h-px grow bg-border" />
+    </div>
 
-      <EmailCodeForm
-        id-prefix="signin"
-        :source="source"
-        @signed-in="redirect()"
-        @google="handleGoogleLogin"
-      />
+    <EmailCodeForm
+      id-prefix="signin"
+      :source="source"
+      @signed-in="redirect()"
+      @google="handleGoogleLogin"
+    />
 
-      <Alert v-if="error" variant="destructive" class="mt-4" role="alert">
-        <AlertDescription>{{ error }}</AlertDescription>
-      </Alert>
+    <Alert v-if="error" variant="destructive" role="alert">
+      <AlertDescription>{{ error }}</AlertDescription>
+    </Alert>
 
-      <p class="mt-6 text-center text-sm text-foreground">
-        Don't have an account?
-        <button
-          class="text-primary hover:underline cursor-pointer"
-          @click="emit('sign-up')"
-        >
-          Sign up here
-        </button>
+    <div class="flex flex-col gap-2 text-[13px] text-muted-foreground">
+      <p>No password. New or returning, it is the same step.</p>
+      <p>
+        By continuing you agree to the
+        <a href="/terms" class="underline underline-offset-2 hover:text-foreground">Terms</a> and
+        <a href="/privacy" class="underline underline-offset-2 hover:text-foreground">Privacy policy</a>.
       </p>
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -55,7 +44,6 @@ import { PhGoogleLogo } from "@phosphor-icons/vue";
 import { useAuth } from "@/composables/useAuth";
 import { usePostAuthRedirect } from "@/composables/usePostAuthRedirect";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import EmailCodeForm from "@/components/EmailCodeForm.vue";
 
@@ -64,13 +52,7 @@ type SignInFormProps = {
   source?: "landing_page_parse" | "resume_match_tool" | "extension" | "direct";
 };
 
-const { pendingJob = false, source = "direct" } = defineProps<SignInFormProps>();
-
-type SignInFormEmits = {
-  (event: "sign-up"): void;
-};
-
-const emit = defineEmits<SignInFormEmits>();
+const { source = "direct" } = defineProps<SignInFormProps>();
 
 const { redirect } = usePostAuthRedirect();
 const { loginWithGoogle } = useAuth();
