@@ -2,19 +2,23 @@
   <form v-if="step === 'email'" class="space-y-4" @submit.prevent="handleSendCode">
     <div>
       <Label :for="`${idPrefix}-email`" class="block text-sm font-medium mb-1">Email</Label>
-      <Input
-        :id="`${idPrefix}-email`"
-        v-model="email"
-        type="email"
-        name="email"
-        autocomplete="email"
-        spellcheck="false"
-        required
-        class="w-full"
-      />
+      <div class="relative">
+        <PhEnvelopeSimple :size="18" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-soft-foreground" aria-hidden="true" />
+        <Input
+          :id="`${idPrefix}-email`"
+          v-model="email"
+          type="email"
+          name="email"
+          autocomplete="email"
+          spellcheck="false"
+          placeholder="you@example.com"
+          required
+          class="h-12 w-full pl-11"
+        />
+      </div>
     </div>
 
-    <Button type="submit" :disabled="loading" variant="outline" size="lg" class="w-full">
+    <Button type="submit" :disabled="loading" size="lg" class="w-full">
       {{ loading ? "Sending…" : "Email me a code" }}
     </Button>
   </form>
@@ -90,6 +94,7 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from "vue";
+import { PhEnvelopeSimple } from "@phosphor-icons/vue";
 import { useAuth } from "@/composables/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
