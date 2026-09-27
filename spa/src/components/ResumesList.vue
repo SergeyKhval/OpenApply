@@ -17,7 +17,7 @@
           <div class="flex min-w-0 grow basis-60 flex-col gap-0.5">
             <ResumeLink :resume="resume" />
             <p class="text-sm text-muted-foreground">
-              <template v-if="resume.kind === 'built'">Made here {{ formatDate(resume.createdAt) }}</template>
+              <template v-if="resume.kind === 'built'">{{ madeFrom(resume) ? `Made from ${madeFrom(resume)} ·` : "Made here" }} {{ formatDate(resume.createdAt) }}</template>
               <template v-else>Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template></template>
             </p>
           </div>
@@ -48,6 +48,7 @@
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <RebuildResumeMenuItem :resume="resume" />
               <DropdownMenuItem variant="destructive" @select="handleDelete(resume)"><PhTrash />Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -81,6 +82,7 @@
       </div>
       <EmptyAction>
         <UploadResumeButton>Upload your resume</UploadResumeButton>
+        <NewResumeButton surface="resumes_empty" variant="outline">Build one here</NewResumeButton>
       </EmptyAction>
     </Empty>
     <TailoredResumeSheet
@@ -123,6 +125,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
+import RebuildResumeMenuItem from "@/components/resume-builder/RebuildResumeMenuItem.vue";
 import { Badge } from "@/components/ui/badge";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { countResumeUsage, formatFileSize, resumeName, usageLabel } from "@/lib/resumeUsage";
@@ -147,6 +151,13 @@ const q = computed(() =>
 );
 
 const { data: resumes } = useCollection<Resume>(q);
+
+// "Made from sarah.pdf" for a resume copied from an upload that's still here
+function madeFrom(resume: Resume): string {
+  if (resume.kind !== "built" || !resume.importedFrom?.resumeId) return "";
+  const source = resumes.value?.find((candidate) => candidate.id === resume.importedFrom?.resumeId);
+  return source && source.kind !== "built" ? source.fileName : "";
+}
 
 // Tailored versions (flag tailored-resume): one query for all of them,
 // newest per job under each resume

@@ -5,15 +5,17 @@ import { db } from "@/firebase/config";
 import { trackEvent } from "@/analytics";
 import { emptyStructuredResume, isResumeComplete, serializeResume, type StructuredResume } from "@/lib/builtResume";
 import { newId, newSection } from "@/lib/builtResumeEdit";
+import type { ExportTemplate } from "@/lib/tailoredResumeExport";
 import type { BuiltResume } from "@/types";
 
 export const AUTOSAVE_DELAY_MS = 1000;
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
-type Snapshot = { structured: StructuredResume; title: string };
+type Snapshot = { structured: StructuredResume; title: string; template: ExportTemplate };
 
-const snapshotOf = (structured: StructuredResume, title: string): string => JSON.stringify({ structured, title });
+const snapshotOf = (structured: StructuredResume, title: string, template: ExportTemplate): string =>
+  JSON.stringify({ structured, title, template });
 
 /**
  * A new built resume from scratch: contact prefilled from the account, the
@@ -52,6 +54,7 @@ export function useBuiltResume(resumeId: Ref<string>) {
 
   const draft = ref<StructuredResume | null>(null);
   const title = ref("");
+  const template = ref<ExportTemplate>("classic");
   const saveState = ref<SaveState>("idle");
   let lastSaved = "";
   let completedSent = false;
@@ -66,7 +69,8 @@ export function useBuiltResume(resumeId: Ref<string>) {
       const loaded: StructuredResume = JSON.parse(JSON.stringify(value.structured));
       draft.value = loaded;
       title.value = value.title;
-      lastSaved = snapshotOf(loaded, title.value);
+      template.value = value.template === "compact" ? "compact" : "classic";
+      lastSaved = snapshotOf(loaded, title.value, template.value);
       completedSent = !!value.completedAt;
     },
     { immediate: true },
@@ -76,8 +80,8 @@ export function useBuiltResume(resumeId: Ref<string>) {
     if (timer) clearTimeout(timer);
     timer = null;
     if (!draft.value || !resumeRef.value) return;
-    const snapshot: Snapshot = JSON.parse(snapshotOf(draft.value, title.value));
-    const serialized = snapshotOf(snapshot.structured, snapshot.title);
+    const serialized = snapshotOf(draft.value, title.value, template.value);
+    const snapshot: Snapshot = JSON.parse(serialized);
     if (serialized === lastSaved) return;
 
     const completing = !completedSent && isResumeComplete(snapshot.structured);
@@ -87,6 +91,7 @@ export function useBuiltResume(resumeId: Ref<string>) {
         structured: snapshot.structured,
         text: serializeResume(snapshot.structured),
         title: snapshot.title.trim().slice(0, 120) || "Resume",
+        template: snapshot.template,
         updatedAt: serverTimestamp(),
         ...(completing ? { completedAt: serverTimestamp() } : {}),
       });
@@ -118,9 +123,9 @@ export function useBuiltResume(resumeId: Ref<string>) {
   }
 
   watch(
-    [draft, title],
+    [draft, title, template],
     () => {
-      if (!draft.value || snapshotOf(draft.value, title.value) === lastSaved) return;
+      if (!draft.value || snapshotOf(draft.value, title.value, template.value) === lastSaved) return;
       if (timer) clearTimeout(timer);
       timer = setTimeout(save, AUTOSAVE_DELAY_MS);
     },
@@ -132,5 +137,5 @@ export function useBuiltResume(resumeId: Ref<string>) {
     void flush();
   });
 
-  return { resume, draft, title, pending, loadError, saveState, save, flush };
+  return { resume, draft, title, template, pending, loadError, saveState, save, flush };
 }

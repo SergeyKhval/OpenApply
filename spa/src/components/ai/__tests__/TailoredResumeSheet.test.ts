@@ -53,6 +53,17 @@ vi.mock("@/composables/useProSubscription", () => ({
   useProSubscription: () => ({ isStartingCheckout: ref(false), startProCheckout: vi.fn() }),
 }));
 
+vi.mock("@/components/resume-builder/RebuildResumeButton.vue", async () => {
+  const { defineComponent, h } = await import("vue");
+  return {
+    default: defineComponent({
+      name: "RebuildResumeButton",
+      props: ["resume", "surface"],
+      setup: (componentProps, { slots }) => () => h("button", { "data-surface": componentProps.surface }, slots.default?.()),
+    }),
+  };
+});
+
 import TailoredResumeSheet from "../TailoredResumeSheet.vue";
 
 enableAutoUnmount(afterEach);
@@ -126,6 +137,7 @@ describe("TailoredResumeSheet", () => {
     await flushPromises();
     expect(callCreate).toHaveBeenCalledWith({ resumeId: "resume-1", applicationId: "job-1" });
     expect(trackEvent).toHaveBeenCalledWith("tailored_resume_generated", expect.objectContaining({ applied: 5 }));
+    expect(trackEvent).toHaveBeenCalledWith("tailored_resume_started", expect.objectContaining({ resumeId: "resume-1", resumeKind: "upload" }));
   });
 
   it("says when there was nothing to change, and that no check was used", async () => {
@@ -156,6 +168,23 @@ describe("TailoredResumeSheet", () => {
     button("Make a tailored version")!.click();
     await flushPromises();
     expect(body()).toContain("You've hit today's limit for tailored versions.");
+  });
+
+  it("offers rebuilding a jumbled PDF in the editor", async () => {
+    callCreate.mockRejectedValue({ message: "Your resume's text came out jumbled, so we can't edit it safely.", details: { code: "scrambled" } });
+    await mountSheet();
+    button("Make a tailored version")!.click();
+    await flushPromises();
+    const rebuild = document.body.querySelector('[data-surface="scrambled_block"]');
+    expect(rebuild?.textContent).toContain("Rebuild it in the editor");
+  });
+
+  it("doesn't offer a rebuild for other refusals", async () => {
+    callCreate.mockRejectedValue({ message: "limit", details: { code: "rate_limited" } });
+    await mountSheet();
+    button("Make a tailored version")!.click();
+    await flushPromises();
+    expect(document.body.querySelector('[data-surface="scrambled_block"]')).toBeNull();
   });
 
   it("shows the out-of-checks panel instead of running", async () => {

@@ -128,6 +128,18 @@ describe("useCoverLetters", () => {
       expect(mockTrackEvent).toHaveBeenCalledWith("cover_letter_generated", {
         jobApplicationId: "job-1",
         resumeId: "resume-1",
+        resumeKind: "upload",
+      });
+    });
+
+    it("says when the letter came from a resume built in the app", async () => {
+      mockHttpsCallable.mockResolvedValueOnce({ data: { coverLetterId: "cl-1", body: "Dear hiring manager..." } });
+      const { generateCoverLetter } = useCoverLetters();
+      await generateCoverLetter("job-1", "resume-1", undefined, "built");
+      expect(mockTrackEvent).toHaveBeenCalledWith("cover_letter_generated", {
+        jobApplicationId: "job-1",
+        resumeId: "resume-1",
+        resumeKind: "built",
       });
     });
 

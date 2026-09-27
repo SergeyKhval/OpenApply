@@ -155,6 +155,17 @@ describe("useBuiltResume", () => {
     expect(updateDoc).toHaveBeenCalledTimes(1);
   });
 
+  it("saves the chosen template with the rest", async () => {
+    resumeDoc.value = built(emptyStructuredResume({ name: "Sarah Chen" }), { template: "classic" });
+    const { api } = setup();
+    await nextTick();
+    expect(api.template.value).toBe("classic");
+    api.template.value = "compact";
+    await nextTick();
+    await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS);
+    expect(updateDoc.mock.calls[0]![1]).toMatchObject({ template: "compact" });
+  });
+
   it("says when a save fails", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     updateDoc.mockRejectedValueOnce(new Error("offline"));

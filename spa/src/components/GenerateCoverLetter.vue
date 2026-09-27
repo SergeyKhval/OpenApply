@@ -13,7 +13,10 @@
         <EmptyTitle>Upload a resume</EmptyTitle>
         <EmptyDescription>The letter is written from your resume and the job, so it needs a resume first.</EmptyDescription>
       </div>
-      <EmptyAction><UploadResumeButton>Upload resume</UploadResumeButton></EmptyAction>
+      <EmptyAction>
+        <UploadResumeButton>Upload resume</UploadResumeButton>
+        <NewResumeButton surface="cover_letter_empty" variant="outline">Build one here</NewResumeButton>
+      </EmptyAction>
     </Empty>
 
     <Empty v-else-if="!hasJobApplications">
@@ -74,6 +77,7 @@ import { useRoute, useRouter } from "vue-router";
 import AiChecksLeft from "@/components/AiChecksLeft.vue";
 import AiLimitReached from "@/components/AiLimitReached.vue";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import AiSheet from "@/components/ai/AiSheet.vue";
 import ChoicePills from "@/components/ai/ChoicePills.vue";
 import JobApplicationSelect from "@/components/inputs/JobApplicationSelect.vue";
@@ -216,6 +220,7 @@ const handleGenerateCoverLetter = async () => {
     selectedJobApplicationId.value,
     selectedResumeId.value,
     { length: length.value, tone: tone.value },
+    resumes.value?.find((resume) => resume.id === selectedResumeId.value)?.kind ?? "upload",
   );
 
   isProcessing.value = false;
