@@ -14,6 +14,18 @@ const ai = genkit({
   model: googleAI.model("gemini-3.5-flash", { temperature: 0 }),
 });
 
+// gemini-3.5-flash is a Gemini 3-family model: it controls thinking with
+// thinkingConfig.thinkingLevel (an enum), not the thinkingBudget token count
+// Gemini 2.5 models use. @genkit-ai/googleai@1.28.0 doesn't know this model
+// (falls back to a generic model ref) and its config type only declares
+// thinkingBudget, so thinkingLevel isn't typed here yet, but it does reach
+// the API untouched and the API honors it (verified in oa-gom: MINIMAL cut
+// thinking tokens to 0 vs ~740 with no thinkingConfig set, on an identical
+// prompt). Left unset to keep today's behavior; flipping this needs the
+// same quality re-test oa-7zx ran for thinkingBudget, since a lower level
+// may affect requirement-evidence accuracy the same way switching models did.
+const MATCH_THINKING_LEVEL: "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | undefined = undefined;
+
 export const MatchToolResultSchema = z.object({
   companyName: z.string(),
   position: z.string(),
@@ -55,6 +67,11 @@ export async function analyzeResumeMatch(input: MatchToolInput): Promise<MatchTo
     const response = await ai.generate({
       prompt: buildMatchToolPrompt(input),
       output: { schema: MatchToolResultSchema, format: "json" },
+      ...(MATCH_THINKING_LEVEL && {
+        config: {
+          thinkingConfig: { thinkingLevel: MATCH_THINKING_LEVEL },
+        } as Record<string, unknown>,
+      }),
     });
     result = response.output;
   } catch (error) {
