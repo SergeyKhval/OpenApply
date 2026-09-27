@@ -43,12 +43,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       Record<never, never>,
       | '/documents/'
+      | '/documents/resumes/[resumeId]'
     >,
     '/documents/': RouteRecordInfo<
       '/documents/',
       '/documents',
       Record<never, never>,
       Record<never, never>,
+      | never
+    >,
+    '/documents/resumes/[resumeId]': RouteRecordInfo<
+      '/documents/resumes/[resumeId]',
+      '/documents/resumes/:resumeId',
+      { resumeId: ParamValue<true> },
+      { resumeId: ParamValue<false> },
       | never
     >,
     '/jobs': RouteRecordInfo<
@@ -201,12 +209,19 @@ declare module 'vue-router/auto-routes' {
       routes:
         | '/documents'
         | '/documents/'
+        | '/documents/resumes/[resumeId]'
       views:
         | 'default'
     }
     'src/pages/documents/index.vue': {
       routes:
         | '/documents/'
+      views:
+        | never
+    }
+    'src/pages/documents/resumes/[resumeId].vue': {
+      routes:
+        | '/documents/resumes/[resumeId]'
       views:
         | never
     }

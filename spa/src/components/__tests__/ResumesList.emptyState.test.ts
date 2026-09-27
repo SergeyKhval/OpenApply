@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
+import { RouterLinkStub, enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { computed, defineComponent, h, ref, type Ref } from "vue";
 
 const resumes = ref<unknown[]>([]);
@@ -45,7 +45,7 @@ enableAutoUnmount(afterEach);
 const at = (day: number) => ({ toDate: () => new Date(2026, 8, day) });
 
 const mountList = async () => {
-  const wrapper = mount(ResumesList, { attachTo: document.body, global: { stubs: { RouterLink: true, UploadResumeButton: true } } });
+  const wrapper = mount(ResumesList, { attachTo: document.body, global: { stubs: { RouterLink: RouterLinkStub, UploadResumeButton: true } } });
   await flushPromises();
   return wrapper;
 };

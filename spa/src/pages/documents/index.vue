@@ -5,7 +5,10 @@
       <div class="grow">
         <AppSearch v-if="tab === 'cover-letters'" v-model="search" />
       </div>
-      <UploadResumeButton v-if="tab === 'resumes'" />
+      <div v-if="tab === 'resumes'" class="flex gap-2">
+        <NewResumeButton surface="documents_header" />
+        <UploadResumeButton />
+      </div>
       <Button
         v-else-if="tab === 'cover-letters'"
         @click="
@@ -45,6 +48,7 @@ import AppSearch from "@/components/AppSearch.vue";
 import ResumesList from "@/components/ResumesList.vue";
 import CoverLettersList from "@/components/CoverLettersList.vue";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
