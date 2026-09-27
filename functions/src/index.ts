@@ -34,3 +34,4 @@ export * from "./jobListingRecheck";
 export * from "./jobReports";
 export * from "./jobSignalsLookup";
 export * from "./signalDisputes";
+export * from "./rewriteLinkedinProfile";

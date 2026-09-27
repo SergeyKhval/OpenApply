@@ -7,10 +7,10 @@ interface Props {
 
 const { currentPath = '' } = Astro.props;
 const isOnBlogPage = currentPath.startsWith('/blog');
-const isOnResumeMatchPage = currentPath.startsWith('/tools/resume-job-match');
+const isOnToolsPage = currentPath.startsWith('/tools');
 
 const navLinks = [
-  { href: '/tools/resume-job-match', label: 'Free resume check', active: isOnResumeMatchPage },
+  { href: '/tools', label: 'Free tools', active: isOnToolsPage },
   { href: '/#pricing', label: 'Pricing', active: false },
   { href: '/blog', label: 'Blog', active: isOnBlogPage },
 ];
