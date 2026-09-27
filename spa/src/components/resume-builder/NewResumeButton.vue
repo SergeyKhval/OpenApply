@@ -29,12 +29,13 @@ const router = useRouter();
 const { toast } = useToast();
 const isCreating = ref(false);
 
-// Once per mount, when the button is actually on screen
+// Once per mount, when the button is actually on screen and the list has
+// loaded, so hadResume is true for someone who has one
 let offered = false;
 watch(
-  [enabled, () => resumes.value],
-  ([isOn]) => {
-    if (!isOn || offered) return;
+  [enabled, () => resumes.pending.value],
+  ([isOn, isLoading]) => {
+    if (!isOn || isLoading || offered) return;
     offered = true;
     trackEvent("resume_builder_offered", { surface, hadResume: resumes.value.length > 0 });
   },

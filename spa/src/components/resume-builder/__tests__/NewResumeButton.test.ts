@@ -3,7 +3,8 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { ref } from "vue";
 
 const flag = ref(false);
-const resumes = ref<unknown[]>([]);
+const pending = ref(false);
+const resumes = Object.assign(ref<unknown[]>([]), { pending });
 const push = vi.fn();
 const createBuiltResume = vi.fn(async (..._args: unknown[]) => "new-1");
 const trackEvent = vi.fn();
@@ -23,6 +24,7 @@ enableAutoUnmount(afterEach);
 describe("NewResumeButton", () => {
   beforeEach(() => {
     flag.value = false;
+    pending.value = false;
     resumes.value = [];
     push.mockClear();
     trackEvent.mockClear();
@@ -42,6 +44,18 @@ describe("NewResumeButton", () => {
     await flushPromises();
     expect(wrapper.find("button").exists()).toBe(true);
     expect(trackEvent).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith("resume_builder_offered", { surface: "documents_header", hadResume: true });
+  });
+
+  it("waits for the resumes to load before counting the offer", async () => {
+    flag.value = true;
+    pending.value = true;
+    mount(NewResumeButton, { props: { surface: "documents_header" } });
+    await flushPromises();
+    expect(trackEvent).not.toHaveBeenCalled();
+    resumes.value = [{ id: "r1" }];
+    pending.value = false;
+    await flushPromises();
     expect(trackEvent).toHaveBeenCalledWith("resume_builder_offered", { surface: "documents_header", hadResume: true });
   });
 
