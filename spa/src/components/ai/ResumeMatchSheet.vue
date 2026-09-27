@@ -73,6 +73,10 @@
             <PhArrowsClockwise />
             Check again · 1 check
           </Button>
+          <Button v-if="canTailor" variant="outline" @click="tailor">
+            <PhMagicWand />
+            Make a tailored version
+          </Button>
           <Button @click="writeCoverLetter">
             <PhPenNib />
             Write a cover letter for this job
@@ -93,7 +97,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useCollection, useCurrentUser } from "vuefire";
 import { collection, limit, orderBy, query, where } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { PhArrowsClockwise, PhPenNib, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
+import { PhArrowsClockwise, PhMagicWand, PhPenNib, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
 import AiChecksLeft from "@/components/AiChecksLeft.vue";
 import AiLimitReached from "@/components/AiLimitReached.vue";
 import ResumeLink from "@/components/ResumeLink.vue";
@@ -105,6 +109,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { db, functions } from "@/firebase/config";
 import { trackEvent } from "@/analytics";
 import { useAiAllowance } from "@/composables/useAiAllowance";
+import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { toMatchView, type RequirementStatus } from "@/lib/matchView";
 import type { JobApplication, Resume, ResumeJobMatch } from "@/types";
 
@@ -116,6 +121,7 @@ type ResumeMatchSheetProps = {
 
 type ResumeMatchSheetEmits = {
   (event: "update:open", value: boolean): void;
+  (event: "tailor"): void;
 };
 
 const { open, resume, application } = defineProps<ResumeMatchSheetProps>();
@@ -147,6 +153,25 @@ const matchQuery = computed(() =>
 );
 const matches = useCollection<ResumeJobMatch>(matchQuery);
 const view = computed(() => (matches.value[0] ? toMatchView(matches.value[0].matchResult) : null));
+
+// Tailored version (flag tailored-resume): needs a match run by the shared
+// engine, which stores the analysis it tailors from
+const tailoringEnabled = useFeatureFlag("tailored-resume");
+const canTailor = computed(() => tailoringEnabled.value && Boolean(matches.value[0]?.analysis));
+watch(
+  () => [open, tailoringEnabled.value, matches.value[0]] as const,
+  ([isOpen, enabled, latest]) => {
+    if (!isOpen || !enabled || !latest) return;
+    const matchScore = Math.round(latest.matchResult.match_summary?.overall_match_percent ?? 0);
+    trackEvent("tailored_resume_offered", latest.analysis ? { matchScore } : { matchScore, blocked: "no_analysis" });
+  },
+  { immediate: true },
+);
+
+function tailor() {
+  emit("update:open", false);
+  emit("tailor");
+}
 
 const isRunning = ref(false);
 const errorMessage = ref("");

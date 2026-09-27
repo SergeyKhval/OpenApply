@@ -1,16 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockProfileGet = vi.fn();
+const mockProfileSet = vi.fn();
 const mockSessionsCreate = vi.fn();
+const mockCustomersCreate = vi.fn();
 
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
     collection: () => ({
       doc: () => ({
-        collection: () => ({ doc: () => ({ get: mockProfileGet }) }),
+        collection: () => ({ doc: () => ({ get: mockProfileGet, set: mockProfileSet }) }),
       }),
     }),
   }),
+  FieldValue: { serverTimestamp: () => "mock-ts" },
 }));
 
 vi.mock("firebase-functions/params", () => ({
@@ -21,6 +24,9 @@ vi.mock("stripe", () => ({
   default: class Stripe {
     checkout = {
       sessions: { create: (...args: unknown[]) => mockSessionsCreate(...args) },
+    };
+    customers = {
+      create: (...args: unknown[]) => mockCustomersCreate(...args),
     };
   },
 }));
@@ -42,8 +48,12 @@ const call = createStripeCheckoutSession as unknown as (req: unknown) => Promise
 const SUCCESS = "https://openapply.app/app/jobs?dialog-name=checkout-success";
 const CANCEL = "https://openapply.app/app/jobs?dialog-name=checkout-canceled";
 
-const request = (data: Record<string, unknown> = {}, uid: string | null = "user-1") => ({
-  auth: uid ? { uid } : undefined,
+const request = (
+  data: Record<string, unknown> = {},
+  uid: string | null = "user-1",
+  email?: string,
+) => ({
+  auth: uid ? { uid, token: { email } } : undefined,
   data: { success_url: SUCCESS, cancel_url: CANCEL, ...data },
 });
 
@@ -67,11 +77,31 @@ describe("createStripeCheckoutSession", () => {
     await expect(call(request({}, null))).rejects.toMatchObject({ code: "unauthenticated" });
   });
 
-  it("fails when the billing profile has no Stripe customer", async () => {
-    mockProfileGet.mockResolvedValue(profile({}));
-    await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
+  it("fails when the billing profile doc doesn't exist", async () => {
     mockProfileGet.mockResolvedValue(profile(null));
     await expect(call(request())).rejects.toMatchObject({ code: "failed-precondition" });
+    expect(mockSessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("lazily creates a Stripe customer when the profile has none yet", async () => {
+    mockProfileGet.mockResolvedValue(profile({}));
+    mockCustomersCreate.mockResolvedValue({ id: "cus_new" });
+
+    await expect(call(request({}, "user-1", "new@example.com"))).resolves.toEqual({
+      url: "https://checkout.stripe.com/c/pay/cs_test",
+    });
+
+    expect(mockCustomersCreate).toHaveBeenCalledWith({
+      email: "new@example.com",
+      metadata: { firebaseUid: "user-1" },
+    });
+    expect(mockProfileSet).toHaveBeenCalledWith(
+      { stripeCustomerId: "cus_new", updatedAt: "mock-ts" },
+      { merge: true },
+    );
+    expect(mockSessionsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ customer: "cus_new" }),
+    );
   });
 
   it("says Pro isn't available until the price is configured", async () => {

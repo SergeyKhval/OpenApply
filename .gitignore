@@ -36,6 +36,8 @@ functions/.genkit/
 
 # Scripts
 .github/scripts/package-lock.json
+__pycache__/
+*.pyc
 
 # Misc
 *.csv

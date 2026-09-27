@@ -1,4 +1,5 @@
 import type { JobApplication } from "@/types";
+import { plural } from "@/lib/plural";
 import { stageOf } from "@/lib/stages";
 
 // "Next up" on the Jobs page (and, later, the Monday email): what needs doing
@@ -80,4 +81,15 @@ export function buildNextUp(
     .sort((a, b) => b.savedDaysAgo - a.savedDaysAgo);
 
   return [...followUps, ...upcomingInterviews, ...staleSaved].slice(0, limit);
+}
+
+/** The small line above each Next up card: "Follow-up, 2 days late", "Interview Mon, 28 Sep". */
+export function nextUpEyebrow(item: NextUpItem): string {
+  if (item.kind === "follow-up") {
+    return item.overdueDays > 0 ? `Follow-up, ${plural(item.overdueDays, "day")} late` : "Follow-up due today";
+  }
+  if (item.kind === "interview") {
+    return `Interview ${item.interview.conductedAt.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`;
+  }
+  return `Saved ${plural(item.savedDaysAgo, "day")} ago`;
 }

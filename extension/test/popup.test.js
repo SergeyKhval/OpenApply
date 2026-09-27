@@ -41,7 +41,7 @@ describe("popup", () => {
   it("prefills what it read and saves it without the server", async () => {
     const chrome = fakeChrome({
       tab: jobTab,
-      result: { title: "Frontend Engineer", company: "Acme", location: "Berlin", description, source: "site" },
+      result: { title: "Frontend Engineer", company: "Acme", location: "Berlin", description, source: "site", salary: "$150k-180k" },
     });
     await startPopup({ chrome, document, window: fakeWindow });
 
@@ -67,6 +67,7 @@ describe("popup", () => {
       company: "Acme",
       location: "Berlin",
       description: description.trim(),
+      salary: "$150k-180k",
     });
   });
 

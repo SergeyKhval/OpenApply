@@ -1,6 +1,8 @@
 import { Timestamp } from "firebase/firestore";
 import { CalendarDate, ZonedDateTime } from "@internationalized/date";
 import type { JobPosting } from "../../../shared/jobPosting";
+import type { StructuredResume } from "@/lib/builtResume";
+import type { SourceLine as TailoredSourceLine, VerifiedOp as TailoredOp } from "@/lib/tailoredResume";
 
 export type JobStatus =
   | "draft"
@@ -22,6 +24,7 @@ export type JobApplication = {
   technologies: string[];
   employmentType?: "full-time" | "part-time";
   remotePolicy?: "remote" | "in-office" | "hybrid";
+  salary?: string;
   jobId?: string;
   resumeId?: string | null;
   coverLetterId?: string;
@@ -102,21 +105,50 @@ export type InterviewFormInterview = {
   conductedAt: ZonedDateTime;
 };
 
+// Static, non-AI message templates offered from a job's page: a follow-up
+// after applying, a post-interview thank-you, or a reply to an offer.
+export type FollowUpTemplateType = "follow_up" | "thank_you" | "offer_response";
+
 export type CreateJobApplicationInput = Omit<
   JobApplication,
   "id" | "createdAt" | "userId" | "status"
 >;
 
-export type Resume = {
+type ResumeBase = {
   id: string;
   userId: string;
+  status: "uploaded" | "parsed" | "parse-failed";
+  text?: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+// A PDF the user uploaded; parseResume creates the doc. Docs from before
+// resumes could be built have no `kind`.
+export type UploadedResume = ResumeBase & {
+  kind?: "upload";
   fileName: string;
   fileSize: number;
-  url: string;
-  status: "uploaded" | "parsed" | "parse-failed";
+  url?: string;
   storagePath: string;
-  createdAt: Timestamp;
 };
+
+// A resume made in the app's editor: `text` is derived from `structured`
+// (lib/builtResume.ts) on every save
+export type BuiltResume = ResumeBase & {
+  kind: "built";
+  title: string;
+  template: "classic";
+  structured: StructuredResume;
+  importedFrom?: {
+    source: "resume" | "linkedin_pdf" | "linkedin_paste";
+    resumeId?: string;
+    flaggedFields: string[];
+  };
+  completedAt?: Timestamp;
+};
+
+export type Resume = UploadedResume | BuiltResume;
 
 export type CoverLetter = {
   id: string;
@@ -151,6 +183,13 @@ export type ResumeJobMatch = {
   jobApplicationId: string;
   resumeId: string;
   userId: string;
+  // Raw engine output, stored since the shared match engine (older matches
+  // don't have it). The tailored resume reads requirements and gaps from it.
+  analysis?: {
+    matchScore: number;
+    requirements: { requirement: string; status: "matched" | "partial" | "missing"; importance: string; evidence: string }[];
+    missingKeywords: string[];
+  };
   matchResult: {
     match_summary: {
       overall_match_percent: number;
@@ -166,4 +205,23 @@ export type ResumeJobMatch = {
       partially_matched_skills?: ScoredSkill[];
     };
   };
+};
+
+// A tailored version of a resume for one job (createTailoredResume). Only the
+// user's switched-off edits (excludedOpIds) are theirs to change.
+export type TailoredResume = {
+  id: string;
+  userId: string;
+  resumeId: string;
+  jobApplicationId: string;
+  matchId: string;
+  resume: { id: string; fileName: string | null };
+  jobApplication: { id: string; companyName: string | null; position: string | null };
+  lines: TailoredSourceLine[];
+  sectionOrder: string[];
+  ops: TailoredOp[];
+  excludedOpIds: number[];
+  stats: { proposed: number; applied: number; reverted: number };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 };

@@ -68,16 +68,14 @@ describe("assertAiAllowance", () => {
     });
   });
 
-  it("rejects when the billing profile is missing", async () => {
+  it("self-heals a missing billing profile as a fresh free tier, without writing anything", async () => {
     mockProfileGet.mockResolvedValue(snapshot(null));
-    await expect(assertAiAllowance("user-1", now)).rejects.toMatchObject({
-      code: "failed-precondition",
-    });
+    await expect(assertAiAllowance("user-1", now)).resolves.toBeUndefined();
   });
 });
 
 describe("chargeAiCheck", () => {
-  const transaction = { get: vi.fn(), update: vi.fn() };
+  const transaction = { get: vi.fn(), update: vi.fn(), set: vi.fn() };
 
   beforeEach(() => vi.clearAllMocks());
 
@@ -90,6 +88,7 @@ describe("chargeAiCheck", () => {
       bonusChecks: 10,
       updatedAt: "mock-ts",
     });
+    expect(transaction.set).not.toHaveBeenCalled();
   });
 
   it("throws and writes nothing when nothing is left", async () => {
@@ -98,5 +97,19 @@ describe("chargeAiCheck", () => {
       details: { code: "ai-limit-reached" },
     });
     expect(transaction.update).not.toHaveBeenCalled();
+    expect(transaction.set).not.toHaveBeenCalled();
+  });
+
+  it("self-heals a missing billing profile: creates the free-tier doc and records the check", async () => {
+    transaction.get.mockResolvedValue(snapshot(null));
+    await chargeAiCheck(transaction as never, "user-1", now);
+    expect(transaction.update).not.toHaveBeenCalled();
+    expect(transaction.set).toHaveBeenCalledWith(profileRef, {
+      stripeCustomerId: null,
+      aiUsage: { period: "2026-09", count: 1 },
+      bonusChecks: 0,
+      subscriptionStatus: null,
+      updatedAt: "mock-ts",
+    });
   });
 });

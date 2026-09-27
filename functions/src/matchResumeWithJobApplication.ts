@@ -3,6 +3,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import { assertAiAllowance, chargeAiCheck } from "./lib/aiUsage";
 import { analyzeResumeMatch, toStoredMatchResult } from "./lib/matchEngine";
+import { hashResumeText } from "./lib/tailorSegment";
 import { validateResourceOwnership } from "./lib/ownership";
 import { validateResumeForGeneration } from "./lib/validation";
 
@@ -72,6 +73,8 @@ export const matchResumeWithJobApplication = onCall(async (request) => {
         jobApplicationId: applicationId,
         matchResult: toStoredMatchResult(analysis),
         analysis,
+        // Lets a tailored version check the match still fits this resume text
+        resumeTextHash: hashResumeText(resumeData.text),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });

@@ -1,11 +1,13 @@
 import posthog from "posthog-js";
 import type { BlockedJobBoard } from "@/lib/jobInput";
+import { classifyEmailDomain } from "@/lib/emailDomainType";
+import type { FollowUpTemplateType } from "@/types";
 
 function isLoaded(): boolean {
   return posthog.__loaded;
 }
 
-export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan";
+export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan" | "tailored_resume";
 
 type JobCreationMethod = "link_parse" | "paste" | "manual" | "match_tool" | "extension";
 // "landing" events come from astro/src/components/vue/JobLinkInput.vue
@@ -56,11 +58,21 @@ type EventMap = {
   resume_match_started: { resumeId: string; jobApplicationId: string };
   resume_match_completed: { resumeId: string; jobApplicationId: string };
   resume_match_failed: { error: string };
+  // Tailored resume (flag tailored-resume)
+  tailored_resume_offered: { matchScore: number; blocked?: "no_analysis" | "limit" };
+  tailored_resume_started: { resumeId: string; jobApplicationId: string; matchScore: number };
+  tailored_resume_generated: { proposed: number; applied: number; reverted: number; durationMs: number };
+  tailored_resume_no_changes: { proposed: number; reverted: number };
+  tailored_resume_failed: { error: string; code?: string };
+  tailored_resume_change_toggled: { kind: string; on: boolean };
+  tailored_resume_opened: { resumeId: string; jobApplicationId: string };
+  tailored_resume_downloaded: { format: "docx" | "pdf"; changesIncluded: number };
+  tailored_resume_change_reported: { kind: string; reason: "not_true" | "worse" | "other" };
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };
   next_up_action: { kind: "follow-up" | "interview" | "stale-saved"; action: "draft" | "done" | "snooze" | "applied" | "let_go" | "open" };
-  follow_up_copied: { applicationId?: string };
+  follow_up_copied: { applicationId?: string; template: FollowUpTemplateType };
   account_deleted: void;
   // Posting signals (flag job-signals) were on screen
   job_signals_shown: { surface: "app_page"; sign_types: string[] };
@@ -83,7 +95,11 @@ export function identifyUser(
   properties: { email?: string | null; authMethod: string },
 ) {
   if (!isLoaded()) return;
-  posthog.identify(uid, properties);
+  // Flags likely school-admissions signups (see emailDomainType.ts) so metrics
+  // can report them separately instead of counting them as real users. Never
+  // sends the email anywhere it doesn't already go: `properties.email` above
+  // is already part of this same identify call.
+  posthog.identify(uid, { ...properties, email_domain_type: classifyEmailDomain(properties.email) });
 }
 
 export function resetUser() {

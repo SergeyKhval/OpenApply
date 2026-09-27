@@ -12,6 +12,7 @@ export const EXTENSION_JOB_LIMITS = {
   title: 300,
   company: 300,
   location: 300,
+  salary: 200,
   description: 15000,
 } as const;
 
@@ -24,6 +25,8 @@ export type ExtensionJob = {
   company: string;
   location: string;
   description: string;
+  // The salary or comp range as free text, when the posting states one; absent when it doesn't
+  salary?: string;
   // When the page says it was posted; absent when it doesn't
   posting?: JobPosting;
 };
@@ -116,6 +119,8 @@ export async function decodeExtensionJob(hash: string): Promise<ExtensionJob | n
     description: text(data.description, EXTENSION_JOB_LIMITS.description),
   };
   if (!isWebUrl(job.url) || !job.description) return null;
+  const salary = text(data.salary, EXTENSION_JOB_LIMITS.salary);
+  if (salary) job.salary = salary;
   const posting = sanitizeJobPosting(data.posting);
   if (posting) job.posting = posting;
   return job;

@@ -66,6 +66,7 @@ const followUp = computed(() => followUpLabel(job, now));
 const metaLine = computed(() => {
   const score = job.toolMatch?.matchScore;
   const since = stageSinceLabel(job, now);
-  return score === undefined ? since : `${since} · Match ${score}`;
+  const parts = [since, job.salary, score === undefined ? undefined : `Match ${score}`];
+  return parts.filter(Boolean).join(" · ");
 });
 </script>

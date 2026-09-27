@@ -89,6 +89,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/people': RouteRecordInfo<
+      '/people',
+      '/people',
+      Record<never, never>,
+      Record<never, never>,
+      | '/people/'
+    >,
+    '/people/': RouteRecordInfo<
+      '/people/',
+      '/people',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/posting-review': RouteRecordInfo<
       '/posting-review',
       '/posting-review',
@@ -107,6 +121,7 @@ declare module 'vue-router/auto-routes' {
       | '/settings/email'
       | '/settings/import-export'
       | '/settings/plan'
+      | '/settings/profile'
     >,
     '/settings/': RouteRecordInfo<
       '/settings/',
@@ -146,6 +161,13 @@ declare module 'vue-router/auto-routes' {
     '/settings/plan': RouteRecordInfo<
       '/settings/plan',
       '/settings/plan',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/settings/profile': RouteRecordInfo<
+      '/settings/profile',
+      '/settings/profile',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -222,6 +244,19 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'src/pages/people.vue': {
+      routes:
+        | '/people'
+        | '/people/'
+      views:
+        | 'default'
+    }
+    'src/pages/people/index.vue': {
+      routes:
+        | '/people/'
+      views:
+        | never
+    }
     'src/pages/posting-review.vue': {
       routes:
         | '/posting-review'
@@ -237,6 +272,7 @@ declare module 'vue-router/auto-routes' {
         | '/settings/email'
         | '/settings/import-export'
         | '/settings/plan'
+        | '/settings/profile'
       views:
         | 'default'
     }
@@ -273,6 +309,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/settings/plan.vue': {
       routes:
         | '/settings/plan'
+      views:
+        | never
+    }
+    'src/pages/settings/profile.vue': {
+      routes:
+        | '/settings/profile'
       views:
         | never
     }

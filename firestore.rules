@@ -45,10 +45,30 @@ service cloud.firestore {
       allow delete: if canDeleteOwn();
     }
     
+    // A built resume (made in the app's editor) as the client writes it:
+    // `text` is derived from `structured` on every save
+    function isValidBuiltResume(data) {
+      return data.kind == "built"
+        && data.status == "parsed"
+        && data.title is string && data.title.size() <= 120
+        && data.template in ["classic", "compact"]
+        && data.text is string && data.text.size() <= 60000
+        && data.structured is map;
+    }
+
     match /userResumes/{resumeId} {
       allow read: if canReadOwn();
-      allow create: if canCreateOwn();
-      allow update: if canUpdateOwn();
+      // Uploaded PDFs are created by parseResume (Admin SDK). Clients may
+      // only create built resumes.
+      allow create: if canCreateOwn()
+        && request.resource.data.keys().hasOnly(["userId", "kind", "status", "title", "template", "text", "structured", "createdAt", "updatedAt"])
+        && isValidBuiltResume(request.resource.data);
+      allow update: if canUpdateOwn()
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.get("kind", "upload") == resource.data.get("kind", "upload")
+        && (resource.data.get("kind", "upload") != "built"
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(["structured", "text", "title", "template", "updatedAt", "completedAt"])
+            && isValidBuiltResume(request.resource.data)));
       allow delete: if canDeleteOwn();
     }
     
@@ -89,6 +109,38 @@ service cloud.firestore {
       allow create: if canCreateOwn();
       allow update: if canUpdateOwn();
       allow delete: if canDeleteOwn();
+    }
+
+    // Tailored resumes are written only by createTailoredResume, whose
+    // checks are what keep them honest. The owner may only switch edits
+    // off and on (excludedOpIds), and delete the whole thing.
+    match /tailoredResumes/{tailoredResumeId} {
+      allow read: if canReadOwn();
+      allow create: if false;
+      allow update: if canUpdateOwn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["excludedOpIds", "updatedAt"])
+        && request.resource.data.excludedOpIds is list
+        && request.resource.data.excludedOpIds.size() <= 100;
+      allow delete: if canDeleteOwn();
+    }
+
+    // "Report a wrong change" on a tailored version: create only, by the
+    // owner of that version, with a fixed set of short fields. Read by
+    // admins in the console, never by clients.
+    match /tailoredResumeReports/{reportId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(["userId", "tailoredResumeId", "opIndex", "kind", "reason", "note", "before", "after", "requirement", "createdAt"])
+        && request.resource.data.reason in ["not_true", "worse", "other"]
+        && request.resource.data.kind in ["reworded", "moved", "cut", "skills"]
+        && request.resource.data.opIndex is int
+        && request.resource.data.note is string && request.resource.data.note.size() <= 1000
+        && request.resource.data.before is string && request.resource.data.before.size() <= 2000
+        && request.resource.data.after is string && request.resource.data.after.size() <= 2000
+        && request.resource.data.requirement is string && request.resource.data.requirement.size() <= 500
+        && request.resource.data.createdAt == request.time
+        && get(/databases/$(database)/documents/tailoredResumes/$(request.resource.data.tailoredResumeId)).data.userId == request.auth.uid;
+      allow read, update, delete: if false;
     }
 
     // Ghost-job signals: dated facts about a posting, keyed by the sha256 of

@@ -6,34 +6,32 @@
     <CardHeader class="flex items-center justify-between">
       <CardTitle class="text-lg">Timeline</CardTitle>
     </CardHeader>
-    <CardContent class="flex flex-col gap-4">
-      <div role="radiogroup" aria-label="Add to the timeline" class="flex w-fit gap-0.5 rounded-full bg-muted p-1">
-        <button
-          v-for="kind in COMPOSER_KINDS"
-          :key="kind.value"
-          type="button"
-          role="radio"
-          :aria-checked="composer === kind.value"
-          class="inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm"
-          :class="composer === kind.value ? 'bg-card font-semibold text-foreground shadow-card' : 'text-soft-foreground'"
-          @click="composer = kind.value; editing = null"
-        >
-          <component :is="kind.icon" :size="16" />
-          {{ kind.label }}
-        </button>
-      </div>
-
-      <form v-if="composer === 'note'" class="flex flex-col gap-2" @submit.prevent="submitNote">
+    <CardContent class="flex flex-col gap-3">
+      <form v-if="composer === 'note'" class="flex items-start gap-2" @submit.prevent="submitNote">
         <Label for="timeline-note" class="sr-only">Note</Label>
+        <!-- One line that grows; Enter adds, Shift+Enter breaks the line -->
         <Textarea
           id="timeline-note"
           v-model="noteText"
-          rows="2"
-          placeholder="Add a note: what the recruiter said, questions to ask…"
-          @keydown.meta.enter="submitNote"
-          @keydown.ctrl.enter="submitNote"
+          rows="1"
+          placeholder="Add a note…"
+          class="min-h-11 grow resize-none rounded-3xl px-4 py-2.5 field-sizing-content"
+          @keydown.enter.exact.prevent="submitNote"
         />
-        <Button type="submit" size="sm" class="self-end" :disabled="!noteText.trim()">Add note</Button>
+        <Button v-if="noteText.trim()" type="submit" class="h-11 shrink-0 rounded-full px-5">Add</Button>
+        <DropdownMenu v-else>
+          <DropdownMenuTrigger as-child>
+            <Button type="button" variant="outline" class="h-11 shrink-0 rounded-full px-4" aria-label="Add a note, or pick what to add">
+              Note
+              <PhCaretDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem v-for="kind in COMPOSER_KINDS" :key="kind.value" @select="pick(kind.value)">
+              <component :is="kind.icon" />{{ kind.label }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </form>
       <InterviewForm
         v-else-if="composer === 'interview'"
@@ -48,7 +46,33 @@
         @cancel="composer = 'note'"
       />
 
-      <ol class="flex flex-col">
+      <div class="flex flex-wrap gap-1.5" aria-label="Add to the timeline" role="group">
+        <button
+          v-for="kind in COMPOSER_KINDS"
+          :key="kind.value"
+          type="button"
+          class="h-8 rounded-full px-3 text-[13px] font-semibold"
+          :class="composer === kind.value ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-soft-foreground hover:text-foreground'"
+          :aria-pressed="composer === kind.value"
+          @click="pick(kind.value)"
+        >
+          {{ kind.label }}
+        </button>
+        <DropdownMenu v-if="followUpTemplates.length">
+          <DropdownMenuTrigger as-child>
+            <button type="button" class="h-8 rounded-full bg-muted px-3 text-[13px] font-semibold text-soft-foreground hover:text-foreground">
+              Follow-up
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem v-for="template in followUpTemplates" :key="template.type" @select="emit('draft', template.type)">
+              {{ template.label }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <ol class="mt-1 flex flex-col">
         <li v-for="(entry, index) in entries" :key="entry.id" class="relative flex gap-3.5 pb-4">
           <span
             v-if="index < entries.length - 1"
@@ -63,7 +87,7 @@
           </span>
 
           <div class="flex min-w-0 grow flex-col gap-0.5 pt-0.5">
-            <div class="flex items-start justify-between gap-2">
+            <div class="relative pr-8">
               <span class="text-[13px] text-muted-foreground">
                 <b class="font-bold text-foreground">{{ KIND_LABELS[entry.kind] }}</b>
                 · {{ formatDate(entry) }}<template v-if="entry.upcoming"> · upcoming</template>
@@ -73,7 +97,7 @@
               </span>
               <DropdownMenu v-if="entry.kind !== 'stage'">
                 <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" size="icon-sm" class="-mt-1.5 -mr-2" :aria-label="`Options for ${KIND_LABELS[entry.kind].toLowerCase()}`">
+                  <Button variant="ghost" size="icon-sm" class="absolute -top-1.5 -right-2" :aria-label="`Options for ${KIND_LABELS[entry.kind].toLowerCase()}`">
                     <PhDotsThree :size="18" weight="bold" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -133,6 +157,7 @@ import { ref, type Component } from "vue";
 import {
   PhArrowRight,
   PhCalendarBlank,
+  PhCaretDown,
   PhDotsThree,
   PhNotePencil,
   PhPencilSimple,
@@ -152,12 +177,23 @@ import { Textarea } from "@/components/ui/textarea";
 import ContactForm from "@/components/ContactForm.vue";
 import InterviewForm from "@/components/InterviewForm.vue";
 import type { TimelineEntry } from "@/lib/timeline";
-import type { ContactFormContact, Interview, InterviewFormInterview } from "@/types";
+import type { ContactFormContact, FollowUpTemplateType, Interview, InterviewFormInterview } from "@/types";
 
 type Kind = TimelineEntry["kind"];
 
-const { entries, addNote, updateNote, saveInterview, setInterviewStatus, saveContact, remove } = defineProps<{
+const {
+  entries,
+  addNote,
+  updateNote,
+  saveInterview,
+  setInterviewStatus,
+  saveContact,
+  remove,
+  followUpTemplates = [],
+} = defineProps<{
   entries: TimelineEntry[];
+  // Message templates offered under "Follow-up" (follow-up, thank-you, offer response)
+  followUpTemplates?: { type: FollowUpTemplateType; label: string }[];
   addNote: (text: string) => Promise<void>;
   updateNote: (noteId: string, text: string) => Promise<void>;
   saveInterview: (form: InterviewFormInterview, interviewId?: string) => Promise<unknown>;
@@ -165,6 +201,7 @@ const { entries, addNote, updateNote, saveInterview, setInterviewStatus, saveCon
   saveContact: (form: ContactFormContact, contactId?: string) => Promise<unknown>;
   remove: (kind: "note" | "interview" | "contact", id: string) => Promise<void>;
 }>();
+const emit = defineEmits<{ (event: "draft", type: FollowUpTemplateType): void }>();
 
 const COMPOSER_KINDS: { value: "note" | "interview" | "contact"; label: string; icon: Component }[] = [
   { value: "note", label: "Note", icon: PhNotePencil },
@@ -190,12 +227,24 @@ const formatDate = (entry: TimelineEntry) =>
     ? entry.date.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
     : entry.date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
+function pick(kind: "note" | "interview" | "contact") {
+  composer.value = kind;
+  editing.value = null;
+}
+
 async function submitNote() {
   const text = noteText.value;
   if (!text.trim()) return;
   noteText.value = "";
   await addNote(text);
 }
+
+// The job page's next step card opens an interview here ("Edit step")
+function edit(entryId: string) {
+  const entry = entries.find((candidate) => candidate.id === entryId);
+  if (entry) startEdit(entry);
+}
+defineExpose({ edit });
 
 function startEdit(entry: TimelineEntry) {
   editing.value = entry.id;

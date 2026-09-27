@@ -124,4 +124,35 @@ describe("useUpdateJobApplicationStatus", () => {
       expect(updates).toEqual({ status: "withdrew", updatedAt: "mock-timestamp" });
     });
   });
+
+  describe("moveToStage", () => {
+    const { moveToStage } = useUpdateJobApplicationStatus();
+
+    it("draft -> applied goes through markApplied (sets the follow-up)", async () => {
+      await moveToStage({ id: "app-1", status: "draft" }, "applied");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates.status).toBe("applied");
+      expect(updates.followUpAt).toEqual(new Date("2025-01-22"));
+    });
+
+    it("non-draft job moving to applied is a plain status update, no follow-up", async () => {
+      await moveToStage({ id: "app-1", status: "interviewing" }, "applied");
+      const updates = mockUpdateDoc.mock.calls[0][1];
+      expect(updates.status).toBe("applied");
+      expect(updates.followUpAt).toBeUndefined();
+    });
+
+    it("maps each open stage to its underlying status", async () => {
+      await moveToStage({ id: "app-1", status: "applied" }, "interviewing");
+      expect(mockUpdateDoc.mock.calls[0][1].status).toBe("interviewing");
+
+      mockUpdateDoc.mockClear();
+      await moveToStage({ id: "app-1", status: "interviewing" }, "offer");
+      expect(mockUpdateDoc.mock.calls[0][1].status).toBe("offered");
+
+      mockUpdateDoc.mockClear();
+      await moveToStage({ id: "app-1", status: "offered" }, "saved");
+      expect(mockUpdateDoc.mock.calls[0][1].status).toBe("draft");
+    });
+  });
 });

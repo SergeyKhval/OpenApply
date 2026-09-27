@@ -131,6 +131,8 @@ describe("deleteAccount", () => {
       "jobApplicationNotes",
       "jobApplications",
       "resumeJobMatches",
+      "tailoredResumeReports",
+      "tailoredResumes",
       "userResumes",
     ]);
   });

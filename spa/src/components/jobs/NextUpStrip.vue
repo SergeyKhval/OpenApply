@@ -26,7 +26,7 @@
             class="text-[13.5px] font-bold"
             :class="item.kind === 'follow-up' ? 'text-secondary-foreground' : 'text-muted-foreground'"
           >
-            {{ eyebrow(item) }}
+            {{ nextUpEyebrow(item) }}
           </span>
         </div>
 
@@ -76,7 +76,7 @@ import { Button } from "@/components/ui/button";
 import FollowUpDialog from "@/components/jobs/FollowUpDialog.vue";
 import { useUpdateJobApplicationStatus } from "@/composables/useUpdateJobApplicationStatus";
 import { daysAgoLabel, toJsDate } from "@/lib/jobDates";
-import type { NextUpItem } from "@/lib/nextUp";
+import { nextUpEyebrow, type NextUpItem } from "@/lib/nextUp";
 import type { JobApplication } from "@/types";
 import { trackEvent } from "@/analytics";
 
@@ -117,13 +117,6 @@ const appliedThisWeek = computed(
 );
 
 const time = (date: Date) => date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-
-function eyebrow(item: NextUpItem) {
-  if (item.kind === "follow-up") return item.overdueDays > 0 ? `Follow-up, ${item.overdueDays} days late` : "Follow-up due today";
-  if (item.kind === "interview")
-    return `Interview ${item.interview.conductedAt.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`;
-  return `Saved ${item.savedDaysAgo} days ago`;
-}
 
 function detail(item: NextUpItem) {
   if (item.kind === "follow-up") {

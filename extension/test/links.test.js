@@ -77,6 +77,11 @@ describe("saveJobUrl", () => {
     await expect(decodeExtensionJob(new URL(url).hash)).resolves.toEqual({ ...job, posting });
   });
 
+  it("carries the salary", async () => {
+    const url = await saveJobUrl({ ...job, salary: "$120k-140k" });
+    await expect(decodeExtensionJob(new URL(url).hash)).resolves.toEqual({ ...job, salary: "$120k-140k" });
+  });
+
   it("trims and caps every field", async () => {
     const encoded = await encodeJob({ ...job, title: `  ${"T".repeat(500)}  `, company: undefined });
     const decoded = await decodeExtensionJob(`#job=${encoded}`);

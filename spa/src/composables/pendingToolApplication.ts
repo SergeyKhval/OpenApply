@@ -19,6 +19,7 @@ export type PendingToolApplication = {
   // Absent means the match tool
   source?: "extension";
   location?: string;
+  salary?: string;
   // Absent when the extension saved the job without a match check
   match?: Omit<ToolMatch, "checkedAt">;
   // When the page says the job was posted (extension only)
@@ -135,6 +136,7 @@ export function toJobApplicationInput(
   };
   if (pending.match) input.toolMatch = { ...pending.match, checkedAt: pending.savedAt };
   if (isWebUrl(pending.jobDescriptionLink)) input.jobDescriptionLink = pending.jobDescriptionLink;
+  if (pending.salary) input.salary = pending.salary;
   const remotePolicy = remotePolicyOf(location);
   if (remotePolicy) input.remotePolicy = remotePolicy;
   const posting = sanitizeJobPosting(pending.posting);

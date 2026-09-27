@@ -15,6 +15,8 @@ import subprocess
 import tempfile
 import urllib.request
 
+from school_domains import is_school_domain
+
 PROJECT = "applytrack-a4197"
 FIREBASE_CONFIG = os.path.expanduser("~/.config/configstore/firebase-tools.json")
 FIRESTORE = f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)/documents"
@@ -82,19 +84,34 @@ def main():
         # Anonymous accounts have neither an email nor a linked provider.
         if not user.get("email") and not user.get("providerUserInfo"):
             continue
+        email_domain = (user.get("email") or "@none").split("@")[1]
         acquisition = field_value(profiles.get(user["localId"], {}), "acquisition") or {}
         new_users.append({
             "created": created,
-            "email_domain": (user.get("email") or "@none").split("@")[1],
+            "email_domain": email_domain,
+            "is_school_domain": is_school_domain(email_domain),
             "applications": applications_per_user[user["localId"]],
             "source": acquisition.get("utm_source") or acquisition.get("referrer_host") or "unknown",
         })
 
-    activated = [user for user in new_users if user["applications"] > 0]
-    print(f"Since {args.since}: signups={len(new_users)} activated={len(activated)} (goal 20)")
+    # School-domain signups are almost always people searching for Faria's
+    # OpenApply (the school-admissions platform), not real users. Report them
+    # separately rather than dropping them, since this is a heuristic and can
+    # misclassify a genuine user with a school email.
+    school_users = [user for user in new_users if user["is_school_domain"]]
+    real_users = [user for user in new_users if not user["is_school_domain"]]
+
+    activated = [user for user in real_users if user["applications"] > 0]
+    print(f"Since {args.since}: signups={len(real_users)} activated={len(activated)} (goal 20)")
+
+    school_activated = [user for user in school_users if user["applications"] > 0]
+    print(
+        f"  school-domain signups (excluded above, not real users): "
+        f"signups={len(school_users)} activated={len(school_activated)}"
+    )
 
     by_day = collections.defaultdict(lambda: [0, 0])
-    for user in new_users:
+    for user in real_users:
         day = user["created"].date().isoformat()
         by_day[day][0] += 1
         by_day[day][1] += user["applications"] > 0
@@ -102,14 +119,14 @@ def main():
         print(f"  {day}: signups={by_day[day][0]} activated={by_day[day][1]}")
 
     by_source = collections.defaultdict(lambda: [0, 0])
-    for user in new_users:
+    for user in real_users:
         by_source[user["source"]][0] += 1
         by_source[user["source"]][1] += user["applications"] > 0
     print("By source (signups, activated):")
     for source, (signups, activated_count) in sorted(by_source.items(), key=lambda entry: -entry[1][0]):
         print(f"  {source}: {signups}, {activated_count}")
 
-    print("Email domains:", collections.Counter(user["email_domain"] for user in new_users).most_common(10))
+    print("Email domains (incl. school domains):", collections.Counter(user["email_domain"] for user in new_users).most_common(10))
 
 
 if __name__ == "__main__":

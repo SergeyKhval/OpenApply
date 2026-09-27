@@ -2,12 +2,13 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getCountFromServer,
+  getDocs,
   query,
   serverTimestamp,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { auth, db } from "@/firebase/config";
@@ -136,8 +137,31 @@ export function useJobApplications() {
     }
 
     try {
-      const docRef = doc(db, "jobApplications", applicationId);
-      await deleteDoc(docRef);
+      // The job's own history goes with it, so nothing orphaned shows up
+      // elsewhere (People lists contacts across jobs)
+      const related: [collection: string, jobField: string][] = [
+        ["jobApplicationNotes", "jobApplicationId"],
+        ["interviews", "applicationId"],
+        ["contacts", "jobApplicationId"],
+        ["resumeJobMatches", "jobApplicationId"],
+        ["tailoredResumes", "jobApplicationId"],
+        ["coverLetters", "jobApplication.id"],
+      ];
+      const snapshots = await Promise.all(
+        related.map(([name, jobField]) =>
+          getDocs(
+            query(
+              collection(db, name),
+              where("userId", "==", user.value!.uid),
+              where(jobField, "==", applicationId),
+            ),
+          ),
+        ),
+      );
+      const batch = writeBatch(db);
+      snapshots.forEach((snapshot) => snapshot.docs.forEach((related) => batch.delete(related.ref)));
+      batch.delete(doc(db, "jobApplications", applicationId));
+      await batch.commit();
 
       return { success: true };
     } catch (err) {

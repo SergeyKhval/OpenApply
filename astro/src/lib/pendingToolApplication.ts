@@ -19,6 +19,7 @@ export type PendingToolApplication = {
   // Where the job came from; absent means the match tool
   source?: "extension";
   location?: string;
+  salary?: string;
   // When the page says the job was posted (extension only)
   posting?: JobPosting;
   // Absent when the extension saved the job without a match check

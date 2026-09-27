@@ -4,6 +4,7 @@ import { getFirestore, connectFirestoreEmulator, type Firestore } from "firebase
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator, type Functions } from "firebase/functions";
 import { emulatorPorts } from "./emulatorPorts";
+import { useProductionFirebase } from "./useProductionFirebase";
 
 type FirebaseConfig = {
   apiKey: string;
@@ -31,7 +32,7 @@ export const storage: FirebaseStorage = getStorage(app);
 export const functions: Functions = getFunctions(app);
 
 // Connect to emulators in development
-if (import.meta.env.DEV && !import.meta.env.VITE_USE_PRODUCTION_FIREBASE) {
+if (import.meta.env.DEV && !useProductionFirebase(import.meta.env)) {
   // Check if emulators have already been initialized to avoid errors
   const isEmulatorInitialized = (
     (auth as any).emulatorConfig ||

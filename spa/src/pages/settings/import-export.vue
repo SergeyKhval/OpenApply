@@ -1,23 +1,50 @@
 <template>
   <SettingsShell>
-    <Card>
-      <CardHeader><CardTitle class="text-lg">Export</CardTitle></CardHeader>
-      <CardContent class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-0.5">
-          <p class="text-[15px] font-semibold">Export all jobs</p>
-          <p class="text-sm text-muted-foreground">A CSV with stages, dates, notes and links. Opens in Excel, Numbers or Google Sheets.</p>
+    <!-- Canvas "Settings": one card, a row each for import and export. The card
+         also takes a dropped CSV. -->
+    <div ref="drop-zone" class="rounded-card transition-[box-shadow]" :class="isOverDropZone && 'ring-2 ring-ring'">
+    <Card class="gap-0">
+      <CardHeader><CardTitle class="text-lg">Import and export</CardTitle></CardHeader>
+      <CardContent class="flex flex-col divide-y divide-border">
+        <div class="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-[15px] font-semibold">Import jobs from a spreadsheet</p>
+            <p class="text-sm text-muted-foreground">CSV, up to 100 rows. We help you match the columns.</p>
+          </div>
+          <Button variant="outline" size="sm" class="self-start sm:self-auto" @click="open">
+            <PhUploadSimple />
+            Choose file
+          </Button>
         </div>
-        <Button variant="outline" size="sm" :disabled="exporting || !jobApplications.length" @click="exportJobs">
-          <Spinner v-if="exporting" />
-          <PhDownloadSimple v-else />
-          Export CSV
-        </Button>
+        <div class="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-[15px] font-semibold">Export all jobs</p>
+            <p class="text-sm text-muted-foreground">CSV with stages, dates, notes and links.</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            class="self-start sm:self-auto"
+            :disabled="exporting || !jobApplications.length"
+            @click="exportJobs"
+          >
+            <Spinner v-if="exporting" />
+            <PhDownloadSimple v-else />
+            Export CSV
+          </Button>
+        </div>
       </CardContent>
     </Card>
+    </div>
 
-    <h2 class="mt-2 text-lg font-bold">Import from a spreadsheet</h2>
-    <div>
-      <div v-if="data && data.length">
+    <!-- After a file is chosen: match the columns, drop rows, import -->
+    <section v-if="data && data.length" aria-labelledby="csv-columns-heading" class="flex flex-col gap-2">
+      <h2 id="csv-columns-heading" class="mt-2 text-lg font-bold">Match the columns</h2>
+      <p class="text-sm text-muted-foreground">
+        Pick which column is the company name and which is the position; a job link is optional. Rows without a company
+        and a position are skipped, and a header row can be removed below.
+      </p>
+      <div>
         <div class="sticky top-22 z-10 bg-background py-2">
           <div
             class="flex flex-col sm:flex-row items-start sm:items-center gap-2"
@@ -33,7 +60,7 @@
             </Button>
             <Button size="sm" variant="secondary" @click="open">
               <PhFileCsv />
-              Upload new CSV
+              Choose another file
             </Button>
           </div>
 
@@ -114,94 +141,7 @@
           </table>
         </div>
       </div>
-      <Card v-else>
-        <CardHeader>
-          <CardTitle>Import your job applications</CardTitle>
-          <div class="py-3 sm:hidden">
-            <Button @click="open" class="w-full">
-              <PhFileCsv />
-              Upload CSV
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent class="mb-4">
-          <div class="grid lg:grid-cols-2 gap-4">
-            <div class="max-w-prose space-y-3">
-              <p>
-                Add your job applications in seconds by uploading a CSV file.
-                You will be able to review before uploading, map columns, and
-                choose which rows you want to import
-              </p>
-              <p class="text-sm leading-relaxed text-muted-foreground"></p>
-
-              <h3 class="mt-6 text-sm font-medium text-foreground">
-                Before you upload
-              </h3>
-              <ul
-                class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
-              >
-                <li>CSV with up to 100 rows.</li>
-                <li>One row per job application.</li>
-                <li>
-                  Make sure you have at least these two columns:
-                  <span class="font-medium text-foreground">Company name</span>
-                  and <span class="font-medium text-foreground">Position</span>.
-                </li>
-                <li>
-                  Rows without company name and position will be ignored during
-                  import.
-                </li>
-                <li>Job description link column is optional.</li>
-                <li>
-                  Prefer no header row. If your file has a header, you can
-                  delete that row after upload.
-                </li>
-                <li>
-                  Extra columns are fine; only the mapped ones will be imported.
-                </li>
-              </ul>
-
-              <h3 class="mt-6 text-sm font-medium text-foreground">
-                How it works
-              </h3>
-              <ul
-                class="mt-2 list-disc pl-5 space-y-1 text-sm leading-relaxed text-muted-foreground marker:text-muted-foreground/70"
-              >
-                <li>Click Upload CSV.</li>
-                <li>
-                  Map columns: choose which column is
-                  <span class="font-medium text-foreground">Company name</span>
-                  and which is
-                  <span class="font-medium text-foreground">Position</span>.
-                </li>
-                <li>
-                  Review & tidy: remove any rows you don’t want to import.
-                </li>
-                <li>Import: click Import to add your jobs.</li>
-              </ul>
-            </div>
-
-            <div
-              ref="drop-zone"
-              class="hidden lg:flex w-full h-full border-border border border-dashed rounded-lg flex-col items-center justify-around"
-              :class="isOverDropZone && 'border-solid border-primary'"
-            >
-              <div>
-                <PhFileCsv class="text-muted-foreground" size="128" />
-                <p class="text-muted-foreground">Drop CSV file here</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-
-        <CardFooter>
-          <Button @click="open">
-            <PhFileCsv />
-            Upload CSV
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    </section>
   </SettingsShell>
 </template>
 
@@ -232,6 +172,7 @@ import {
   PhDownloadSimple,
   PhFileArrowUp,
   PhFileCsv,
+  PhUploadSimple,
   PhWarning,
   PhXCircle,
 } from "@phosphor-icons/vue";
@@ -241,7 +182,6 @@ import { functions } from "@/firebase/config.ts";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";

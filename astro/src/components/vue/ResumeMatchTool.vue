@@ -32,7 +32,7 @@
                 class="text-base"
                 aria-hidden="true"
               ></i>
-              {{ isReadingPdf ? "Reading PDF…" : "Upload PDF" }}
+              <span class="max-w-[10rem] truncate" :title="uploadedFileName ?? undefined">{{ uploadLabel }}</span>
               <input
                 type="file"
                 accept="application/pdf,.pdf"
@@ -290,6 +290,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { getFirebaseAuth, getFirebaseFunctions } from "../../lib/firebase";
 import { savePendingToolApplication } from "../../lib/pendingToolApplication";
+import { resumeUploadLabel } from "../../lib/resumeUpload";
 
 type RequirementStatus = "matched" | "partial" | "missing";
 
@@ -349,9 +350,17 @@ const rememberResumeOnDevice = ref(false);
 const jobDescriptionLink = ref<string | null>(null);
 const prefilledFromExtension = ref(false);
 const submitButton = ref<HTMLButtonElement | null>(null);
+const uploadedFileName = ref<string | null>(null);
 let loadingTimer: ReturnType<typeof setInterval> | undefined;
 
 const loadingMessage = computed(() => LOADING_MESSAGES[loadingMessageIndex.value]);
+const uploadLabel = computed(() =>
+  resumeUploadLabel({
+    isReadingPdf: isReadingPdf.value,
+    resumeSource: resumeSource.value,
+    fileName: uploadedFileName.value,
+  }),
+);
 
 const jobLabel = computed(() => {
   if (!analysis.value) return "";
@@ -575,6 +584,7 @@ async function handlePdfUpload(event: Event) {
     }
     resumeText.value = text.slice(0, MAX_CHARS);
     resumeSource.value = "pdf";
+    uploadedFileName.value = file.name;
     trackEvent("tool_pdf_uploaded", { chars: text.length });
   } catch {
     errorMessage.value = "We couldn't read that PDF. Paste the text instead.";

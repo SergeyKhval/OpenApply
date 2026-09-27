@@ -96,6 +96,7 @@ import { useCoverLetters, type CoverLetterStyle } from "@/composables/useCoverLe
 import { useResumes } from "@/composables/useResumes";
 import { db } from "@/firebase/config.ts";
 import type { CoverLetter } from "@/types";
+import { resumeName as resumeLabel } from "@/lib/resumeUsage";
 
 type CoverLetterPreviewProps = {
   isOpen: boolean;
@@ -138,9 +139,10 @@ watch(
 );
 
 const resumes = useResumes();
-const resumeName = computed(
-  () => resumes.value.find((resume) => resume.id === coverLetter.value?.resumeId)?.fileName ?? "",
-);
+const resumeName = computed(() => {
+  const resume = resumes.value.find((candidate) => candidate.id === coverLetter.value?.resumeId);
+  return resume ? resumeLabel(resume) : "";
+});
 const eyebrow = computed(() =>
   coverLetter.value?.jobApplication
     ? `${coverLetter.value.jobApplication.companyName} · ${coverLetter.value.jobApplication.position}`

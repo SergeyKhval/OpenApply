@@ -11,41 +11,60 @@
           class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-5 py-4 last:border-0"
         >
           <span class="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
-            <PhFilePdf :size="22" />
+            <PhFileText v-if="resume.kind === 'built'" :size="22" />
+            <PhFilePdf v-else :size="22" />
           </span>
           <div class="flex min-w-0 grow basis-60 flex-col gap-0.5">
             <ResumeLink :resume="resume" />
             <p class="text-sm text-muted-foreground">
-              Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template>
+              <template v-if="resume.kind === 'built'">Made here {{ formatDate(resume.createdAt) }}</template>
+              <template v-else>Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template></template>
             </p>
           </div>
-          <Badge v-if="resume.status === 'parsed'" variant="success"><PhCheck weight="bold" />Read OK</Badge>
+          <!-- A built resume's text is written by the app, nothing to read -->
+          <template v-if="resume.kind === 'built'" />
+          <Badge v-else-if="resume.status === 'parsed'" variant="success"><PhCheck weight="bold" />Read OK</Badge>
           <Badge v-else-if="resume.status === 'parse-failed'" variant="destructive"><PhX weight="bold" />Couldn't read it</Badge>
           <Badge v-else variant="secondary">Reading…</Badge>
           <RouterLink
             v-if="usage.get(resume.id)"
             to="/jobs"
-            class="text-sm font-semibold text-secondary-foreground hover:underline sm:w-32"
+            class="text-sm font-semibold text-secondary-foreground underline underline-offset-2 sm:w-32"
           >
             {{ usageLabel(usage.get(resume.id) ?? 0) }}
           </RouterLink>
           <span v-else class="text-sm text-muted-foreground sm:w-32">{{ usageLabel(0) }}</span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            class="ml-auto"
-            :aria-label="`Delete ${resume.fileName}`"
-            :disabled="deletingIds.includes(resume.id)"
-            @click="handleDelete(resume)"
-          >
-            <PhTrash :size="18" />
-          </Button>
+          <!-- The file name opens the PDF; the menu holds the rest (canvas "Documents") -->
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="ml-auto"
+                :aria-label="`Options for ${resumeName(resume)}`"
+                :disabled="deletingIds.includes(resume.id)"
+              >
+                <PhDotsThree :size="18" weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem variant="destructive" @select="handleDelete(resume)"><PhTrash />Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <p v-if="resume.status === 'parse-failed'" class="basis-full text-sm text-destructive sm:pl-15">
             We couldn't read the text in this PDF, so matches won't work with it. Try exporting it again and uploading the new file.
           </p>
+          <TailoredVersionsList
+            v-if="tailoredByResume.get(resume.id)?.length"
+            class="basis-full sm:pl-15"
+            :versions="tailoredByResume.get(resume.id) ?? []"
+            :deleting="isDeletingTailored"
+            @open="openTailored(resume, $event)"
+            @delete="deleteTailored"
+          />
         </li>
       </ul>
-      <p class="flex items-center gap-2 text-sm text-muted-foreground">
+      <p v-if="resumes.some((resume) => resume.kind !== 'built')" class="flex items-center gap-2 text-sm text-muted-foreground">
         <PhInfo :size="16" />
         Read OK means we could read the text in the PDF. That text is what the resume match uses.
       </p>
@@ -64,6 +83,12 @@
         <UploadResumeButton>Upload your resume</UploadResumeButton>
       </EmptyAction>
     </Empty>
+    <TailoredResumeSheet
+      v-if="tailoringEnabled && openVersion"
+      v-model:open="isTailoredOpen"
+      :resume="openVersion.resume"
+      :application="openVersion.application"
+    />
   </div>
 </template>
 
@@ -80,10 +105,16 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import { PhCheck, PhFilePdf, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
-import type { Resume } from "@/types";
+import { PhCheck, PhDotsThree, PhFilePdf, PhFileText, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
+import type { Resume, TailoredResume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyAction,
@@ -94,8 +125,12 @@ import {
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { Badge } from "@/components/ui/badge";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
-import { countResumeUsage, formatFileSize, usageLabel } from "@/lib/resumeUsage";
+import { countResumeUsage, formatFileSize, resumeName, usageLabel } from "@/lib/resumeUsage";
 import ResumeLink from "@/components/ResumeLink.vue";
+import TailoredVersionsList, { type TailoredVersionEntry } from "@/components/TailoredVersionsList.vue";
+import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
+import { useFeatureFlag } from "@/composables/useFeatureFlag";
+import { newestTailoredPerJob } from "@/lib/tailoredResume";
 
 const user = useCurrentUser();
 const storage = useFirebaseStorage();
@@ -112,6 +147,49 @@ const q = computed(() =>
 );
 
 const { data: resumes } = useCollection<Resume>(q);
+
+// Tailored versions (flag tailored-resume): one query for all of them,
+// newest per job under each resume
+const tailoringEnabled = useFeatureFlag("tailored-resume");
+const tailoredQuery = computed(() =>
+  user.value && tailoringEnabled.value
+    ? query(collection(db, "tailoredResumes"), where("userId", "==", user.value.uid), orderBy("createdAt", "desc"))
+    : null,
+);
+const tailoredVersions = useCollection<TailoredResume>(tailoredQuery);
+const tailoredByResume = computed(() => newestTailoredPerJob(tailoredVersions.value ?? []));
+
+const isTailoredOpen = ref(false);
+const openVersion = ref<{ resume: Resume; application: { id: string; companyName: string; position: string } } | null>(null);
+function openTailored(resume: Resume, version: TailoredVersionEntry) {
+  openVersion.value = {
+    resume,
+    application: {
+      id: version.jobApplicationId,
+      companyName: version.jobApplication.companyName ?? "",
+      position: version.jobApplication.position ?? "",
+    },
+  };
+  isTailoredOpen.value = true;
+}
+
+const isDeletingTailored = ref(false);
+// Deletes every tailored version of this resume for this job, so an older
+// one doesn't take its place
+async function deleteTailored(version: TailoredVersionEntry) {
+  isDeletingTailored.value = true;
+  try {
+    const batch = writeBatch(db);
+    (tailoredVersions.value ?? [])
+      .filter((candidate) => candidate.resumeId === version.resumeId && candidate.jobApplicationId === version.jobApplicationId)
+      .forEach((candidate) => batch.delete(doc(db, "tailoredResumes", candidate.id)));
+    await batch.commit();
+  } catch (error) {
+    console.error("Error deleting tailored versions:", error);
+  } finally {
+    isDeletingTailored.value = false;
+  }
+}
 
 const { jobApplications } = useJobApplicationsData();
 const usage = computed(() => countResumeUsage(jobApplications.value ?? []));
@@ -141,7 +219,7 @@ const handleDelete = async (resume: Resume) => {
     const applicationCount = linkedApplicationsSnapshot.size;
 
     // Build confirmation message based on whether there are linked applications
-    let confirmMessage = `Are you sure you want to delete "${resume.fileName}"?`;
+    let confirmMessage = `Are you sure you want to delete "${resumeName(resume)}"?`;
 
     if (applicationCount > 0) {
       confirmMessage += `\n\nThis resume is linked to ${applicationCount} job application${applicationCount > 1 ? "s" : ""}. `;
@@ -170,8 +248,9 @@ const handleDelete = async (resume: Resume) => {
     // Commit all Firestore changes
     await batch.commit();
 
-    // Delete from Firebase Storage (do this after Firestore operations succeed)
-    if (resume.storagePath) {
+    // Delete from Firebase Storage (do this after Firestore operations succeed).
+    // A built resume has no file.
+    if (resume.kind !== "built" && resume.storagePath) {
       const fileRef = storageRef(storage, resume.storagePath);
       await deleteObject(fileRef);
     }

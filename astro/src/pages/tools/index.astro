@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const currentPath = Astro.url.pathname;
+const pageTitle = "Free Job Search Tools | OpenApply";
+const pageDescription = "Free, no-signup tools for your job search: an honest resume vs job description match checker, and a LinkedIn headline and About rewriter built only from what you paste.";
+const canonicalUrl = new URL('/tools', Astro.site || 'https://openapply.app').href;
+
+const tools = [
+  {
+    href: '/tools/resume-job-match',
+    icon: 'ph-target',
+    name: 'Resume vs Job Description Match Checker',
+    description: "Paste your resume and a job description. Get an honest match score, every requirement checked against your resume with the line that proves it, and the keywords you're missing.",
+  },
+  {
+    href: '/tools/linkedin-headline-rewrite',
+    icon: 'ph-linkedin-logo',
+    name: 'LinkedIn Headline & About Rewriter',
+    description: "Paste your headline and About section. Get a sharper rewrite built only from what you pasted, checked line by line against your text.",
+  },
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": tools.map((tool, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "url": new URL(tool.href, Astro.site || 'https://openapply.app').href,
+    "name": tool.name,
+  })),
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonicalUrl={canonicalUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <div class="bg-background text-foreground antialiased">
+    <Header currentPath={currentPath} />
+
+    <main id="main">
+      <section class="py-16 lg:py-20">
+        <div class="container mx-auto px-4 max-w-4xl">
+          <div class="text-center max-w-2xl mx-auto mb-12">
+            <p class="inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold text-secondary-foreground mb-5">
+              Free · No signup
+            </p>
+            <h1 class="text-4xl lg:text-5xl font-extrabold leading-[1.05] tracking-tight mb-5">
+              Free job search tools
+            </h1>
+            <p class="text-lg text-muted-foreground">
+              Every tool here follows the same rule: build only from what you already gave it,
+              checked line by line against your own text.
+            </p>
+          </div>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            {tools.map((tool) => (
+              <a
+                href={tool.href}
+                class="flex flex-col gap-3 rounded-card border border-border bg-card p-6 shadow-card hover:border-primary/50 transition-colors"
+              >
+                <span class="inline-flex size-11 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                  <i class={`ph ${tool.icon} text-xl`} aria-hidden="true"></i>
+                </span>
+                <h2 class="text-xl font-bold text-foreground">{tool.name}</h2>
+                <p class="text-muted-foreground text-[15px]">{tool.description}</p>
+                <span class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                  Try it free
+                  <i class="ph ph-arrow-right" aria-hidden="true"></i>
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>
