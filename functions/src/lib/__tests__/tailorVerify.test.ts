@@ -4,6 +4,7 @@ import {
   assembleTailoredResume,
   canonicalize,
   factTokens,
+  namesOthersWork,
   newFacts,
   tailorStats,
   verifyTailorOps,
@@ -65,6 +66,60 @@ describe("newFacts", () => {
 
   it("accepts a lowercase source word written capitalized", () => {
     expect(newFacts("Redux migration of legacy screens.", "migrated legacy screens to redux", vocabulary)).toEqual([]);
+  });
+
+  // oa-0tf: false positives found by the LinkedIn rewriter usefulness gate
+  // (research/linkedin-rewriter-usefulness-2026-09.md), fixed here since
+  // newFacts is shared by both tools.
+  it("doesn't treat an ordinary sentence-starting adverb or conjunction as a name", () => {
+    const bio = "I led the checkout redesign at Acme.";
+    expect(newFacts("Previously led the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+    expect(newFacts("Currently leading the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+    expect(newFacts("Because it mattered, I led the checkout redesign at Acme.", bio, vocabulary)).toEqual([]);
+  });
+
+  it("still catches an invented name at a sentence start", () => {
+    expect(newFacts("Kafka and Postgres queries for the reporting dashboard.", "Maintained Postgres queries.", vocabulary)).toEqual(
+      expect.arrayContaining(["word:kafka"]),
+    );
+  });
+
+  it("treats a hyphenated compound as the same fact as its two-word source form", () => {
+    expect(newFacts("I teach a fifth-grade class.", "I teach fifth grade at a school.", vocabulary)).toEqual([]);
+  });
+
+  it("tolerates ordinary inflection (plural, gerund, nominalization) of a source word", () => {
+    // "Designing" mid-segment (not a sentence start) so the existing -ing
+    // sentence-start exclusion doesn't shortcut past the stem fold below.
+    expect(
+      newFacts("UX Designer | also Designing for learners", "UX Designer at a startup. I design learning tools.", vocabulary),
+    ).toEqual([]);
+    expect(newFacts("Learned from a senior AE about procurement.", "One of our senior AEs helped me with procurement.", vocabulary)).toEqual(
+      [],
+    );
+    expect(newFacts("Reconciliations and vendor payments.", "I reconcile accounts and process vendor payments.", vocabulary)).toEqual(
+      [],
+    );
+  });
+
+  it("still catches an unrelated word that merely shares a prefix", () => {
+    // "Kubernetes" and "Kubecon" share a 5-letter stem; the stem fold must
+    // not let a genuinely different name through.
+    expect(newFacts("Spoke at Kubecon this year.", "I run Kubernetes clusters.", vocabulary)).toEqual(
+      expect.arrayContaining(["word:kubecon"]),
+    );
+  });
+});
+
+describe("namesOthersWork", () => {
+  it("doesn't attribute a skill to a team across an 'or'/negation boundary", () => {
+    // "never worked with Kubernetes or led a team" is two independent
+    // admissions, not "a team's Kubernetes".
+    expect(namesOthersWork("I've never worked with Kubernetes or led a team.", "Kubernetes")).toBe(false);
+  });
+
+  it("still attributes a skill named right before a people noun", () => {
+    expect(namesOthersWork("Coordinated with the platform team's Kubernetes engineers.", "Kubernetes")).toBe(true);
   });
 });
 

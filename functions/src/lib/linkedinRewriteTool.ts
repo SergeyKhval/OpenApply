@@ -209,12 +209,14 @@ function sharedNamedTerms(text: string, sourceText: string): string[] {
  * line's own original text: whether a hedge survives only makes sense for
  * the line that stated it.
  *
- * namesOthersWork only runs on About lines, not the headline: it flags a
+ * namesOthersWork only runs on About lines, not the headline, and only
+ * scans `aboutSourceText` for context (not `wholeSourceText`): it flags a
  * shared term followed by a role or group noun (team, engineer, manager...)
  * within a few words, which is exactly the shape of a LinkedIn headline
  * itself ("Frontend Engineer", "Data Scientist" is the candidate's own
- * title, not someone else's), so applying it there would misfire on nearly
- * every headline.
+ * title, not someone else's), so letting the headline into this scan (even
+ * just as surrounding context for an About check) would misread the
+ * candidate's own headline title as somebody else's.
  *
  * When a target role is given, its words feed newFacts as vocabulary (so an
  * exact role term, lowercase or not, has to already be in the pasted text)
@@ -229,6 +231,7 @@ export function verifyLinkedinRewriteLine(
   proposed: string,
   wholeSourceText: string,
   targetRole = "",
+  aboutSourceText: string = wholeSourceText,
 ): LinkedinRewriteLineVerdict {
   const revert = (revertReason: LinkedinRewriteRevertReason, offendingTokens?: string[]): LinkedinRewriteLineVerdict => ({
     id,
@@ -243,8 +246,17 @@ export function verifyLinkedinRewriteLine(
   if (!text) return revert("empty_text");
   if (text.toLowerCase() === original.trim().toLowerCase()) return revert("no_change");
 
-  const allowed = Math.max(original.length * MAX_REPHRASE_GROWTH, original.length + MIN_LENGTH_ALLOWANCE);
-  if (text.length > allowed) return revert("too_long");
+  // The headline is short and LinkedIn-style rewrites routinely restructure
+  // "Title at Company" into "Title | Skill A, Skill B | positioning", which
+  // multiplies its length with zero new facts. The resume-bullet-tuned
+  // growth ratio below is the wrong shape for that; LinkedIn's own field
+  // limit is the constraint that actually matters here.
+  if (id === "headline") {
+    if (text.length > MAX_HEADLINE_CHARS) return revert("too_long");
+  } else {
+    const allowed = Math.max(original.length * MAX_REPHRASE_GROWTH, original.length + MIN_LENGTH_ALLOWANCE);
+    if (text.length > allowed) return revert("too_long");
+  }
 
   const vocabulary = { terms: vocabularyTermsFromTargetRole(targetRole) };
   const invented = newFacts(text, wholeSourceText, vocabulary);
@@ -259,7 +271,11 @@ export function verifyLinkedinRewriteLine(
   }
 
   if (id !== "headline") {
-    const others = sharedNamedTerms(text, wholeSourceText).filter((term) => namesOthersWork(wholeSourceText, term));
+    // Scoped to the About text alone, not the headline: the headline is
+    // always the candidate's own title ("DevOps Engineer"), never someone
+    // else's, so letting it into this scan misreads a shared word followed
+    // by the headline's own role noun as "the team's", not the candidate's.
+    const others = sharedNamedTerms(text, wholeSourceText).filter((term) => namesOthersWork(aboutSourceText, term));
     if (others.length) return revert("others_work", others);
   }
 
