@@ -1,4 +1,4 @@
-<!-- Desktop sidebar (lg and up): logo, Jobs and Documents, AI checks left,
+<!-- Desktop sidebar (lg and up): logo, Jobs, Documents and People, AI checks left,
      account menu -->
 <template>
   <aside class="flex h-full w-62 shrink-0 flex-col gap-1.5 border-r border-border bg-background px-4 pt-6 pb-3.5">

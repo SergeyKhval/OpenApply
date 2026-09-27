@@ -1,4 +1,4 @@
-<!-- Signed-in layout shared by Jobs, Documents and Settings: sidebar on
+<!-- Signed-in layout shared by Jobs, Documents, People and Settings: sidebar on
      desktop, tab bar on phones, page content in the router view. -->
 <template>
   <div class="flex h-dvh bg-background">

@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from "vue-router";
+import type { RouteLocationNormalized, RouteRecordRaw } from "vue-router";
 
 // Old /dashboard/... urls (bookmarks, open tabs, weekly digest emails already
 // sent) land on the same place in the Jobs / Documents / Settings layout.
@@ -51,3 +51,12 @@ export const legacyRedirects: RouteRecordRaw[] = [
     }),
   ),
 ];
+
+// People used to be a tab under Documents (/documents?tab=people). The path
+// still matches the Documents page, so this runs as a navigation guard.
+export const redirectLegacyQueries = (to: RouteLocationNormalized) => {
+  if (to.path === "/documents" && to.query.tab === "people") {
+    const { tab: _tab, ...query } = to.query;
+    return { path: "/people", query };
+  }
+};
