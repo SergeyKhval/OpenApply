@@ -28,7 +28,7 @@
 
       <template v-else-if="matchResume">
         <p class="text-[15px] text-soft-foreground">
-          See which requirements <span class="font-semibold text-foreground">{{ matchResume.fileName }}</span> meets and
+          See which requirements <span class="font-semibold text-foreground">{{ resumeName(matchResume) }}</span> meets and
           what to fix before you apply.
         </p>
         <Button size="sm" class="self-start" @click="isMatchOpen = true"><PhSparkle />Check my resume</Button>
@@ -72,6 +72,7 @@ import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { useResumeUpload } from "@/composables/useResumeUpload";
 import { toJsDate } from "@/lib/jobDates";
 import { mustHaveLine, toMatchView } from "@/lib/matchView";
+import { resumeName } from "@/lib/resumeUsage";
 import type { JobApplication, Resume, ResumeJobMatch } from "@/types";
 
 const { application, resumes } = defineProps<{ application: JobApplication; resumes: Resume[] }>();
