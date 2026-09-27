@@ -43,6 +43,14 @@
           <p v-if="resume.status === 'parse-failed'" class="basis-full text-sm text-destructive sm:pl-15">
             We couldn't read the text in this PDF, so matches won't work with it. Try exporting it again and uploading the new file.
           </p>
+          <TailoredVersionsList
+            v-if="tailoredByResume.get(resume.id)?.length"
+            class="basis-full sm:pl-15"
+            :versions="tailoredByResume.get(resume.id) ?? []"
+            :deleting="isDeletingTailored"
+            @open="openTailored(resume, $event)"
+            @delete="deleteTailored"
+          />
         </li>
       </ul>
       <p class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -50,6 +58,12 @@
         Read OK means we could read the text in the PDF. That text is what the resume match uses.
       </p>
     </div>
+    <TailoredResumeSheet
+      v-if="tailoringEnabled && openVersion"
+      v-model:open="isTailoredOpen"
+      :resume="openVersion.resume"
+      :application="openVersion.application"
+    />
     <Empty v-else class="py-12">
       <EmptyIcon>
         <PhFilePdf :size="32" />
@@ -81,7 +95,7 @@ import {
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { PhCheck, PhFilePdf, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
-import type { Resume } from "@/types";
+import type { Resume, TailoredResume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +110,10 @@ import { Badge } from "@/components/ui/badge";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
 import { countResumeUsage, formatFileSize, usageLabel } from "@/lib/resumeUsage";
 import ResumeLink from "@/components/ResumeLink.vue";
+import TailoredVersionsList, { type TailoredVersionEntry } from "@/components/TailoredVersionsList.vue";
+import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
+import { useFeatureFlag } from "@/composables/useFeatureFlag";
+import { newestTailoredPerJob } from "@/lib/tailoredResume";
 
 const user = useCurrentUser();
 const storage = useFirebaseStorage();
@@ -112,6 +130,49 @@ const q = computed(() =>
 );
 
 const { data: resumes } = useCollection<Resume>(q);
+
+// Tailored versions (flag tailored-resume): one query for all of them,
+// newest per job under each resume
+const tailoringEnabled = useFeatureFlag("tailored-resume");
+const tailoredQuery = computed(() =>
+  user.value && tailoringEnabled.value
+    ? query(collection(db, "tailoredResumes"), where("userId", "==", user.value.uid), orderBy("createdAt", "desc"))
+    : null,
+);
+const tailoredVersions = useCollection<TailoredResume>(tailoredQuery);
+const tailoredByResume = computed(() => newestTailoredPerJob(tailoredVersions.value ?? []));
+
+const isTailoredOpen = ref(false);
+const openVersion = ref<{ resume: Resume; application: { id: string; companyName: string; position: string } } | null>(null);
+function openTailored(resume: Resume, version: TailoredVersionEntry) {
+  openVersion.value = {
+    resume,
+    application: {
+      id: version.jobApplicationId,
+      companyName: version.jobApplication.companyName ?? "",
+      position: version.jobApplication.position ?? "",
+    },
+  };
+  isTailoredOpen.value = true;
+}
+
+const isDeletingTailored = ref(false);
+// Deletes every tailored version of this resume for this job, so an older
+// one doesn't take its place
+async function deleteTailored(version: TailoredVersionEntry) {
+  isDeletingTailored.value = true;
+  try {
+    const batch = writeBatch(db);
+    (tailoredVersions.value ?? [])
+      .filter((candidate) => candidate.resumeId === version.resumeId && candidate.jobApplicationId === version.jobApplicationId)
+      .forEach((candidate) => batch.delete(doc(db, "tailoredResumes", candidate.id)));
+    await batch.commit();
+  } catch (error) {
+    console.error("Error deleting tailored versions:", error);
+  } finally {
+    isDeletingTailored.value = false;
+  }
+}
 
 const { jobApplications } = useJobApplicationsData();
 const usage = computed(() => countResumeUsage(jobApplications.value ?? []));

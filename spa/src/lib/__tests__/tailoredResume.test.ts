@@ -3,6 +3,7 @@ import {
   assembleTailoredResume,
   docText,
   explainRevert,
+  newestTailoredPerJob,
   toChangeRows,
   type SourceLine,
   type TailoredDoc,
@@ -100,5 +101,19 @@ describe("docText", () => {
     expect(text).toContain("Sarah Chen");
     expect(text).toContain("• Maintained PostgreSQL queries for the reporting dashboard.");
     expect(text).toContain("React, TypeScript, Redux, Jest\nPostgreSQL");
+  });
+});
+
+describe("newestTailoredPerJob", () => {
+  it("keeps the newest version per resume and job, and counts the rest", () => {
+    const versions = [
+      { id: "t3", resumeId: "r1", jobApplicationId: "a" },
+      { id: "t2", resumeId: "r2", jobApplicationId: "b" },
+      { id: "t1", resumeId: "r1", jobApplicationId: "a" },
+      { id: "t0", resumeId: "r1", jobApplicationId: "c" },
+    ];
+    const grouped = newestTailoredPerJob(versions);
+    expect(grouped.get("r1")!.map((version) => [version.id, version.count])).toEqual([["t3", 2], ["t0", 1]]);
+    expect(grouped.get("r2")!.map((version) => version.id)).toEqual(["t2"]);
   });
 });

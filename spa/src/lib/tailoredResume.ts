@@ -284,3 +284,26 @@ export function docText(doc: TailoredDoc): string {
     .map((section) => [section.heading, ...section.lines.map((line) => (line.bullet ? `• ${line.text}` : line.text))].filter(Boolean).join("\n"))
     .join("\n\n");
 }
+
+/**
+ * Newest tailored version per job for each resume, with how many versions
+ * that job has. Expects versions newest first.
+ */
+export function newestTailoredPerJob<T extends { resumeId: string; jobApplicationId: string }>(
+  versions: T[],
+): Map<string, (T & { count: number })[]> {
+  const byResume = new Map<string, (T & { count: number })[]>();
+  const seen = new Map<string, T & { count: number }>();
+  for (const version of versions) {
+    const key = `${version.resumeId}/${version.jobApplicationId}`;
+    const newest = seen.get(key);
+    if (newest) {
+      newest.count += 1;
+      continue;
+    }
+    const entry = { ...version, count: 1 };
+    seen.set(key, entry);
+    byResume.set(version.resumeId, [...(byResume.get(version.resumeId) ?? []), entry]);
+  }
+  return byResume;
+}
