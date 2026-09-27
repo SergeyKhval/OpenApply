@@ -2,7 +2,7 @@
   <Button v-if="enabled" variant="secondary" :disabled="isCreating" @click="create">
     <PhSpinner v-if="isCreating" class="animate-spin" />
     <PhPencilSimpleLine v-else />
-    <span>New<span class="hidden lg:inline"> resume</span></span>
+    <slot><span>New<span class="hidden lg:inline"> resume</span></span></slot>
   </Button>
 </template>
 

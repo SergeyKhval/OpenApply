@@ -40,7 +40,25 @@ describe.each([
     const wrapper = mount(Form);
     expect(wrapper.findComponent(EmailCodeForm).exists()).toBe(true);
     expect(wrapper.find('input[type="password"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toMatch(/password/i);
+    // The only mention says there isn't one
+    expect(wrapper.text()).not.toMatch(/forgot|your password|reset password/i);
+    expect(wrapper.text()).toContain("No password. New or returning, it is the same step.");
+  });
+
+  it("puts the emailed code first and Google second, as on the canvas", () => {
+    const wrapper = mount(Form);
+    const google = buttonByText(wrapper, "Continue with Google")!;
+    expect(google.classes().join(" ")).toMatch(/border/);
+    const sendCode = buttonByText(wrapper, "Email me a code")!;
+    expect(sendCode.attributes("type")).toBe("submit");
+    expect(sendCode.classes().join(" ")).toContain("bg-primary");
+    expect(wrapper.get(`#${idPrefix}-email`).attributes("placeholder")).toBe("you@example.com");
+  });
+
+  it("links the terms and privacy policy", () => {
+    const wrapper = mount(Form);
+    const links = wrapper.findAll("a").map((link) => link.attributes("href"));
+    expect(links).toEqual(["/terms", "/privacy"]);
   });
 
   it("shows a retry and Google option when the code service is down", async () => {
@@ -79,3 +97,9 @@ describe.each([
   });
 });
 
+describe("headings", () => {
+  it("sign up asks to create a free account, sign in welcomes back", () => {
+    expect(mount(SignUpForm).get("h2").text()).toBe("Create your free account");
+    expect(mount(SignInForm).get("h2").text()).toBe("Sign in");
+  });
+});

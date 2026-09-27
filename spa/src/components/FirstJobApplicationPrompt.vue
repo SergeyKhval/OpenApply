@@ -3,12 +3,34 @@
      or anyone who prefers, pastes a link or the description itself.
      Owner: no import, no checklist. -->
 <template>
-  <div
-    class="mx-auto flex w-full max-w-lg flex-col items-center gap-5 rounded-card bg-card px-6 py-10 text-center shadow-card dark:border dark:border-border sm:px-10"
-  >
-    <span class="grid size-14 place-items-center rounded-full bg-secondary text-secondary-foreground">
-      <PhPuzzlePiece v-if="showExtension" :size="26" />
-      <PhLink v-else :size="26" />
+  <!-- No card (canvas "First run"): left-aligned on phones, centered from sm up -->
+  <div class="mx-auto flex w-full max-w-lg flex-col items-start gap-5 text-left sm:items-center sm:text-center">
+    <!-- What the extension looks like on a job page; a picture, not a control -->
+    <div
+      v-if="showExtension"
+      aria-hidden="true"
+      class="flex w-56 flex-col gap-2.5 rounded-2xl border border-border bg-card p-3 text-left shadow-pop"
+    >
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-1.5 text-sm font-bold">
+          <span class="grid size-5 place-items-center rounded-[6px_6px_6px_2px] bg-primary text-primary-foreground">
+            <PhCheck :size="11" weight="bold" />
+          </span>
+          OpenApply
+        </span>
+        <span class="text-[11px] text-muted-foreground">Extension</span>
+      </div>
+      <div class="flex flex-col gap-0.5 rounded-lg bg-muted px-2.5 py-2">
+        <span class="text-xs font-bold">Senior Frontend Engineer</span>
+        <span class="text-[11px] text-soft-foreground">Northwind Labs · Hybrid, Berlin</span>
+        <span class="flex items-center gap-1 text-[11px] text-success"><PhCheck :size="10" />Description read from the page</span>
+      </div>
+      <span class="flex h-8 items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+        <PhPlus :size="12" />Save to OpenApply
+      </span>
+    </div>
+    <span v-else class="grid size-14 place-items-center rounded-full bg-secondary text-secondary-foreground">
+      <PhLink :size="26" />
     </span>
     <div class="space-y-2">
       <h2 class="text-2xl font-extrabold text-foreground sm:text-3xl">Save your first job</h2>
@@ -24,15 +46,15 @@
       <Button size="lg" as-child>
         <a :href="extensionUrl" target="_blank" rel="noopener noreferrer" @click="trackExtensionClick">
           <PhGoogleChromeLogo />
-          Add to Chrome, it's free
+          Add to Chrome, it is free
         </a>
       </Button>
       <button
         type="button"
-        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground hover:underline"
+        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground underline underline-offset-2"
         @click="preferPaste = true"
       >
-        or paste a link or description instead
+        or paste a link, or add one by hand
       </button>
     </template>
 
@@ -43,6 +65,8 @@
         novalidate
         @submit.prevent="handleSubmit"
       >
+        <div class="relative sm:flex-1">
+        <PhLink :size="18" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-soft-foreground" aria-hidden="true" />
         <Input
           v-model="jobInput"
           type="text"
@@ -53,9 +77,10 @@
           :aria-invalid="!!errorMessage"
           aria-describedby="job-link-error"
           placeholder="Paste a job link or description"
-          :class="['h-12 sm:flex-1', errorMessage && 'border-destructive']"
+          :class="['h-12 w-full pl-11', errorMessage && 'border-destructive']"
           @paste="onPaste"
         />
+        </div>
         <Button type="submit" size="lg" class="shrink-0">Save job</Button>
       </form>
       <form v-else class="flex w-full flex-col gap-2" novalidate @submit.prevent="handleSubmit">
@@ -81,14 +106,14 @@
       <button
         v-if="textMode"
         type="button"
-        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground hover:underline"
+        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground underline underline-offset-2"
         @click="useLinkInstead"
       >
         or paste a link instead
       </button>
       <button
         type="button"
-        class="cursor-pointer text-[15px] font-semibold text-secondary-foreground hover:underline"
+        class="cursor-pointer self-center text-[15px] font-semibold text-secondary-foreground underline underline-offset-2"
         v-else
         @click="openAddDialog({ 'add-mode': 'manual' })"
       >
@@ -101,7 +126,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { PhGoogleChromeLogo, PhLink, PhPuzzlePiece, PhSpinner } from "@phosphor-icons/vue";
+import { PhCheck, PhGoogleChromeLogo, PhLink, PhPlus, PhSpinner } from "@phosphor-icons/vue";
 import { isDesktopChromium } from "@/lib/browser";
 import { trackEvent } from "@/analytics";
 import { Button } from "@/components/ui/button";

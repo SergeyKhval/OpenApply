@@ -111,7 +111,11 @@ describe("ResumesList: a resume built in the app", () => {
   it("deletes the doc without touching Storage", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     const wrapper = await mountList();
-    await wrapper.get('[aria-label="Delete Product roles"]').trigger("click");
+    await wrapper.get('[aria-label="Options for Product roles"]').trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    const items = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    expect(items.map((item) => item.textContent?.trim())).toEqual(["Delete"]);
+    items[0].click();
     await flushPromises();
     expect(batchDelete).toHaveBeenCalledTimes(1);
     expect(deleteObject).not.toHaveBeenCalled();
