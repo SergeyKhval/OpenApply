@@ -1,4 +1,4 @@
-import { readonly, ref, type Ref } from "vue";
+import { readonly, ref, watch, type Ref } from "vue";
 import posthog from "posthog-js";
 
 // Flags forced on for this build, e.g. VITE_FEATURE_FLAGS=job-signals in a
@@ -27,4 +27,22 @@ export function useFeatureFlag(flag: string): Readonly<Ref<boolean>> {
     }
   }
   return readonly(enabled);
+}
+
+/** Resolves true once the flag is on, or false if it isn't on within timeoutMs. */
+export function waitForFeatureFlag(flag: string, timeoutMs: number): Promise<boolean> {
+  const enabled = useFeatureFlag(flag);
+  if (enabled.value) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      stop();
+      resolve(false);
+    }, timeoutMs);
+    const stop = watch(enabled, (on) => {
+      if (!on) return;
+      clearTimeout(timer);
+      stop();
+      resolve(true);
+    });
+  });
 }
