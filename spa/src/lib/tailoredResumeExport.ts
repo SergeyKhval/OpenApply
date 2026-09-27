@@ -28,22 +28,70 @@ export function exportFileName(doc: ResumeDoc, meta: ExportMeta, extension: "doc
   return `${safe || "Resume"}.${extension}`;
 }
 
-// Sizes in half-points (docx): 16pt name, 12pt headings, 10.5pt body
-const NAME_SIZE = 32;
-const HEADING_SIZE = 24;
-const BODY_SIZE = 21;
-const FONT = "Calibri";
+// Two ATS-safe looks for built resumes; tailored versions always use classic.
+// Only fonts and spacing differ: same single column, real bullets, no tables.
+export type ExportTemplate = "classic" | "compact";
 
-export async function tailoredResumeDocx(doc: ResumeDoc): Promise<Blob> {
+type DocxStyle = {
+  font: string;
+  // Sizes in half-points
+  nameSize: number;
+  headingSize: number;
+  bodySize: number;
+  smallCapsHeadings: boolean;
+  headingSpacing: { before: number; after: number };
+  lineAfter: number;
+  bulletAfter: number;
+  margin: { top: number; bottom: number; left: number; right: number };
+};
+
+const DOCX_STYLES: Record<ExportTemplate, DocxStyle> = {
+  // 16pt name, 12pt uppercase headings, 10.5pt Calibri body
+  classic: {
+    font: "Calibri",
+    nameSize: 32,
+    headingSize: 24,
+    bodySize: 21,
+    smallCapsHeadings: false,
+    headingSpacing: { before: 240, after: 80 },
+    lineAfter: 60,
+    bulletAfter: 40,
+    margin: { top: 720, bottom: 720, left: 900, right: 900 },
+  },
+  // 15pt name, 11pt small-caps headings, 10pt Cambria body, tighter, so a
+  // ten-year career fits on a page
+  compact: {
+    font: "Cambria",
+    nameSize: 30,
+    headingSize: 22,
+    bodySize: 20,
+    smallCapsHeadings: true,
+    headingSpacing: { before: 160, after: 60 },
+    lineAfter: 30,
+    bulletAfter: 20,
+    margin: { top: 600, bottom: 600, left: 720, right: 720 },
+  },
+};
+
+export async function tailoredResumeDocx(doc: ResumeDoc, template: ExportTemplate = "classic"): Promise<Blob> {
   const { Document, Packer, Paragraph, TextRun, BorderStyle } = await import("docx");
+  const style = DOCX_STYLES[template];
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
 
   doc.sections.forEach((section, sectionIndex) => {
     if (section.heading) {
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: section.heading.toUpperCase(), bold: true, size: HEADING_SIZE, font: FONT })],
-          spacing: { before: 240, after: 80 },
+          children: [
+            new TextRun({
+              text: style.smallCapsHeadings ? section.heading : section.heading.toUpperCase(),
+              bold: true,
+              size: style.headingSize,
+              font: style.font,
+              ...(style.smallCapsHeadings ? { smallCaps: true } : {}),
+            }),
+          ],
+          spacing: style.headingSpacing,
           border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "999999", space: 2 } },
         }),
       );
@@ -52,9 +100,11 @@ export async function tailoredResumeDocx(doc: ResumeDoc): Promise<Blob> {
       const isName = section.heading === null && sectionIndex === 0 && lineIndex === 0;
       paragraphs.push(
         new Paragraph({
-          children: [new TextRun({ text: line.text, bold: isName || line.strong === true, size: isName ? NAME_SIZE : BODY_SIZE, font: FONT })],
+          children: [
+            new TextRun({ text: line.text, bold: isName || line.strong === true, size: isName ? style.nameSize : style.bodySize, font: style.font }),
+          ],
           ...(line.bullet ? { bullet: { level: 0 } } : {}),
-          spacing: { after: line.bullet ? 40 : 60 },
+          spacing: { after: line.bullet ? style.bulletAfter : style.lineAfter },
         }),
       );
     });
@@ -62,8 +112,8 @@ export async function tailoredResumeDocx(doc: ResumeDoc): Promise<Blob> {
 
   const document = new Document({
     creator: "OpenApply",
-    styles: { default: { document: { run: { font: FONT, size: BODY_SIZE } } } },
-    sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } }, children: paragraphs }],
+    styles: { default: { document: { run: { font: style.font, size: style.bodySize } } } },
+    sections: [{ properties: { page: { margin: style.margin } }, children: paragraphs }],
   });
   return Packer.toBlob(document);
 }
@@ -71,8 +121,25 @@ export async function tailoredResumeDocx(doc: ResumeDoc): Promise<Blob> {
 const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 
+const PRINT_CSS: Record<ExportTemplate, string> = {
+  classic: `@page { margin: 14mm 16mm; }
+body { font-family: Calibri, Carlito, "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.35; color: #000; margin: 0; }
+h1 { font-size: 16pt; margin: 0 0 2pt; }
+h2 { font-size: 12pt; text-transform: uppercase; border-bottom: 0.5pt solid #999; margin: 12pt 0 4pt; padding-bottom: 1pt; }
+p { margin: 0 0 3pt; }
+ul { margin: 0 0 4pt; padding-left: 14pt; }
+li { margin: 0 0 2pt; }`,
+  compact: `@page { margin: 10.5mm 12.7mm; }
+body { font-family: Cambria, Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.28; color: #000; margin: 0; }
+h1 { font-size: 15pt; margin: 0 0 1pt; }
+h2 { font-size: 11pt; font-variant: small-caps; letter-spacing: 0.02em; border-bottom: 0.5pt solid #999; margin: 8pt 0 3pt; padding-bottom: 1pt; }
+p { margin: 0 0 1.5pt; }
+ul { margin: 0 0 3pt; padding-left: 13pt; }
+li { margin: 0 0 1pt; }`,
+};
+
 /** A standalone page for the browser's "Save as PDF". */
-export function tailoredResumeHtml(doc: ResumeDoc, title: string): string {
+export function tailoredResumeHtml(doc: ResumeDoc, title: string, template: ExportTemplate = "classic"): string {
   const body = doc.sections
     .map((section, sectionIndex) => {
       const heading = section.heading ? `<h2>${escapeHtml(section.heading)}</h2>` : "";
@@ -103,13 +170,7 @@ export function tailoredResumeHtml(doc: ResumeDoc, title: string): string {
     .join("");
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
-@page { margin: 14mm 16mm; }
-body { font-family: Calibri, Carlito, "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.35; color: #000; margin: 0; }
-h1 { font-size: 16pt; margin: 0 0 2pt; }
-h2 { font-size: 12pt; text-transform: uppercase; border-bottom: 0.5pt solid #999; margin: 12pt 0 4pt; padding-bottom: 1pt; }
-p { margin: 0 0 3pt; }
-ul { margin: 0 0 4pt; padding-left: 14pt; }
-li { margin: 0 0 2pt; }
+${PRINT_CSS[template]}
 section { break-inside: auto; }
 @media screen { body { padding: 14mm 16mm; } }
 @media screen and (max-width: 480px) { body { padding: 16px; } }
@@ -133,11 +194,11 @@ export function saveBlob(blob: Blob, fileName: string): void {
  * where the user picks "Save as PDF". Returns false when a popup blocker
  * stopped the tab.
  */
-export function printTailoredResume(doc: ResumeDoc, fileName: string): boolean {
+export function printTailoredResume(doc: ResumeDoc, fileName: string, template: ExportTemplate = "classic"): boolean {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return false;
   printWindow.document.open();
-  printWindow.document.write(tailoredResumeHtml(doc, fileName.replace(/\.pdf$/, "")));
+  printWindow.document.write(tailoredResumeHtml(doc, fileName.replace(/\.pdf$/, ""), template));
   printWindow.document.close();
   printWindow.focus();
   // Give the new document a moment to lay out before printing

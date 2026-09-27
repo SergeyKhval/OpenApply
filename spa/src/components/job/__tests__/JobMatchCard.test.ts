@@ -57,7 +57,7 @@ const mountCard = (resumes: Resume[], slots = {}) =>
   mount(JobMatchCard, {
     props: { application, resumes },
     slots,
-    global: { stubs: { ResumeMatchSheet: true, TailoredResumeSheet: true, ResumeScore: true } },
+    global: { stubs: { ResumeMatchSheet: true, TailoredResumeSheet: true, ResumeScore: true, NewResumeButton: true } },
   });
 
 describe("JobMatchCard", () => {
@@ -96,6 +96,11 @@ describe("JobMatchCard", () => {
     const wrapper = mountCard([resume]);
     expect(wrapper.text()).toContain("Maya_Chen_Frontend_2026.pdf");
     expect(wrapper.find("button").text()).toBe("Check my resume");
+  });
+
+  it("without a resume, also offers building one (the button hides itself while the flag is off)", () => {
+    expect(mountCard([]).findComponent({ name: "NewResumeButton" }).attributes("surface")).toBe("job_page");
+    expect(mountCard([resume]).findComponent({ name: "NewResumeButton" }).exists()).toBe(false);
   });
 
   it("without a resume, offers the upload", async () => {

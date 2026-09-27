@@ -138,7 +138,7 @@ export type UploadedResume = ResumeBase & {
 export type BuiltResume = ResumeBase & {
   kind: "built";
   title: string;
-  template: "classic";
+  template: "classic" | "compact";
   structured: StructuredResume;
   importedFrom?: {
     source: "resume" | "linkedin_pdf" | "linkedin_paste";
@@ -193,6 +193,8 @@ export type ResumeJobMatch = {
     matchScore: number;
     requirements: { requirement: string; status: "matched" | "partial" | "missing"; importance: string; evidence: string }[];
     missingKeywords: string[];
+    // How the resume's text reads to a parser; the tailor refuses "scrambled"
+    parseCheck?: { status: "clean" | "issues" | "scrambled"; note: string };
   };
   matchResult: {
     match_summary: {

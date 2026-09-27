@@ -9,7 +9,17 @@ function isLoaded(): boolean {
 
 export type AiLimitSource = "cover_letter" | "ai_review" | "regenerate_cover_letter" | "settings_plan" | "tailored_resume";
 
-export type ResumeBuilderSurface = "documents_header";
+export type ResumeBuilderSurface =
+  | "resumes_empty"
+  | "picker_empty"
+  | "cover_letter_empty"
+  | "job_page"
+  | "scrambled_block"
+  | "match_parse_check"
+  | "documents_header"
+  | "resume_menu";
+// Whether an AI feature ran on an uploaded PDF or a resume built in the app
+export type ResumeKind = "upload" | "built";
 export type ResumeBuilderSource = "scratch" | "resume" | "linkedin_pdf" | "linkedin_paste";
 
 type JobCreationMethod = "link_parse" | "paste" | "manual" | "match_tool" | "extension";
@@ -45,7 +55,7 @@ type EventMap = {
   lp_auth_skipped: void;
   job_parse_succeeded: { company?: string; position?: string };
   job_parse_failed: { error?: string };
-  cover_letter_generated: { jobApplicationId: string; resumeId: string };
+  cover_letter_generated: { jobApplicationId: string; resumeId: string; resumeKind: ResumeKind };
   cover_letter_generation_failed: { error: string; code?: string };
   cover_letter_regenerated: void;
   resume_uploaded: void;
@@ -58,12 +68,12 @@ type EventMap = {
   csv_import_completed: { rowCount: number };
   jobs_exported: { rowCount: number };
   extension_install_clicked: { from: "first_run" };
-  resume_match_started: { resumeId: string; jobApplicationId: string };
+  resume_match_started: { resumeId: string; jobApplicationId: string; resumeKind: ResumeKind };
   resume_match_completed: { resumeId: string; jobApplicationId: string };
   resume_match_failed: { error: string };
   // Tailored resume (flag tailored-resume)
   tailored_resume_offered: { matchScore: number; blocked?: "no_analysis" | "limit" };
-  tailored_resume_started: { resumeId: string; jobApplicationId: string; matchScore: number };
+  tailored_resume_started: { resumeId: string; jobApplicationId: string; matchScore: number; resumeKind: ResumeKind };
   tailored_resume_generated: { proposed: number; applied: number; reverted: number; durationMs: number };
   tailored_resume_no_changes: { proposed: number; reverted: number };
   tailored_resume_failed: { error: string; code?: string };
@@ -76,7 +86,7 @@ type EventMap = {
   resume_builder_started: { source: ResumeBuilderSource };
   resume_builder_section_added: { type: string };
   resume_builder_completed: { source: ResumeBuilderSource; sections: number; entries: number; bullets: number; minutesSinceStart: number };
-  resume_builder_downloaded: { format: "docx" | "pdf"; template: string };
+  resume_builder_downloaded: { format: "docx" | "pdf"; template: "classic" | "compact" };
   resume_import_completed: {
     source: ResumeBuilderSource;
     fieldsVerified: number;

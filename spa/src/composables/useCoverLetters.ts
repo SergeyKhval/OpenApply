@@ -12,7 +12,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "@/firebase/config";
 import type { CoverLetter } from "@/types";
-import { trackEvent } from "@/analytics";
+import { trackEvent, type ResumeKind } from "@/analytics";
 
 export type CoverLetterStyle = { length: "short" | "standard"; tone: "plain" | "warm" };
 
@@ -97,6 +97,7 @@ export function useCoverLetters() {
     jobApplicationId: string,
     resumeId: string,
     style?: CoverLetterStyle,
+    resumeKind: ResumeKind = "upload",
   ): Promise<GenerateCoverLetterResult> => {
     if (!user.value) {
       return { success: false, error: "User not authenticated" };
@@ -111,7 +112,7 @@ export function useCoverLetters() {
       });
 
       const data = result.data as { coverLetterId: string; body: string };
-      trackEvent("cover_letter_generated", { jobApplicationId, resumeId });
+      trackEvent("cover_letter_generated", { jobApplicationId, resumeId, resumeKind });
       return { success: true, data };
     } catch (err) {
       console.error("Error generating cover letter:", err);

@@ -73,7 +73,18 @@ const pricingPlans = [
   },
 ];
 
+// The resume builder is behind the app's resume-builder flag until Sergey
+// opens it; flip this with the flag so the FAQ never promises what users
+// can't open. Copy checked against research/resume-import-gate-2026-09.md.
+const RESUME_BUILDER_LIVE = false;
+
+const resumeBuilderFaq = {
+  question: 'Can I make a resume here if I don\'t have one?',
+  answer: "Yes. Start from scratch, or copy in a PDF you have or your LinkedIn profile: LinkedIn's own Save to PDF file, or the text pasted from your profile. We never connect to your LinkedIn account. The import copies your text into place without rewording it, and asks you to check anything it couldn't confirm. Download it as .docx or PDF: one column, no tables or graphics, so applicant tracking systems read it in order. It's free.",
+};
+
 const faqs = [
+  ...(RESUME_BUILDER_LIVE ? [resumeBuilderFaq] : []),
   {
     question: 'What counts as an AI check?',
     answer: 'Each AI resume match or cover letter (including a regenerate) is one check. Tracking, job link import and resume upload are free and unlimited. Free accounts get 15 checks a month; Pro gets 150 for $9 a month. Checks reset on the 1st of each month.',

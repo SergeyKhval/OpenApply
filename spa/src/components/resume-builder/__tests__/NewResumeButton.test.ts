@@ -60,6 +60,14 @@ describe("NewResumeButton", () => {
     expect(wrapper.get("button").attributes("aria-label")).toBe("New resume");
   });
 
+  it("takes its own label and counts the offer for its surface", async () => {
+    flag.value = true;
+    const wrapper = mount(NewResumeButton, { props: { surface: "resumes_empty", variant: "outline" }, slots: { default: "Build one here" } });
+    await flushPromises();
+    expect(wrapper.get("button").text()).toBe("Build one here");
+    expect(trackEvent).toHaveBeenCalledWith("resume_builder_offered", { surface: "resumes_empty", hadResume: false });
+  });
+
   it("opens the chooser", async () => {
     flag.value = true;
     const wrapper = mount(NewResumeButton, { props: { surface: "documents_header" } });

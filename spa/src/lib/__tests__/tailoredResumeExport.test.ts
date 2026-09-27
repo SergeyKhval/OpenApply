@@ -71,3 +71,27 @@ describe("tailoredResumeHtml", () => {
     expect(out).toContain("&lt;script&gt;alert(1)&lt;/script&gt; &amp; Co");
   });
 });
+
+describe("the compact template", () => {
+  const documentXml = async (blob: Blob) => (await JSZip.loadAsync(await blob.arrayBuffer())).file("word/document.xml")!.async("string");
+
+  it("leaves the classic output as it was by default", async () => {
+    expect(tailoredResumeHtml(doc, "x")).toBe(tailoredResumeHtml(doc, "x", "classic"));
+    expect(await documentXml(await tailoredResumeDocx(doc))).toBe(await documentXml(await tailoredResumeDocx(doc, "classic")));
+  });
+
+  it("sets a serif body, small-caps headings and tighter spacing in the DOCX", async () => {
+    const xml = await documentXml(await tailoredResumeDocx(doc, "compact"));
+    expect(xml).toContain('w:ascii="Cambria"');
+    expect(xml).not.toContain('w:ascii="Calibri"');
+    expect(xml).toContain("<w:smallCaps/>");
+    expect(xml).not.toMatch(/<w:tbl>|<w:txbxContent>|<w:drawing>/);
+  });
+
+  it("does the same in the print view, with every line kept", () => {
+    const html = tailoredResumeHtml(doc, "x", "compact");
+    expect(html).toMatch(/font-family: Cambria, Georgia/);
+    expect(html).toContain("font-variant: small-caps");
+    expect(html).toContain("<li>Maintained PostgreSQL queries for the reporting dashboard.</li>");
+  });
+});

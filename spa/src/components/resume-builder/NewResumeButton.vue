@@ -1,7 +1,7 @@
 <template>
   <template v-if="enabled">
     <!-- Two roots (button and sheet): class and aria-label go to the button -->
-    <Button variant="secondary" v-bind="$attrs" @click="open = true">
+    <Button :variant="variant" :size="size" v-bind="$attrs" @click="open = true">
       <PhPencilSimpleLine />
       <slot><span>New<span class="hidden lg:inline"> resume</span></span></slot>
     </Button>
@@ -12,17 +12,17 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { PhPencilSimpleLine } from "@phosphor-icons/vue";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonVariants } from "@/components/ui/button";
 import NewResumeSheet from "@/components/resume-builder/NewResumeSheet.vue";
 import { useFeatureFlag } from "@/composables/useFeatureFlag";
 import { useResumes } from "@/composables/useResumes";
 import { trackEvent, type ResumeBuilderSurface } from "@/analytics";
 
-type NewResumeButtonProps = { surface: ResumeBuilderSurface };
+type NewResumeButtonProps = { surface: ResumeBuilderSurface; variant?: ButtonVariants["variant"]; size?: ButtonVariants["size"] };
 
 defineOptions({ inheritAttrs: false });
 
-const { surface } = defineProps<NewResumeButtonProps>();
+const { surface, variant = "secondary", size } = defineProps<NewResumeButtonProps>();
 
 const enabled = useFeatureFlag("resume-builder");
 const resumes = useResumes();

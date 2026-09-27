@@ -26,6 +26,7 @@
         </div>
         <EmptyAction>
           <UploadResumeButton>Upload Resume</UploadResumeButton>
+          <NewResumeButton surface="picker_empty" variant="outline">Build one here</NewResumeButton>
         </EmptyAction>
       </Empty>
 
@@ -122,6 +123,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
+import NewResumeButton from "@/components/resume-builder/NewResumeButton.vue";
 import { useResumes } from "@/composables/useResumes";
 import { resumeName } from "@/lib/resumeUsage";
 import { useJobApplications } from "@/composables/useJobApplications";
