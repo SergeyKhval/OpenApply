@@ -10,6 +10,7 @@
           placeholder="BSc Computer Science"
         />
         <Input v-else :id="`${entry.id}-title`" v-model="(entry as ResumeRole).title" :placeholder="titlePlaceholder" />
+        <FlaggedHint :path="`${path}.title`" :value="isEducation ? (entry as ResumeEducation).degree : (entry as ResumeRole).title" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label :for="`${entry.id}-organization`">{{ isEducation ? "School" : organizationLabel }}</Label>
@@ -20,14 +21,17 @@
           placeholder="Warsaw University of Technology"
         />
         <Input v-else :id="`${entry.id}-organization`" v-model="(entry as ResumeRole).organization" :placeholder="organizationPlaceholder" />
+        <FlaggedHint :path="`${path}.organization`" :value="isEducation ? (entry as ResumeEducation).school : (entry as ResumeRole).organization" />
       </div>
       <div class="flex flex-col gap-1.5 sm:col-span-2">
         <Label :for="`${entry.id}-location`">Location <span class="font-normal text-muted-foreground">(optional)</span></Label>
         <Input :id="`${entry.id}-location`" v-model="entry.location" placeholder="City, or Remote" />
+        <FlaggedHint :path="`${path}.location`" :value="entry.location" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label :for="`${entry.id}-start`">Start</Label>
         <YearMonthInput :id="`${entry.id}-start`" v-model="entry.start" label="Start" />
+        <FlaggedHint :path="`${path}.start`" :value="entry.start" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label :for="`${entry.id}-end`">End</Label>
@@ -36,6 +40,7 @@
           <Checkbox v-model="isPresent" />
           I still work here
         </label>
+        <FlaggedHint :path="`${path}.end`" :value="entry.end" />
       </div>
     </div>
     <ResumeBulletsEditor v-if="!isEducation || entry.bullets.length" v-model="entry.bullets" :label="`${headerLabel} line`" />
@@ -56,14 +61,16 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import FlaggedHint from "@/components/resume-builder/FlaggedHint.vue";
 import ResumeBulletsEditor from "@/components/resume-builder/ResumeBulletsEditor.vue";
 import YearMonthInput from "@/components/resume-builder/YearMonthInput.vue";
 import { entryHints, newBullet } from "@/lib/builtResumeEdit";
 import type { ResumeEducation, ResumeRole, RoleSectionType, YearMonth } from "@/lib/builtResume";
 
-type ResumeEntryFormProps = { sectionType: RoleSectionType | "education" };
+// path: the entry's place in an import's flagged fields, "sections.<id>.entries.<id>"
+type ResumeEntryFormProps = { sectionType: RoleSectionType | "education"; path: string };
 
-const { sectionType } = defineProps<ResumeEntryFormProps>();
+const { sectionType, path } = defineProps<ResumeEntryFormProps>();
 const entry = defineModel<ResumeRole | ResumeEducation>({ required: true });
 
 const isEducation = computed(() => sectionType === "education");

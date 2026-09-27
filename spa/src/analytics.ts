@@ -77,6 +77,17 @@ type EventMap = {
   resume_builder_section_added: { type: string };
   resume_builder_completed: { source: ResumeBuilderSource; sections: number; entries: number; bullets: number; minutesSinceStart: number };
   resume_builder_downloaded: { format: "docx" | "pdf"; template: string };
+  resume_import_completed: {
+    source: ResumeBuilderSource;
+    fieldsVerified: number;
+    fieldsFlagged: number;
+    bulletsImported: number;
+    bulletsUnsorted: number;
+    linesSkipped: number;
+    fallback: boolean;
+    durationMs: number;
+  };
+  resume_import_failed: { source: ResumeBuilderSource; error: string; code?: string };
   interview_created: { applicationId: string };
   contact_created: { applicationId: string };
   note_created: { applicationId: string };

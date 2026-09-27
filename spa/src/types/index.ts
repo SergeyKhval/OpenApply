@@ -144,6 +144,10 @@ export type BuiltResume = ResumeBase & {
     source: "resume" | "linkedin_pdf" | "linkedin_paste";
     resumeId?: string;
     flaggedFields: string[];
+    // Source lines the import couldn't place under a job, or didn't use
+    unsorted?: string[];
+    notImported?: string[];
+    fallback?: boolean;
   };
   completedAt?: Timestamp;
 };

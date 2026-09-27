@@ -41,6 +41,7 @@
         :as-tags="section.type === 'skills' || section.type === 'languages'"
         :placeholder="ITEM_PLACEHOLDERS[section.type]"
       />
+      <FlaggedHint v-if="'items' in section" :path="`sections.${section.id}.items`" :value="section.items" />
 
       <template v-else-if="'entries' in section">
         <article
@@ -59,7 +60,7 @@
               @remove="emit('removeEntry', entryIndex)"
             />
           </div>
-          <ResumeEntryForm v-model="section.entries[entryIndex]!" :section-type="section.type" />
+          <ResumeEntryForm v-model="section.entries[entryIndex]!" :section-type="section.type" :path="`sections.${section.id}.entries.${entry.id}`" />
         </article>
         <Button variant="secondary" class="self-start" @click="addEntry">
           <PhPlus :size="18" />
@@ -76,6 +77,7 @@ import { PhCaretRight, PhPlus } from "@phosphor-icons/vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import FlaggedHint from "@/components/resume-builder/FlaggedHint.vue";
 import ReorderButtons from "@/components/resume-builder/ReorderButtons.vue";
 import ResumeEntryForm from "@/components/resume-builder/ResumeEntryForm.vue";
 import ResumeItemsEditor from "@/components/resume-builder/ResumeItemsEditor.vue";
