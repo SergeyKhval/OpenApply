@@ -372,6 +372,12 @@
       "indexes": []
     },
     {
+      "collectionGroup": "importRateLimits",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
       "collectionGroup": "linkedinToolUsage",
       "fieldPath": "expiresAt",
       "ttl": true,
