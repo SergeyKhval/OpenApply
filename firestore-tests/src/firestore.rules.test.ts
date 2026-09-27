@@ -160,6 +160,89 @@ describe("jobApplications collection (existing owner-scoped rule; sanity check)"
   });
 });
 
+describe("userResumes collection", () => {
+  const built = {
+    userId: "alice",
+    kind: "built",
+    status: "parsed",
+    title: "Resume",
+    template: "classic",
+    text: "Alice Doe\nalice@example.com",
+    structured: { version: 1, contact: { name: "Alice Doe" }, sections: [] },
+    createdAt: 1,
+    updatedAt: 1,
+  };
+  const uploaded = { userId: "alice", fileName: "alice.pdf", fileSize: 1000, storagePath: "resumes/alice/1-alice.pdf", status: "parsed", text: "Alice Doe" };
+
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "userResumes", "built1"), built);
+      await setDoc(doc(db, "userResumes", "upload1"), uploaded);
+    });
+  });
+
+  it("lets the owner read their resumes, and nobody else", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertSucceeds(getDoc(doc(alice, "userResumes", "built1")));
+    await assertFails(getDoc(doc(bob, "userResumes", "built1")));
+    await assertFails(getDoc(doc(bob, "userResumes", "upload1")));
+  });
+
+  it("lets a user create a built resume of their own", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertSucceeds(setDoc(doc(alice, "userResumes", "new"), { ...built, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+  });
+
+  it("never lets a client create an upload, someone else's resume, or extra fields", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), uploaded));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, userId: "bob" }));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, storagePath: "resumes/bob/1-bob.pdf" }));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, importedFrom: { source: "resume", flaggedFields: [] } }));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, text: "x".repeat(60001) }));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, template: "two-column" }));
+    await assertFails(setDoc(doc(alice, "userResumes", "forged"), { ...built, structured: "text" }));
+  });
+
+  it("lets the owner save a built resume's content", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertSucceeds(
+      updateDoc(doc(alice, "userResumes", "built1"), {
+        structured: { version: 1, contact: { name: "Alice Doe" }, sections: [] },
+        text: "Alice Doe",
+        title: "Product roles",
+        updatedAt: serverTimestamp(),
+        completedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("never lets a built resume change owner, kind or bookkeeping", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(bob, "userResumes", "built1"), { text: "Bob" }));
+    await assertFails(updateDoc(doc(alice, "userResumes", "built1"), { userId: "bob" }));
+    await assertFails(updateDoc(doc(alice, "userResumes", "built1"), { kind: "upload" }));
+    await assertFails(updateDoc(doc(alice, "userResumes", "built1"), { storagePath: "resumes/bob/1-bob.pdf" }));
+    await assertFails(updateDoc(doc(alice, "userResumes", "built1"), { text: "x".repeat(60001) }));
+  });
+
+  it("never lets an upload be handed to someone else or turned into a built resume", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(alice, "userResumes", "upload1"), { userId: "bob" }));
+    await assertFails(updateDoc(doc(alice, "userResumes", "upload1"), { kind: "built" }));
+  });
+
+  it("lets the owner delete either kind", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertFails(deleteDoc(doc(bob, "userResumes", "built1")));
+    await assertSucceeds(deleteDoc(doc(alice, "userResumes", "built1")));
+    await assertSucceeds(deleteDoc(doc(alice, "userResumes", "upload1")));
+  });
+});
+
 describe("tailoredResumes collection", () => {
   const ID = "tailored1";
   const tailored = {

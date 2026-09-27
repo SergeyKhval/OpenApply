@@ -22,6 +22,7 @@ export * from "./jobApplications";
 export * from "./sendWelcomeEmail";
 export * from "./matchResumeWithJobApplication";
 export * from "./createTailoredResume";
+export * from "./importResume";
 export * from "./matchResumeTool";
 export * from "./sendWeeklyDigest";
 export * from "./processUserDigest";
