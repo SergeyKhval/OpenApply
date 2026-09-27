@@ -24,7 +24,7 @@
       <section v-if="rows.changes.length" class="flex flex-col gap-2" aria-label="Changes">
         <h3 class="text-[17px] font-bold">Changes</h3>
         <ul class="flex flex-col divide-y divide-border">
-          <li v-for="row in rows.changes" :key="row.index" class="flex items-start gap-3 py-3" :class="{ 'opacity-60': !row.included }">
+          <li v-for="row in rows.changes" :key="row.index" class="flex flex-wrap items-start gap-3 py-3" :class="{ 'opacity-60': !row.included && reportingIndex !== row.index }">
             <div class="flex min-w-0 grow flex-col gap-1">
               <span class="inline-flex w-fit rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">{{ row.label }}</span>
               <template v-if="row.kind === 'reworded'">
@@ -38,10 +38,30 @@
               <span v-else class="text-[15px]" :class="{ 'line-through text-muted-foreground': row.kind === 'cut' }">{{ row.before }}</span>
               <span v-if="row.requirement" class="text-sm text-soft-foreground">For: {{ row.requirement }}</span>
             </div>
-            <Switch
-              :model-value="row.included"
-              :aria-label="`${row.included ? 'Keep' : 'Skip'}: ${row.label}`"
-              @update:model-value="toggle(row.index, row.kind, $event)"
+            <div class="flex shrink-0 flex-col items-end gap-2">
+              <Switch
+                :model-value="row.included"
+                :aria-label="`${row.included ? 'Keep' : 'Skip'}: ${row.label}`"
+                @update:model-value="toggle(row.index, row.kind, $event)"
+              />
+              <span v-if="reportedIndexes.has(row.index)" class="text-xs text-muted-foreground">Reported</span>
+              <Button
+                v-else
+                variant="ghost"
+                size="icon-sm"
+                :aria-label="`Report a wrong change: ${row.label}`"
+                @click="reportingIndex = reportingIndex === row.index ? null : row.index"
+              >
+                <PhFlag />
+              </Button>
+            </div>
+            <TailoredChangeReport
+              v-if="reportingIndex === row.index && tailored"
+              class="basis-full"
+              :tailored-resume-id="tailored.id"
+              :row="row"
+              @reported="onReported(row.index, row.kind)"
+              @cancel="reportingIndex = null"
             />
           </li>
         </ul>
@@ -138,11 +158,12 @@ import { computed, ref, watch } from "vue";
 import { useCollection, useCurrentUser, useDocument } from "vuefire";
 import { collection, doc as docRef, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { PhCopy, PhFileDoc, PhFilePdf, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
+import { PhCopy, PhFileDoc, PhFilePdf, PhFlag, PhSparkle, PhWarningCircle } from "@phosphor-icons/vue";
 import AiChecksLeft from "@/components/AiChecksLeft.vue";
 import AiLimitReached from "@/components/AiLimitReached.vue";
 import ResumeLink from "@/components/ResumeLink.vue";
 import AiSheet from "@/components/ai/AiSheet.vue";
+import TailoredChangeReport from "@/components/ai/TailoredChangeReport.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -240,6 +261,15 @@ async function toggle(index: number, kind: ChangeKind, on: boolean) {
   } catch {
     errorMessage.value = "Couldn't save that switch. It applies to this preview only.";
   }
+}
+
+// Reports this session; a reported change is switched off
+const reportingIndex = ref<number | null>(null);
+const reportedIndexes = ref(new Set<number>());
+async function onReported(index: number, kind: ChangeKind) {
+  reportingIndex.value = null;
+  reportedIndexes.value = new Set([...reportedIndexes.value, index]);
+  if (!excluded.value.has(index)) await toggle(index, kind, false);
 }
 
 const isRunning = ref(false);

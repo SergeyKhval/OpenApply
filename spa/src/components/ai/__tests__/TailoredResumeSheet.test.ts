@@ -9,6 +9,7 @@ const match = ref<unknown>(null);
 const usage = ref(3);
 const callCreate = vi.fn();
 const updateDoc = vi.fn();
+const addDoc = vi.fn();
 const trackEvent = vi.fn();
 const saveBlob = vi.fn();
 const printTailoredResume = vi.fn();
@@ -29,6 +30,7 @@ vi.mock("firebase/firestore", () => ({
   limit: vi.fn(),
   doc: (_db: unknown, collectionName: string, id: string) => ({ path: `${collectionName}/${id}` }),
   updateDoc: (...args: unknown[]) => updateDoc(...args),
+  addDoc: (...args: unknown[]) => addDoc(...args),
   serverTimestamp: () => "server-ts",
 }));
 vi.mock("firebase/functions", () => ({ httpsCallable: () => callCreate }));
@@ -105,6 +107,7 @@ describe("TailoredResumeSheet", () => {
     usage.value = 3;
     callCreate.mockReset();
     updateDoc.mockReset().mockResolvedValue(undefined);
+    addDoc.mockReset().mockResolvedValue({ id: "report-1" });
     trackEvent.mockReset();
     saveBlob.mockReset();
     printTailoredResume.mockReset().mockReturnValue(true);
@@ -228,6 +231,47 @@ describe("TailoredResumeSheet", () => {
       await flushPromises();
       expect(body()).toContain("Your browser blocked the print tab.");
       expect(trackEvent).not.toHaveBeenCalledWith("tailored_resume_downloaded", expect.anything());
+    });
+
+    it("reports a wrong change, switches it off, and marks it reported", async () => {
+      await mountSheet();
+      (document.body.querySelector('[aria-label="Report a wrong change: Reworded"]') as HTMLElement).click();
+      await flushPromises();
+      expect(body()).toContain("Sends this change (before and after) to us");
+      const note = document.body.querySelector("textarea") as HTMLTextAreaElement;
+      note.value = "Never used PostgreSQL by that name";
+      note.dispatchEvent(new Event("input"));
+      await flushPromises();
+      button("Send report")!.click();
+      await flushPromises();
+
+      expect(addDoc).toHaveBeenCalledWith(undefined, {
+        userId: "user-1",
+        tailoredResumeId: "tailored-1",
+        opIndex: 1,
+        kind: "reworded",
+        reason: "not_true",
+        note: "Never used PostgreSQL by that name",
+        before: "Maintained Postgres queries for the reporting dashboard.",
+        after: "Maintained PostgreSQL queries for the reporting dashboard.",
+        requirement: "PostgreSQL",
+        createdAt: "server-ts",
+      });
+      expect(trackEvent).toHaveBeenCalledWith("tailored_resume_change_reported", { kind: "reworded", reason: "not_true" });
+      expect(updateDoc).toHaveBeenCalledWith({ path: "tailoredResumes/tailored-1" }, { excludedOpIds: [1], updatedAt: "server-ts" });
+      expect(body()).toContain("Reported");
+      expect(document.body.querySelector('[aria-label="Report a wrong change: Reworded"]')).toBeNull();
+    });
+
+    it("keeps the change and says so when the report doesn't send", async () => {
+      addDoc.mockRejectedValue(new Error("offline"));
+      await mountSheet();
+      (document.body.querySelector('[aria-label="Report a wrong change: Reworded"]') as HTMLElement).click();
+      await flushPromises();
+      button("Send report")!.click();
+      await flushPromises();
+      expect(body()).toContain("The report didn't send.");
+      expect(updateDoc).not.toHaveBeenCalled();
     });
 
     it("starts from the switches saved earlier", async () => {
