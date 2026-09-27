@@ -45,7 +45,7 @@ describe("JobApplicationDescription", () => {
     expect(text).toBe("Intro\n\nDetails");
   });
 
-  it("still applies line-clamp-5 until 'Show more' is clicked", async () => {
+  it("still applies line-clamp-5 until 'Show all' is clicked", async () => {
     const jobDescription = "Line one\nLine two";
 
     const wrapper = mount(JobApplicationDescription, {
@@ -56,7 +56,7 @@ describe("JobApplicationDescription", () => {
 
     await wrapper
       .findAll("button")
-      .find((button) => button.text().includes("Show more"))!
+      .find((button) => button.text().includes("Show all"))!
       .trigger("click");
 
     expect(wrapper.find("p").classes()).not.toContain("line-clamp-5");
