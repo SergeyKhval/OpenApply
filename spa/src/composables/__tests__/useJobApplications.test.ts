@@ -8,6 +8,9 @@ const mockDoc = vi.fn().mockReturnValue("mock-doc-ref");
 const mockCollection = vi.fn().mockReturnValue("mock-collection-ref");
 const mockServerTimestamp = vi.fn().mockReturnValue("mock-timestamp");
 const mockGetCountFromServer = vi.fn();
+const mockGetDocs = vi.fn();
+const mockBatchDelete = vi.fn();
+const mockBatchCommit = vi.fn();
 
 vi.mock("firebase/firestore", () => ({
   addDoc: (...args: unknown[]) => mockAddDoc(...args),
@@ -19,6 +22,8 @@ vi.mock("firebase/firestore", () => ({
   getCountFromServer: (...args: unknown[]) => mockGetCountFromServer(...args),
   query: (...args: unknown[]) => args,
   where: (...args: unknown[]) => args,
+  getDocs: (...args: unknown[]) => mockGetDocs(...args),
+  writeBatch: () => ({ delete: mockBatchDelete, commit: mockBatchCommit }),
 }));
 
 const mockAuth = vi.hoisted(() => ({ currentUser: null as { uid: string } | null }));
@@ -280,13 +285,34 @@ describe("useJobApplications", () => {
       expect(result.error).toBe("User not authenticated");
     });
 
-    it("calls deleteDoc with correct reference", async () => {
-      mockDeleteDoc.mockResolvedValueOnce(undefined);
+    it("deletes the job and its own notes, interviews, contacts, matches and letters in one batch", async () => {
+      // Every related query finds one doc of its own
+      mockGetDocs.mockImplementation(async (queryArgs: unknown[]) => ({
+        docs: [{ ref: `ref-of-${(queryArgs[0] as unknown[])[1] ?? "x"}` }],
+      }));
+      mockCollection.mockImplementation((_db: unknown, name: string) => ["collection", name]);
+      mockBatchCommit.mockResolvedValueOnce(undefined);
       const { deleteJobApplication } = useJobApplications();
       const result = await deleteJobApplication("app-1");
+
       expect(result.success).toBe(true);
+      const queried = mockGetDocs.mock.calls.map(([queryArgs]) => ({
+        name: (queryArgs[0] as unknown[])[1],
+        filters: queryArgs.slice(1),
+      }));
+      expect(queried).toEqual([
+        { name: "jobApplicationNotes", filters: [["userId", "==", "user-123"], ["jobApplicationId", "==", "app-1"]] },
+        { name: "interviews", filters: [["userId", "==", "user-123"], ["applicationId", "==", "app-1"]] },
+        { name: "contacts", filters: [["userId", "==", "user-123"], ["jobApplicationId", "==", "app-1"]] },
+        { name: "resumeJobMatches", filters: [["userId", "==", "user-123"], ["jobApplicationId", "==", "app-1"]] },
+        { name: "tailoredResumes", filters: [["userId", "==", "user-123"], ["jobApplicationId", "==", "app-1"]] },
+        { name: "coverLetters", filters: [["userId", "==", "user-123"], ["jobApplication.id", "==", "app-1"]] },
+      ]);
+      expect(mockBatchDelete).toHaveBeenCalledTimes(7);
       expect(mockDoc).toHaveBeenCalledWith("mock-db", "jobApplications", "app-1");
-      expect(mockDeleteDoc).toHaveBeenCalledWith("mock-doc-ref");
+      expect(mockBatchDelete).toHaveBeenLastCalledWith("mock-doc-ref");
+      expect(mockBatchCommit).toHaveBeenCalledOnce();
+      mockCollection.mockReturnValue("mock-collection-ref");
     });
   });
 });
