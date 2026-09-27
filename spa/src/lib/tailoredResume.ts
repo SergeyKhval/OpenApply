@@ -56,6 +56,8 @@ export type DocLine = {
   kind: "original" | "rephrased" | "surfaced";
   sourceIds: string[];
   opIndex?: number;
+  // Bold, for entry headers in a built resume. Tailored versions never set it.
+  strong?: boolean;
 };
 
 export type DocSection = {
@@ -63,7 +65,10 @@ export type DocSection = {
   lines: DocLine[];
 };
 
-export type TailoredDoc = { sections: DocSection[] };
+// What the preview and the downloads render: a tailored version or a
+// resume built in the app
+export type ResumeDoc = { sections: DocSection[] };
+export type TailoredDoc = ResumeDoc;
 
 const SKILLS_HEADING = /skill|competenc|technolog|tools|stack/i;
 const INTRO_HEADING = /summary|profile|about|objective/i;

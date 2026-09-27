@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 import { CalendarDate, ZonedDateTime } from "@internationalized/date";
 import type { JobPosting } from "../../../shared/jobPosting";
+import type { StructuredResume } from "@/lib/builtResume";
 import type { SourceLine as TailoredSourceLine, VerifiedOp as TailoredOp } from "@/lib/tailoredResume";
 
 export type JobStatus =
@@ -113,16 +114,41 @@ export type CreateJobApplicationInput = Omit<
   "id" | "createdAt" | "userId" | "status"
 >;
 
-export type Resume = {
+type ResumeBase = {
   id: string;
   userId: string;
+  status: "uploaded" | "parsed" | "parse-failed";
+  text?: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+// A PDF the user uploaded; parseResume creates the doc. Docs from before
+// resumes could be built have no `kind`.
+export type UploadedResume = ResumeBase & {
+  kind?: "upload";
   fileName: string;
   fileSize: number;
-  url: string;
-  status: "uploaded" | "parsed" | "parse-failed";
+  url?: string;
   storagePath: string;
-  createdAt: Timestamp;
 };
+
+// A resume made in the app's editor: `text` is derived from `structured`
+// (lib/builtResume.ts) on every save
+export type BuiltResume = ResumeBase & {
+  kind: "built";
+  title: string;
+  template: "classic";
+  structured: StructuredResume;
+  importedFrom?: {
+    source: "resume" | "linkedin_pdf" | "linkedin_paste";
+    resumeId?: string;
+    flaggedFields: string[];
+  };
+  completedAt?: Timestamp;
+};
+
+export type Resume = UploadedResume | BuiltResume;
 
 export type CoverLetter = {
   id: string;

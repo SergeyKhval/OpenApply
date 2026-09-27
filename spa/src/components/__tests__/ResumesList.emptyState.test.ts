@@ -15,15 +15,17 @@ vi.mock("vuefire", () => ({
   useFirebaseStorage: () => ({}),
   useStorageFileUrl: () => ({ url: ref(null) }),
 }));
-vi.mock("firebase/storage", () => ({ ref: () => ({}), deleteObject: vi.fn() }));
+const deleteObject = vi.fn();
+const batchDelete = vi.fn();
+vi.mock("firebase/storage", () => ({ ref: () => ({}), deleteObject: (...args: unknown[]) => deleteObject(...args) }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   query: () => ({ query: true }),
   where: vi.fn(),
   orderBy: vi.fn(),
-  getDocs: vi.fn(),
+  getDocs: async () => ({ size: 0, forEach: () => {} }),
   doc: vi.fn(),
-  writeBatch: () => ({ delete: vi.fn(), commit: vi.fn(), update: vi.fn() }),
+  writeBatch: () => ({ delete: batchDelete, commit: vi.fn(), update: vi.fn() }),
 }));
 vi.mock("@/firebase/config.ts", () => ({ db: {} }));
 vi.mock("@/firebase/config", () => ({ db: {}, functions: {} }));
@@ -78,5 +80,40 @@ describe("ResumesList: empty state", () => {
     resumes.value = [];
     const wrapper = await mountList();
     expect(wrapper.text()).toContain("No resumes yet");
+  });
+});
+
+describe("ResumesList: a resume built in the app", () => {
+  const built = {
+    id: "resume-2",
+    kind: "built",
+    title: "Product roles",
+    status: "parsed",
+    createdAt: at(2),
+    structured: { version: 1, contact: {}, sections: [] },
+  };
+
+  beforeEach(() => {
+    collectionCalls = 0;
+    deleteObject.mockClear();
+    batchDelete.mockClear();
+    resumes.value = [built];
+  });
+
+  it("shows its title, with no file size or read status", async () => {
+    const wrapper = await mountList();
+    expect(wrapper.text()).toContain("Product roles");
+    expect(wrapper.text()).toContain("Made here");
+    expect(wrapper.text()).not.toContain("Read OK");
+    expect(wrapper.text()).not.toContain("Uploaded");
+  });
+
+  it("deletes the doc without touching Storage", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const wrapper = await mountList();
+    await wrapper.get('[aria-label="Delete Product roles"]').trigger("click");
+    await flushPromises();
+    expect(batchDelete).toHaveBeenCalledTimes(1);
+    expect(deleteObject).not.toHaveBeenCalled();
   });
 });

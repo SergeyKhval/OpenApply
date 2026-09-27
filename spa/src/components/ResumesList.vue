@@ -11,15 +11,19 @@
           class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-5 py-4 last:border-0"
         >
           <span class="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
-            <PhFilePdf :size="22" />
+            <PhFileText v-if="resume.kind === 'built'" :size="22" />
+            <PhFilePdf v-else :size="22" />
           </span>
           <div class="flex min-w-0 grow basis-60 flex-col gap-0.5">
             <ResumeLink :resume="resume" />
             <p class="text-sm text-muted-foreground">
-              Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template>
+              <template v-if="resume.kind === 'built'">Made here {{ formatDate(resume.createdAt) }}</template>
+              <template v-else>Uploaded {{ formatDate(resume.createdAt) }}<template v-if="resume.fileSize"> · {{ formatFileSize(resume.fileSize) }}</template></template>
             </p>
           </div>
-          <Badge v-if="resume.status === 'parsed'" variant="success"><PhCheck weight="bold" />Read OK</Badge>
+          <!-- A built resume's text is written by the app, nothing to read -->
+          <template v-if="resume.kind === 'built'" />
+          <Badge v-else-if="resume.status === 'parsed'" variant="success"><PhCheck weight="bold" />Read OK</Badge>
           <Badge v-else-if="resume.status === 'parse-failed'" variant="destructive"><PhX weight="bold" />Couldn't read it</Badge>
           <Badge v-else variant="secondary">Reading…</Badge>
           <RouterLink
@@ -34,7 +38,7 @@
             variant="ghost"
             size="icon-sm"
             class="ml-auto"
-            :aria-label="`Delete ${resume.fileName}`"
+            :aria-label="`Delete ${resumeName(resume)}`"
             :disabled="deletingIds.includes(resume.id)"
             @click="handleDelete(resume)"
           >
@@ -53,7 +57,7 @@
           />
         </li>
       </ul>
-      <p class="flex items-center gap-2 text-sm text-muted-foreground">
+      <p v-if="resumes.some((resume) => resume.kind !== 'built')" class="flex items-center gap-2 text-sm text-muted-foreground">
         <PhInfo :size="16" />
         Read OK means we could read the text in the PDF. That text is what the resume match uses.
       </p>
@@ -94,7 +98,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
-import { PhCheck, PhFilePdf, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
+import { PhCheck, PhFilePdf, PhFileText, PhInfo, PhTrash, PhX } from "@phosphor-icons/vue";
 import type { Resume, TailoredResume } from "@/types";
 import { db } from "@/firebase/config.ts";
 import { Button } from "@/components/ui/button";
@@ -108,7 +112,7 @@ import {
 import UploadResumeButton from "@/components/UploadResumeButton.vue";
 import { Badge } from "@/components/ui/badge";
 import { useJobApplicationsData } from "@/composables/useJobApplicationsData";
-import { countResumeUsage, formatFileSize, usageLabel } from "@/lib/resumeUsage";
+import { countResumeUsage, formatFileSize, resumeName, usageLabel } from "@/lib/resumeUsage";
 import ResumeLink from "@/components/ResumeLink.vue";
 import TailoredVersionsList, { type TailoredVersionEntry } from "@/components/TailoredVersionsList.vue";
 import TailoredResumeSheet from "@/components/ai/TailoredResumeSheet.vue";
@@ -202,7 +206,7 @@ const handleDelete = async (resume: Resume) => {
     const applicationCount = linkedApplicationsSnapshot.size;
 
     // Build confirmation message based on whether there are linked applications
-    let confirmMessage = `Are you sure you want to delete "${resume.fileName}"?`;
+    let confirmMessage = `Are you sure you want to delete "${resumeName(resume)}"?`;
 
     if (applicationCount > 0) {
       confirmMessage += `\n\nThis resume is linked to ${applicationCount} job application${applicationCount > 1 ? "s" : ""}. `;
@@ -231,8 +235,9 @@ const handleDelete = async (resume: Resume) => {
     // Commit all Firestore changes
     await batch.commit();
 
-    // Delete from Firebase Storage (do this after Firestore operations succeed)
-    if (resume.storagePath) {
+    // Delete from Firebase Storage (do this after Firestore operations succeed).
+    // A built resume has no file.
+    if (resume.kind !== "built" && resume.storagePath) {
       const fileRef = storageRef(storage, resume.storagePath);
       await deleteObject(fileRef);
     }
