@@ -67,8 +67,8 @@
         </button>
         <p v-if="errorMessage" role="alert" class="text-destructive text-sm text-center">{{ errorMessage }}</p>
         <p class="text-xs text-muted-foreground text-center max-w-lg">
-          Free, no signup, takes about 15 seconds. Nothing is stored. It only uses facts already in your text,
-          it never invents a skill, employer, number, or title.
+          Free, no signup, takes about 15 seconds. Nothing is stored. Every line is built only
+          from what you paste and checked against your original text before you see it.
         </p>
       </div>
     </form>
@@ -137,7 +137,7 @@
           <h3 class="text-xl font-extrabold text-foreground">Applying to jobs next?</h3>
           <p class="text-[15px] text-soft-foreground mt-1">
             OpenApply tracks every application free, with an honest AI match check against each job description,
-            the same never-invents-evidence check that ran on this rewrite.
+            checked line by line the same way this rewrite was.
           </p>
         </div>
         <a
@@ -207,7 +207,7 @@ const TOOL_NAME = "linkedin_rewrite";
 const LOADING_MESSAGES = [
   "Reading your headline…",
   "Reading your About section…",
-  "Checking every line for invented facts…",
+  "Checking each line against your original text…",
   "Being honest with you…",
 ];
 

@@ -11,8 +11,9 @@ import {
 
 // LinkedIn headline/About rewriter: the model proposes a new headline and a
 // rewrite of each About paragraph, and tailorVerify's fact checks (newFacts,
-// droppedQualifiers, namesOthersWork) decide which survive. A line that adds
-// or strengthens a claim reverts to the visitor's original wording.
+// droppedQualifiers, namesOthersWork, unsupportedJobWords) decide which
+// survive. A line that adds or strengthens a claim reverts to the visitor's
+// original wording.
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -73,10 +74,16 @@ export async function generateLinkedinRewrite(
   }
 
   const wholeSourceText = `${input.headline}\n\n${input.about}`;
-  const headline = verifyLinkedinRewriteLine("headline", input.headline, output.headline, wholeSourceText);
+  const headline = verifyLinkedinRewriteLine(
+    "headline",
+    input.headline,
+    output.headline,
+    wholeSourceText,
+    input.targetRole,
+  );
   const byId = new Map(output.aboutLines.map((line) => [line.id, line.text]));
   const about = lines.map((line) =>
-    verifyLinkedinRewriteLine(line.id, line.text, byId.get(line.id) ?? line.text, wholeSourceText),
+    verifyLinkedinRewriteLine(line.id, line.text, byId.get(line.id) ?? line.text, wholeSourceText, input.targetRole),
   );
 
   return {

@@ -5,6 +5,7 @@ import {
   factTokens,
   namesOthersWork,
   newFacts,
+  unsupportedJobWords,
 } from "./tailorVerify";
 
 export const MIN_HEADLINE_CHARS = 10;
@@ -150,7 +151,8 @@ export type LinkedinRewriteRevertReason =
   | "too_long"
   | "new_fact"
   | "dropped_qualifier"
-  | "others_work";
+  | "others_work"
+  | "job_word";
 
 export type LinkedinRewriteLineVerdict = {
   id: string;
@@ -165,6 +167,22 @@ const MIN_LENGTH_ALLOWANCE = 24;
 const NO_VOCABULARY = { terms: [] as string[] };
 
 const cleanText = (value: string) => value.replace(/\s+/g, " ").trim();
+
+/**
+ * Individual words and the whole phrase from a target role, fed to newFacts
+ * as vocabulary so a role-specific skill the visitor never typed (e.g.
+ * "kubernetes", "people management") can't slip into a rewrite just because
+ * it isn't capitalized: newFacts's own word/lexicon checks only ever look at
+ * capitalization and a fixed seniority/intensifier list, not at role text.
+ */
+function vocabularyTermsFromTargetRole(targetRole: string): string[] {
+  if (!targetRole) return [];
+  const words = targetRole
+    .split(/[^\p{L}\p{N}+#.]+/u)
+    .map((word) => word.trim())
+    .filter((word) => word.length >= 3);
+  return [...new Set([targetRole, ...words])];
+}
 
 /** Named or tool-like words the rewrite and the source both already state. */
 function sharedNamedTerms(text: string, sourceText: string): string[] {
@@ -197,12 +215,20 @@ function sharedNamedTerms(text: string, sourceText: string): string[] {
  * itself ("Frontend Engineer", "Data Scientist" is the candidate's own
  * title, not someone else's), so applying it there would misfire on nearly
  * every headline.
+ *
+ * When a target role is given, its words feed newFacts as vocabulary (so an
+ * exact role term, lowercase or not, has to already be in the pasted text)
+ * and unsupportedJobWords additionally catches a role word the rewrite uses
+ * that the pasted text has no matching-stem word for, the same check
+ * tailor-v2 uses to stop a resume rewrite from stitching the job posting's
+ * own wording onto a line.
  */
 export function verifyLinkedinRewriteLine(
   id: string,
   original: string,
   proposed: string,
   wholeSourceText: string,
+  targetRole = "",
 ): LinkedinRewriteLineVerdict {
   const revert = (revertReason: LinkedinRewriteRevertReason, offendingTokens?: string[]): LinkedinRewriteLineVerdict => ({
     id,
@@ -220,11 +246,17 @@ export function verifyLinkedinRewriteLine(
   const allowed = Math.max(original.length * MAX_REPHRASE_GROWTH, original.length + MIN_LENGTH_ALLOWANCE);
   if (text.length > allowed) return revert("too_long");
 
-  const invented = newFacts(text, wholeSourceText, NO_VOCABULARY);
+  const vocabulary = { terms: vocabularyTermsFromTargetRole(targetRole) };
+  const invented = newFacts(text, wholeSourceText, vocabulary);
   if (invented.length) return revert("new_fact", invented);
 
   const dropped = droppedQualifiers(text, original);
   if (dropped.length) return revert("dropped_qualifier", dropped);
+
+  if (targetRole) {
+    const jobWords = unsupportedJobWords(text, wholeSourceText, [targetRole]);
+    if (jobWords.length) return revert("job_word", jobWords);
+  }
 
   if (id !== "headline") {
     const others = sharedNamedTerms(text, wholeSourceText).filter((term) => namesOthersWork(wholeSourceText, term));

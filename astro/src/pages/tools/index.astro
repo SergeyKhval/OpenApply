@@ -5,7 +5,7 @@ import Footer from '../../components/Footer.astro';
 
 const currentPath = Astro.url.pathname;
 const pageTitle = "Free Job Search Tools | OpenApply";
-const pageDescription = "Free, no-signup tools for your job search: an honest resume vs job description match checker, and a LinkedIn headline and About rewriter that never invents a fact.";
+const pageDescription = "Free, no-signup tools for your job search: an honest resume vs job description match checker, and a LinkedIn headline and About rewriter built only from what you paste.";
 const canonicalUrl = new URL('/tools', Astro.site || 'https://openapply.app').href;
 
 const tools = [
@@ -19,7 +19,7 @@ const tools = [
     href: '/tools/linkedin-headline-rewrite',
     icon: 'ph-linkedin-logo',
     name: 'LinkedIn Headline & About Rewriter',
-    description: "Paste your headline and About section. Get a sharper rewrite that only uses facts already in your text, checked line by line so it never invents a skill, employer, or title.",
+    description: "Paste your headline and About section. Get a sharper rewrite built only from what you pasted, checked line by line against your text.",
   },
 ];
 
@@ -55,8 +55,8 @@ const jsonLd = {
               Free job search tools
             </h1>
             <p class="text-lg text-muted-foreground">
-              Every tool here runs the same rule: it only uses facts you already gave it. No invented
-              skills, employers, numbers, or credentials, ever.
+              Every tool here follows the same rule: build only from what you already gave it,
+              checked line by line against your own text.
             </p>
           </div>
 

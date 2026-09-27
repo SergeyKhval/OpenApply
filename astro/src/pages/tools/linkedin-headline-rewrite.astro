@@ -6,7 +6,7 @@ import LinkedinRewriteTool from '../../components/vue/LinkedinRewriteTool.vue';
 
 const currentPath = Astro.url.pathname;
 const pageTitle = "Free LinkedIn Headline & About Rewriter | OpenApply";
-const pageDescription = "Paste your LinkedIn headline and About section. Get a sharper rewrite that only uses facts already in your text, checked line by line so it never invents a skill, employer, or title. Free, no signup.";
+const pageDescription = "Paste your LinkedIn headline and About section. Get a sharper rewrite built only from what you pasted, checked line by line against your text. Free, no signup.";
 const canonicalUrl = new URL('/tools/linkedin-headline-rewrite', Astro.site || 'https://openapply.app').href;
 const ogImage = 'https://openapply.app/images/og/linkedin-headline-rewrite.png';
 
@@ -39,7 +39,7 @@ const faqs = [
   },
   {
     question: "Will it make up experience I don't have?",
-    answer: "No, on purpose. Every rewritten line is checked in code against everything you pasted. A line that adds a skill, employer, number, credential, or stronger ownership word than you stated gets thrown out and your original wording is kept instead, marked \"kept your wording\" so you can see exactly what changed.",
+    answer: "It's designed not to. Every rewritten line is checked in code against everything you pasted: a line that adds a skill, employer, number, credential, or stronger ownership word than you stated gets thrown out and your original wording is kept instead, marked \"kept your wording\" so you can see exactly what changed. Read the result before you paste it into LinkedIn; the check catches added facts, not every change in tone.",
   },
   {
     question: "What if I give it a target role?",
@@ -106,9 +106,9 @@ const jsonLd = {
             </h1>
             <p class="text-lg text-muted-foreground">
               Paste your headline and About section. In about 15 seconds you get a sharper
-              version that only uses facts already in your text. Every line is checked in code,
-              so it never invents a skill, employer, number, or title, and shows you exactly
-              which lines it kept as-is.
+              version built only from what you pasted. Every line is checked in code against
+              your original text and reverts to your own wording if it can't be verified, so
+              you can see exactly what changed and what it kept as-is.
             </p>
           </div>
           <p id="tool-hero-collapsed" class="hidden text-center text-lg font-semibold text-foreground mb-6">

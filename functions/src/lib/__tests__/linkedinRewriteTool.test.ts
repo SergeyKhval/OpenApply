@@ -217,6 +217,48 @@ describe("verifyLinkedinRewriteLine", () => {
     expect(result).toMatchObject({ changed: false, revertReason: "new_fact" });
   });
 
+  it("reverts a rewrite that borrows a lowercase skill named only in the target role", () => {
+    const headline = "Backend Engineer at Acme";
+    const original = "I write backend services in Java at Acme.";
+    const wholeSourceText = `${headline}\n\n${original}`;
+    const result = verifyLinkedinRewriteLine(
+      "about-1",
+      original,
+      "I write backend services in Java and kubernetes at Acme.",
+      wholeSourceText,
+      "Kubernetes Platform Engineer",
+    );
+    expect(result).toMatchObject({ changed: false, revertReason: "new_fact", text: original });
+  });
+
+  it("does not flag a target role's word when it's already in the pasted text", () => {
+    const headline = "Kubernetes Platform Engineer at Acme";
+    const original = "I run our Kubernetes clusters at Acme.";
+    const wholeSourceText = `${headline}\n\n${original}`;
+    const result = verifyLinkedinRewriteLine(
+      "about-1",
+      original,
+      "I operate our Kubernetes clusters at Acme.",
+      wholeSourceText,
+      "Kubernetes Platform Engineer",
+    );
+    expect(result).toMatchObject({ changed: true });
+  });
+
+  it("reverts a rewrite that stitches on a job word the pasted text has no match for (unsupportedJobWords)", () => {
+    const headline = "Backend Engineer at Acme";
+    const original = "I manage a product line at Acme.";
+    const wholeSourceText = `${headline}\n\n${original}`;
+    const result = verifyLinkedinRewriteLine(
+      "about-1",
+      original,
+      "I manage our growth-focused product line at Acme.",
+      wholeSourceText,
+      "Growth-focused Product Manager",
+    );
+    expect(result).toMatchObject({ changed: false, revertReason: "job_word", text: original });
+  });
+
   it("keeps the original wording when the rewrite is identical", () => {
     const result = verifyLinkedinRewriteLine("about-1", source, source, source);
     expect(result).toMatchObject({ changed: false, revertReason: "no_change", text: source });
