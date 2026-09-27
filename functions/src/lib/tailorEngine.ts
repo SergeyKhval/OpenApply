@@ -29,6 +29,19 @@ const ai = genkit({
   model: googleAI.model(TAILOR_MODEL, { temperature: 0 }),
 });
 
+// gemini-3.5-flash is a Gemini 3-family model: it controls thinking with
+// thinkingConfig.thinkingLevel (an enum), not the thinkingBudget token count
+// Gemini 2.5 models use. @genkit-ai/googleai@1.28.0 doesn't know this model
+// (falls back to a generic model ref) and its config type only declares
+// thinkingBudget, so thinkingLevel isn't typed here yet, but it does reach
+// the API untouched and the API honors it (verified in oa-gom: MINIMAL cut
+// thinking tokens to 0 vs ~740 with no thinkingConfig set, on an identical
+// prompt). Left unset to keep today's behavior; flipping this needs the
+// same quality re-test oa-7zx ran for thinkingBudget, since a lower level
+// may affect the same rewrite-usefulness/precision balance the tailor gate
+// (research/tailored-resume-gate-2026-09.md) measured across runs 1-4.
+const TAILOR_THINKING_LEVEL: "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | undefined = undefined;
+
 export const TailorModelOutputSchema = z.object({
   headerLineIds: z.array(z.string()),
   sectionOrder: z.array(z.string()),
@@ -171,6 +184,9 @@ const defaultGenerate: TailorGenerate = async (prompt) => {
   const response = await ai.generate({
     prompt,
     output: { schema: TailorModelOutputSchema, format: "json" },
+    config: TAILOR_THINKING_LEVEL
+      ? ({ thinkingConfig: { thinkingLevel: TAILOR_THINKING_LEVEL } } as Record<string, unknown>)
+      : undefined,
   });
   return {
     output: response.output,

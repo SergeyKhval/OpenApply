@@ -67,11 +67,9 @@ export async function analyzeResumeMatch(input: MatchToolInput): Promise<MatchTo
     const response = await ai.generate({
       prompt: buildMatchToolPrompt(input),
       output: { schema: MatchToolResultSchema, format: "json" },
-      ...(MATCH_THINKING_LEVEL && {
-        config: {
-          thinkingConfig: { thinkingLevel: MATCH_THINKING_LEVEL },
-        } as Record<string, unknown>,
-      }),
+      config: MATCH_THINKING_LEVEL
+        ? ({ thinkingConfig: { thinkingLevel: MATCH_THINKING_LEVEL } } as Record<string, unknown>)
+        : undefined,
     });
     result = response.output;
   } catch (error) {
