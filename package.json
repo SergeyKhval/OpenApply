@@ -6,7 +6,6 @@
   "type": "module",
   "license": "MIT",
   "author": "Sergey Khval",
-  "homepage": "https://openapply.app",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SergeyKhval/OpenApply.git"
