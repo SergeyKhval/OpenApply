@@ -104,9 +104,26 @@ const breadcrumbItems = [
 
       <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8">OpenApply Blog</h1>
       <p class="text-lg text-muted-foreground mb-12 max-w-3xl">
-        Welcome to our blog! Here you'll find insights, tips, and updates about job applications, 
+        Welcome to our blog! Here you'll find insights, tips, and updates about job applications,
         career development, and how to make the most of OpenApply and AI tools to streamline your job search.
       </p>
+
+      <a
+        href="/guides/job-scam-red-flags"
+        class="group mb-12 flex items-center justify-between gap-4 rounded-card border border-border bg-card p-6 hover:border-primary transition-colors"
+      >
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Guide</p>
+          <h2 class="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-1">
+            Job Scam Red Flags: How to Spot One Before You Pay
+          </h2>
+          <p class="text-sm text-muted-foreground">
+            Concrete warning signs, cited to the FTC and BBB, plus what to do if it already happened.
+          </p>
+        </div>
+        <i class="ph ph-arrow-right text-xl text-muted-foreground group-hover:text-primary transition-colors shrink-0" aria-hidden="true"></i>
+      </a>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post) => (
           <article class="border border-border rounded-lg overflow-hidden hover:border-primary transition-colors flex flex-col h-full">

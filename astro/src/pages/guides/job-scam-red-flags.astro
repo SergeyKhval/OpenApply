@@ -1,0 +1,267 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+
+const currentPath = Astro.url.pathname;
+const pageTitle = 'Job Scam Red Flags: How to Spot One Before You Pay | OpenApply';
+const pageDescription = "Concrete warning signs of a job scam (equipment fees, check overpayment, WhatsApp or Telegram interviews, personal-email recruiters, pay far above range) and what to do if it already happened. Every claim cited to the FTC, BBB, or FBI IC3.";
+const canonicalUrl = new URL('/guides/job-scam-red-flags', Astro.site || 'https://openapply.app').href;
+const publishedTime = new Date('2026-09-26').toISOString();
+
+const breadcrumbItems = [
+  { name: 'Home', url: '/' },
+  { name: 'Job Scam Red Flags', url: currentPath },
+];
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbItems.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.name,
+    item: new URL(item.url, Astro.site || 'https://openapply.app').href,
+  })),
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Job Scam Red Flags: How to Spot One Before You Pay',
+  description: pageDescription,
+  datePublished: publishedTime,
+  dateModified: publishedTime,
+  author: { '@type': 'Person', name: 'OpenApply Team' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'OpenApply',
+    logo: { '@type': 'ImageObject', url: 'https://openapply.app/favicon.ico' },
+  },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+};
+
+const redFlags = [
+  {
+    title: 'They ask you to pay first, for equipment, training, or a "starter kit"',
+    body: "A real employer pays you. It does not ask you to buy a laptop, a certification, or a background-check kit before you can start. The FTC's own guidance is direct about this one: \"Don't pay for the promise of a job.\"",
+    source: { label: 'FTC, Job Scams', url: 'https://consumer.ftc.gov/articles/job-scams' },
+  },
+  {
+    title: 'You get a check to deposit and are told to send part of it back',
+    body: 'This is the classic overpayment scam: you deposit a check, then wire money, buy gift cards, or send crypto back for "expenses" or "taxes." The check bounces days later. Your bank holds you responsible for the full amount, even though it looked cleared when you sent the money.',
+    source: { label: 'FTC, Job Scams', url: 'https://consumer.ftc.gov/articles/job-scams' },
+  },
+  {
+    title: 'The whole "interview" happens over WhatsApp or Telegram',
+    body: 'The FTC put out a specific alert on this in April 2026: real employers do not recruit through unsolicited text messages, WhatsApp, or Telegram. If a stranger messages you a job offer on one of these and never moves to a work email or a real phone call, that is the scam, not a quirky hiring process.',
+    source: { label: 'FTC, "That job offer text is probably a scam"', url: 'https://consumer.ftc.gov/consumer-alerts/2026/04/job-offer-text-probably-scam' },
+  },
+  {
+    title: 'Your "recruiter" is emailing from a personal account, not the company\'s domain',
+    body: 'A Gmail or Outlook address instead of a company domain, or a personal phone number with no connection to the company they claim to represent, is one of the specific signs the FTC tells people to check for before engaging further.',
+    source: { label: 'FTC, "Job scammers are looking to hire you"', url: 'https://consumer.ftc.gov/consumer-alerts/2025/07/job-scammers-are-looking-hire-you' },
+  },
+  {
+    title: 'The pay is well above the going rate, and they want an answer right now',
+    body: "Too-good-to-be-true salaries and high-pressure offers to take the job immediately, sometimes without the interviewer ever turning on a camera, show up repeatedly in BBB's own employment-scam complaint data. A real employer can wait a day for your answer.",
+    source: { label: 'BBB, Employment Scams 2026 Update', url: 'https://www.bbb.org/all/scamstudies/jobscams/employment-scams-2026-update' },
+  },
+  {
+    title: 'Nobody can describe the company or the actual work past a headline and a number',
+    body: 'Vague promises like making a lot of money "in a short period of time with little work," with no real job description, no verifiable company details, and no clear day-to-day duties, are a pattern the FTC calls out directly.',
+    source: { label: 'FTC, Job Scams', url: 'https://consumer.ftc.gov/articles/job-scams' },
+  },
+  {
+    title: 'They ask for your Social Security number or bank account before any real interview',
+    body: '"For payroll" is the usual excuse. A legitimate employer collects that information after you have an actual offer, through a real onboarding system, not by text before you have even spoken to anyone by phone.',
+    source: { label: 'FTC, "Job scammers are looking to hire you"', url: 'https://consumer.ftc.gov/consumer-alerts/2025/07/job-scammers-are-looking-hire-you' },
+  },
+];
+
+const faqs = [
+  {
+    question: 'Can OpenApply tell me if a job posting is a scam?',
+    answer: "No. We don't scan postings or messages for scam signals, automatically or otherwise. This page and your own read of the signs above are the check. If something like this happens on a job you're tracking, you can write it down as a note on that application in OpenApply so you have your own timestamped record, but nothing here is detected or reviewed on our end.",
+  },
+  {
+    question: 'Is a work-from-home job automatically a scam?',
+    answer: 'No. Most remote postings are real. One vague detail is normal for any job ad. Being asked to pay, being sent a check to deposit, or having the entire interview happen over WhatsApp or Telegram is not normal, and any one of those alone is reason enough to stop.',
+  },
+  {
+    question: 'What if I already deposited the check?',
+    answer: 'Contact your bank immediately, even if the check appears to have cleared. Fake checks routinely take days to bounce, and once one does, your bank will still expect you to repay the full amount, not just the part you kept.',
+  },
+  {
+    question: 'Where do I report a job scam?',
+    answer: 'Three places, and it is fine to file with all three: the FTC at ReportFraud.ftc.gov, the FBI\'s Internet Crime Complaint Center at ic3.gov, and BBB Scam Tracker at bbb.org, which publishes reports so the next person searching that recruiter or company name can find them.',
+  },
+  {
+    question: 'I already gave them my Social Security number or bank account number. Now what?',
+    answer: "Treat it as identity theft, not just a bad job lead. The FTC's recovery site, IdentityTheft.gov, walks through freezing your credit and the rest of the recovery steps, and you should still file the reports above so it's on record.",
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+  })),
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  keywords="job scam red flags, how to spot a job scam, job scam checklist, employment scam warning signs, fake job posting signs, report a job scam FTC"
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+  publishedTime={publishedTime}
+  author="OpenApply Team"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <Header currentPath={currentPath} />
+
+  <main class="min-h-screen bg-background">
+    <article class="container mx-auto px-4 py-12 max-w-4xl">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <header class="mb-12 border-b border-border pb-8">
+        <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          Job Scam Red Flags: How to Spot One Before You Pay
+        </h1>
+        <p class="text-lg text-muted-foreground">
+          Job scam reports to the FTC tripled between 2020 and 2024, with reported losses climbing
+          from $90 million to $501 million a year. BBB Scam Tracker saw employment-scam reports
+          double again in 2025 alone. Neither number is guesswork, both come straight from the
+          agencies that track them, linked below. Here is exactly what to look for, and exactly
+          what to do if you already sent money or information.
+        </p>
+      </header>
+
+      <section class="mb-16">
+        <h2 class="text-3xl font-bold text-foreground mb-3">The warning signs</h2>
+        <p class="text-muted-foreground mb-8">
+          No single sign here proves a scam by itself. A real employer can be slow to reply or
+          vague on the phone. But two or three of these together on the same posting, especially
+          any request for money, are the pattern regulators see over and over.
+        </p>
+        <div class="flex flex-col gap-6">
+          {redFlags.map((flag) => (
+            <div class="rounded-card border border-border bg-card p-6">
+              <h3 class="text-lg font-semibold text-foreground mb-2 flex gap-2">
+                <i class="ph ph-warning-circle text-destructive mt-1 shrink-0" aria-hidden="true"></i>
+                <span>{flag.title}</span>
+              </h3>
+              <p class="text-muted-foreground mb-3">{flag.body}</p>
+              <a
+                href={flag.source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                Source: {flag.source.label}
+                <i class="ph ph-arrow-square-out text-xs" aria-hidden="true"></i>
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 class="text-3xl font-bold text-foreground mb-3">What to do if it already happened</h2>
+        <div class="prose prose-lg dark:prose-invert max-w-none">
+          <p>
+            If you sent money, gift card codes, or crypto, contact your bank or the payment
+            service you used right away and ask them to flag or reverse the transaction. The FTC's
+            own advice: "Contact the company you used to send the money, report the fraud, and ask
+            to have the transaction reversed." Speed matters here, so do this before anything else.
+          </p>
+          <p>Then file a report, and there is no reason to pick just one:</p>
+          <ul>
+            <li>
+              <strong>The FTC</strong>, at{' '}
+              <a href="https://reportfraud.ftc.gov/" target="_blank" rel="noopener noreferrer">ReportFraud.ftc.gov</a>.
+            </li>
+            <li>
+              <strong>The FBI's Internet Crime Complaint Center (IC3)</strong>, at{' '}
+              <a href="https://www.ic3.gov/" target="_blank" rel="noopener noreferrer">ic3.gov</a>,
+              the federal channel specifically for crime that happened online.
+            </li>
+            <li>
+              <strong>BBB Scam Tracker</strong>, at{' '}
+              <a href="https://www.bbb.org/scamtracker/reportscam" target="_blank" rel="noopener noreferrer">bbb.org/scamtracker/reportscam</a>,
+              which publishes reports publicly, so the next person who searches that recruiter or
+              company name finds a warning instead of walking in blind.
+            </li>
+          </ul>
+          <p>
+            If you handed over a Social Security number, driver's license, or bank account number,
+            treat it as identity theft on top of a bad job lead. The FTC's recovery site,{' '}
+            <a href="https://www.identitytheft.gov/" target="_blank" rel="noopener noreferrer">IdentityTheft.gov</a>,
+            walks through freezing your credit and the rest of the recovery steps.
+          </p>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <div class="rounded-card bg-secondary p-8">
+          <h2 class="text-2xl font-bold text-foreground mb-3">Where OpenApply fits in, honestly</h2>
+          <p class="text-muted-foreground mb-4">
+            We don't scan job postings or recruiter messages for scam signals. There's no
+            detector running here, this page and your own judgment are the check. If something
+            like this happens on a job you're tracking in OpenApply, you can add it as a note on
+            that application: a private, timestamped record sitting next to the rest of your
+            application details, useful when you're filing the reports above or just trying to
+            remember exactly what happened and when. That's the whole feature. It doesn't get
+            reviewed by us and it doesn't warn anyone else, it's just yours to have in writing.
+          </p>
+          <a
+            href="/app/?utm_source=guide&utm_medium=cta&utm_campaign=job_scam_red_flags"
+            id="footer-cta"
+            class="inline-flex items-center justify-center gap-2 text-[15px] font-semibold h-12 rounded-full px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Track your applications for free
+          </a>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-3xl font-bold text-foreground mb-8">Questions</h2>
+        <div class="flex flex-col gap-6">
+          {faqs.map((faq) => (
+            <div>
+              <h3 class="text-lg font-semibold text-foreground mb-2">{faq.question}</h3>
+              <p class="text-muted-foreground">{faq.answer}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const footerCta = document.getElementById('footer-cta') as HTMLAnchorElement | null;
+  const incoming = new URLSearchParams(window.location.search);
+  if (footerCta && incoming.has('utm_source')) {
+    const url = new URL(footerCta.href);
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((key) => {
+      url.searchParams.delete(key);
+      const value = incoming.get(key);
+      if (value) url.searchParams.set(key, value);
+    });
+    footerCta.href = url.toString();
+  }
+  footerCta?.addEventListener('click', () => {
+    (window as any).posthog?.capture('guide_cta_clicked', { guide: 'job_scam_red_flags', cta: 'footer_signup' });
+  });
+</script>
